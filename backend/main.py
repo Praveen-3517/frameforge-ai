@@ -122,51 +122,39 @@ app.add_middleware(
 # ─────────────────────────────────────────────────────────────
 
 
+import re
+
 async def generate_scene_prompts(story_text: str) -> List[str]:
     """
-    Use Gemini 1.5 Flash to generate 3 cinematic IMAGE prompts from the story.
-    These prompts are optimised for Pollinations / Flux image generation.
+    100% Local Scene Generation.
+    Splits the story into 3 parts and formats them for the image generator.
+    No API keys, no quotas, never fails.
     """
-    log.info("🧠  Generating scene prompts with Gemini …")
-
-    system_prompt = (
-        "You are an expert AI image prompt engineer and cinematographer. "
-        "Given a story, create exactly 3 detailed visual scene prompts for "
-        "an AI image generator (Flux/Stable Diffusion). "
-        "Each prompt must: "
-        "(1) Be rich in visual detail — lighting, colors, atmosphere, style. "
-        "(2) Be under 100 words. "
-        "(3) Include a cinematic photography style (e.g. 'dramatic wide-angle shot', 'macro close-up'). "
-        "(4) Include art direction words like: cinematic lighting, 8k, photorealistic, epic, dramatic. "
-        "(5) NOT include character names — use archetypes. "
-        "Return ONLY valid JSON: {\"scenes\": [\"prompt1\", \"prompt2\", \"prompt3\"]}"
-    )
-
-    user_prompt = f"Story:\n\"\"\"\n{story_text}\n\"\"\"\n\nCreate 3 image prompts as JSON."
-
-    loop = asyncio.get_event_loop()
-
-    def _call_gemini() -> str:
-        model = genai.GenerativeModel(
-            model_name="gemini-1.5-flash",
-            system_instruction=system_prompt,
-            generation_config=genai.types.GenerationConfig(
-                temperature=0.8,
-                response_mime_type="application/json",
-            ),
-        )
-        response = model.generate_content(user_prompt)
-        return response.text or "{}"
-
-    raw: str = await loop.run_in_executor(None, _call_gemini)
-    log.info("   Gemini response: %s", raw[:200])
-
-    data   = json.loads(raw)
-    scenes: List[str] = data.get("scenes", [])
-
-    if len(scenes) != 3:
-        raise ValueError(f"Gemini returned {len(scenes)} scenes instead of 3. Raw: {raw}")
-
+    log.info("🧠  Generating scene prompts locally (No API needed) …")
+    
+    # Clean text
+    text = re.sub(r'\s+', ' ', story_text).strip()
+    
+    # Split into sentences
+    sentences = [s.strip() for s in re.split(r'[.!?]', text) if len(s.strip()) > 3]
+    
+    # Fallback if no punctuation
+    if len(sentences) == 0:
+        sentences = [text]
+        
+    # Pad to at least 3 sentences
+    while len(sentences) < 3:
+        sentences.append(sentences[-1])
+        
+    # Divide into 3 chunks
+    chunk_size = max(1, len(sentences) // 3)
+    
+    scene1 = " ".join(sentences[0:chunk_size])
+    scene2 = " ".join(sentences[chunk_size:chunk_size*2])
+    scene3 = " ".join(sentences[chunk_size*2:])
+    
+    scenes = [scene1, scene2, scene3]
+    
     for i, s in enumerate(scenes, 1):
         log.info("   Scene %d: %s", i, s[:90])
 
@@ -182,21 +170,39 @@ async def generate_scene_image(prompt: str, scene_index: int, job_id: str) -> Pa
     """
     Generate a 1280×720 image from a prompt using Pollinations.ai.
     Completely free — no API key required.
+    Includes retry logic to bypass 429 Too Many Requests.
     """
     log.info("🖼️  Generating image %d via Pollinations.ai …", scene_index)
 
     encoded_prompt = quote(f"{prompt}, cinematic, 8k, photorealistic")
-    url = POLLINATIONS_URL.format(prompt=encoded_prompt)
+    # Adding a random seed to bust caching and help bypass rate limits
+    import random
+    seed = random.randint(1, 999999)
+    url = f"{POLLINATIONS_URL.format(prompt=encoded_prompt)}&seed={seed}"
 
     image_path = TEMP_DIR / f"{job_id}_scene_{scene_index}.jpg"
 
-    async with httpx.AsyncClient(timeout=120, follow_redirects=True) as client:
-        resp = await client.get(url)
-        resp.raise_for_status()
-        with open(image_path, "wb") as f:
-            f.write(resp.content)
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            async with httpx.AsyncClient(timeout=120, follow_redirects=True) as client:
+                resp = await client.get(url)
+                if resp.status_code == 429:
+                    log.warning("   ⚠️ 429 Too Many Requests. Retrying image %d in 5s... (Attempt %d/%d)", scene_index, attempt+1, max_retries)
+                    await asyncio.sleep(5)
+                    continue
+                resp.raise_for_status()
+                
+                with open(image_path, "wb") as f:
+                    f.write(resp.content)
+                break  # Success! Exit retry loop
+        except Exception as e:
+            if attempt == max_retries - 1:
+                raise e
+            log.warning("   ⚠️ Error on image %d: %s. Retrying in 5s...", scene_index, e)
+            await asyncio.sleep(5)
 
-    log.info("   Image %d saved → %s  (%.1f KB)", scene_index, image_path, image_path.stat().st_size / 1024)
+    log.info("   ✅ Image %d saved → %s  (%.1f KB)", scene_index, image_path, image_path.stat().st_size / 1024)
     return image_path
 
 
@@ -207,14 +213,13 @@ async def generate_scene_image(prompt: str, scene_index: int, job_id: str) -> Pa
 
 async def generate_voiceover(story_text: str, job_id: str) -> Path:
     """Generate MP3 voiceover using Microsoft Edge-TTS (free)."""
-    log.info("🎙️  Generating voiceover with Edge-TTS …")
+    log.info("🎙️  Generating voiceover with Edge-TTS (Hindi) …")
 
     output_path = TEMP_DIR / f"{job_id}_voiceover.mp3"
     communicate = edge_tts.Communicate(
         text=story_text,
-        voice="en-US-GuyNeural",
-        rate="-5%",
-        volume="+10%",
+        voice="hi-IN-MadhurNeural",
+        rate="-10%",
     )
     await communicate.save(str(output_path))
 
@@ -227,56 +232,16 @@ async def generate_voiceover(story_text: str, job_id: str) -> Path:
 # ─────────────────────────────────────────────────────────────
 
 
-def _make_ken_burns_clip(image_path: Path, duration: float, scene_index: int) -> ImageClip:
+def _make_clip(image_path: Path, duration: float, scene_index: int) -> ImageClip:
     """
-    Create a cinematic Ken Burns (slow zoom + pan) effect on a still image.
-    Alternates zoom-in / zoom-out / pan-right per scene.
+    Creates a static image clip. 
+    This renders 100x faster than calculating Ken Burns frame-by-frame in Python.
     """
     img = Image.open(str(image_path)).convert("RGB")
     img = img.resize((VIDEO_WIDTH, VIDEO_HEIGHT), Image.LANCZOS)
     img_array = np.array(img)
 
-    total_frames = int(duration * FPS)
-    zoom_start   = 1.0
-    zoom_end     = 1.12  # 12% zoom over the clip duration
-
-    # Alternate zoom direction per scene
-    if scene_index % 2 == 0:
-        zoom_start, zoom_end = zoom_end, zoom_start
-
-    def make_frame(t: float):
-        progress = t / duration
-        zoom = zoom_start + (zoom_end - zoom_start) * progress
-
-        new_w = int(VIDEO_WIDTH  / zoom)
-        new_h = int(VIDEO_HEIGHT / zoom)
-
-        # Pan slightly left→right or right→left
-        max_x_offset = (VIDEO_WIDTH  - new_w) // 2
-        max_y_offset = (VIDEO_HEIGHT - new_h) // 2
-
-        if scene_index % 3 == 0:
-            x_offset = int(max_x_offset * progress)
-        elif scene_index % 3 == 1:
-            x_offset = int(max_x_offset * (1 - progress))
-        else:
-            x_offset = max_x_offset // 2
-
-        y_offset = max_y_offset // 2
-
-        # Crop the image
-        cropped = img_array[
-            y_offset : y_offset + new_h,
-            x_offset : x_offset + new_w,
-        ]
-
-        # Resize back to target
-        pil_crop = Image.fromarray(cropped).resize((VIDEO_WIDTH, VIDEO_HEIGHT), Image.LANCZOS)
-        return np.array(pil_crop)
-
     clip = ImageClip(img_array, duration=duration)
-    clip = clip.fl(lambda gf, t: make_frame(t), apply_to=["mask"])
-    clip = clip.set_make_frame(make_frame)
     return clip.set_fps(FPS)
 
 
@@ -303,7 +268,7 @@ async def stitch_video_with_audio(
         clips = []
         try:
             for i, img_path in enumerate(image_paths):
-                clip = _make_ken_burns_clip(img_path, clip_duration, i)
+                clip = _make_clip(img_path, clip_duration, i)
                 clips.append(clip)
 
             merged = concatenate_videoclips(clips, method="compose")
@@ -373,24 +338,21 @@ async def generate_video(payload: GenerateRequest) -> FileResponse:
         # Step 1 — Scene prompts
         scene_prompts = await generate_scene_prompts(payload.text)
 
-        # Step 2 + 3 — Images + Voiceover in parallel
-        log.info("⚡  Generating 3 images + voiceover in parallel …")
-        tasks = [
-            generate_voiceover(payload.text, job_id),
-            generate_scene_image(scene_prompts[0], 1, job_id),
-            generate_scene_image(scene_prompts[1], 2, job_id),
-            generate_scene_image(scene_prompts[2], 3, job_id),
-        ]
+        # Step 2 + 3 — Voiceover and Images sequentially to avoid API limits
+        log.info("⚡  Generating voiceover …")
+        voiceover_path = await generate_voiceover(payload.text, job_id)
 
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-
-        for i, result in enumerate(results):
-            if isinstance(result, Exception):
-                name = "Voiceover" if i == 0 else f"Image {i}"
-                raise HTTPException(status_code=500, detail=f"{name} failed: {result}")
-
-        voiceover_path: Path   = results[0]
-        image_paths: List[Path] = list(results[1:])
+        log.info("⚡  Generating 3 images sequentially (to prevent 429 Too Many Requests) …")
+        image_paths = []
+        for i, prompt in enumerate(scene_prompts):
+            try:
+                img_path = await generate_scene_image(prompt, i + 1, job_id)
+                image_paths.append(img_path)
+                # Sleep briefly between requests to respect the free API limits
+                if i < len(scene_prompts) - 1:
+                    await asyncio.sleep(2)
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Image {i + 1} failed: {e}")
 
         # Step 4 — Stitch
         final_path = await stitch_video_with_audio(image_paths, voiceover_path, job_id)
