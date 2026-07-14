@@ -81,7 +81,7 @@ POLLINATIONS_URL = "https://image.pollinations.ai/prompt/{prompt}?width=1280&hei
 CLIP_DURATION_SEC = 6      # seconds per scene
 VIDEO_WIDTH       = 1280
 VIDEO_HEIGHT      = 720
-FPS               = 24
+FPS               = 2      # Reduced FPS for static images to speed up rendering 10x
 
 # ─────────────────────────────────────────────────────────────
 # 2.  Pydantic Schemas
@@ -271,7 +271,7 @@ async def stitch_video_with_audio(
                 clip = _make_clip(img_path, clip_duration, i)
                 clips.append(clip)
 
-            merged = concatenate_videoclips(clips, method="compose")
+            merged = concatenate_videoclips(clips, method="chain")
             final  = merged.set_audio(voiceover)
 
             final.write_videofile(
@@ -281,7 +281,7 @@ async def stitch_video_with_audio(
                 temp_audiofile=str(TEMP_DIR / f"{job_id}_tmp.m4a"),
                 remove_temp=True,
                 fps=FPS,
-                preset="fast",
+                preset="ultrafast",
                 logger=None,
             )
             log.info(
