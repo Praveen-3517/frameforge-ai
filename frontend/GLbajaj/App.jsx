@@ -73,8 +73,10 @@ export default function App() {
     startStepProgression()
 
     try {
+      // Post to the backend (uses live Render URL if deployed, otherwise localhost)
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
       const response = await axios.post(
-        '/generate-video',
+        `${API_URL}/generate-video`,
         { text: text.trim() },
         {
           responseType: 'blob',           // expect raw binary MP4
