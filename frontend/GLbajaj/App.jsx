@@ -3,6 +3,7 @@ import axios from 'axios'
 import StarField from './components/StarField'
 import Hero from './components/Hero'
 import TextInput from './components/TextInput'
+import SettingsPanel from './components/SettingsPanel'
 import PipelineSteps from './components/PipelineSteps'
 import VideoPlayer from './components/VideoPlayer'
 import ErrorBanner from './components/ErrorBanner'
@@ -31,6 +32,11 @@ const STATE = {
 
 export default function App() {
   const [text, setText] = useState('')
+  const [options, setOptions] = useState({
+    style: 'Photorealistic, Cinematic, 8k',
+    quality: '720p',
+    aspect_ratio: '16:9'
+  })
   const [appState, setAppState] = useState(STATE.IDLE)
   const [currentStep, setCurrentStep] = useState(0)
   const [videoUrl, setVideoUrl] = useState(null)
@@ -77,7 +83,12 @@ export default function App() {
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
       const response = await axios.post(
         `${API_URL}/generate-video`,
-        { text: text.trim() },
+        { 
+          text: text.trim(),
+          style: options.style,
+          quality: options.quality,
+          aspect_ratio: options.aspect_ratio
+        },
         {
           responseType: 'blob',           // expect raw binary MP4
           timeout: 15 * 60 * 1000,        // 15 minute timeout
@@ -222,6 +233,12 @@ export default function App() {
                 onChange={setText}
                 onSubmit={handleGenerate}
                 isLoading={isLoading}
+              />
+              
+              <SettingsPanel 
+                options={options} 
+                setOptions={setOptions} 
+                disabled={isLoading} 
               />
 
               {/* Pipeline step tracker — only visible while loading */}

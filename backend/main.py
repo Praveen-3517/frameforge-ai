@@ -79,8 +79,6 @@ POLLINATIONS_URL = "https://image.pollinations.ai/prompt/{prompt}?width=1280&hei
 
 # Video settings
 CLIP_DURATION_SEC = 6      # seconds per scene
-VIDEO_WIDTH       = 1280
-VIDEO_HEIGHT      = 720
 FPS               = 2      # Reduced FPS for static images to speed up rendering 10x
 
 # ─────────────────────────────────────────────────────────────
@@ -95,6 +93,9 @@ class GenerateRequest(BaseModel):
         max_length=2000,
         description="The story / script to turn into a video.",
     )
+    style: str = Field(default="Photorealistic, Cinematic")
+    quality: str = Field(default="720p")
+    aspect_ratio: str = Field(default="16:9")
 
 
 # ─────────────────────────────────────────────────────────────
@@ -166,19 +167,19 @@ async def generate_scene_prompts(story_text: str) -> List[str]:
 # ─────────────────────────────────────────────────────────────
 
 
-async def generate_scene_image(prompt: str, scene_index: int, job_id: str) -> Path:
+async def generate_scene_image(prompt: str, scene_index: int, job_id: str, style: str, width: int, height: int) -> Path:
     """
-    Generate a 1280×720 image from a prompt using Pollinations.ai.
+    Generate an image from a prompt using Pollinations.ai.
     Completely free — no API key required.
     Includes retry logic to bypass 429 Too Many Requests.
     """
     log.info("🖼️  Generating image %d via Pollinations.ai …", scene_index)
 
-    encoded_prompt = quote(f"{prompt}, cinematic, 8k, photorealistic")
+    encoded_prompt = quote(f"{prompt}, {style}")
     # Adding a random seed to bust caching and help bypass rate limits
     import random
     seed = random.randint(1, 999999)
-    url = f"{POLLINATIONS_URL.format(prompt=encoded_prompt)}&seed={seed}"
+    url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width={width}&height={height}&nologo=true&enhance=true&model=flux&seed={seed}"
 
     image_path = TEMP_DIR / f"{job_id}_scene_{scene_index}.jpg"
 
@@ -232,13 +233,13 @@ async def generate_voiceover(story_text: str, job_id: str) -> Path:
 # ─────────────────────────────────────────────────────────────
 
 
-def _make_clip(image_path: Path, duration: float, scene_index: int) -> ImageClip:
+def _make_clip(image_path: Path, duration: float, scene_index: int, width: int, height: int) -> ImageClip:
     """
     Creates a static image clip. 
     This renders 100x faster than calculating Ken Burns frame-by-frame in Python.
     """
     img = Image.open(str(image_path)).convert("RGB")
-    img = img.resize((VIDEO_WIDTH, VIDEO_HEIGHT), Image.LANCZOS)
+    img = img.resize((width, height), Image.LANCZOS)
     img_array = np.array(img)
 
     clip = ImageClip(img_array, duration=duration)
@@ -249,6 +250,8 @@ async def stitch_video_with_audio(
     image_paths: List[Path],
     voiceover_path: Path,
     job_id: str,
+    width: int,
+    height: int,
 ) -> Path:
     """Stitch animated image clips + attach voiceover → final MP4."""
     log.info("✂️   Stitching %d animated clips + attaching voiceover …", len(image_paths))
@@ -268,7 +271,7 @@ async def stitch_video_with_audio(
         clips = []
         try:
             for i, img_path in enumerate(image_paths):
-                clip = _make_clip(img_path, clip_duration, i)
+                clip = _make_clip(img_path, clip_duration, i, width, height)
                 clips.append(clip)
 
             merged = concatenate_videoclips(clips, method="chain")
@@ -334,6 +337,15 @@ async def generate_video(payload: GenerateRequest) -> FileResponse:
     log.info("🚀  Job [%s] started — %s…", job_id, payload.text[:50])
     t_start = time.perf_counter()
 
+    # Determine dimensions based on quality and aspect ratio
+    if payload.quality == "1080p":
+        w, h = 1920, 1080
+    else:
+        w, h = 1280, 720
+        
+    if payload.aspect_ratio == "9:16":
+        w, h = h, w
+
     try:
         # Step 1 — Scene prompts
         scene_prompts = await generate_scene_prompts(payload.text)
@@ -346,16 +358,15 @@ async def generate_video(payload: GenerateRequest) -> FileResponse:
         image_paths = []
         for i, prompt in enumerate(scene_prompts):
             try:
-                img_path = await generate_scene_image(prompt, i + 1, job_id)
+                img_path = await generate_scene_image(prompt, i + 1, job_id, payload.style, w, h)
                 image_paths.append(img_path)
-                # Sleep briefly between requests to respect the free API limits
-                if i < len(scene_prompts) - 1:
-                    await asyncio.sleep(2)
             except Exception as e:
+                log.error("Failed to generate image %d: %s", i + 1, e)
                 raise HTTPException(status_code=500, detail=f"Image {i + 1} failed: {e}")
 
-        # Step 4 — Stitch
-        final_path = await stitch_video_with_audio(image_paths, voiceover_path, job_id)
+        # Step 4 — Stitch video
+        log.info("⚡  Stitching video …")
+        final_path = await stitch_video_with_audio(image_paths, voiceover_path, job_id, w, h)
         _cleanup_temp_files(job_id)
 
         elapsed = time.perf_counter() - t_start
