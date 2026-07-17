@@ -30,10 +30,11 @@ import edge_tts
 import google.generativeai as genai
 import httpx
 import numpy as np
+import replicate
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, BackgroundTasks, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from moviepy.editor import (
     AudioFileClip,
     ImageClip,
@@ -397,14 +398,69 @@ async def generate_video(payload: GenerateRequest) -> FileResponse:
 async def health_check() -> dict:
     return {
         "status": "ok",
-        "stack": "Gemini 1.5 Flash + Pollinations.ai + Edge-TTS + MoviePy",
-        "cost": "$0.00 - 100% Free",
-        "gemini_configured": bool(GEMINI_API_KEY),
+        "stack": "Gemini 1.5 Flash + Pollinations.ai + Edge-TTS + MoviePy + Replicate",
     }
 
 
 # ─────────────────────────────────────────────────────────────
-# 11.  Dev Runner
+# 11.  Clothes Changer Endpoint
+# ─────────────────────────────────────────────────────────────
+
+@app.post("/change-clothes", tags=["Image Generation"])
+async def change_clothes(
+    image: UploadFile = File(...),
+    prompt: str = Form(...)
+):
+    job_id = uuid.uuid4().hex[:12]
+    log.info("👕  Job [%s] started Clothes Change: %s", job_id, prompt)
+    
+    try:
+        # Save uploaded user image
+        user_img_path = TEMP_DIR / f"{job_id}_user.jpg"
+        with open(user_img_path, "wb") as f:
+            f.write(await image.read())
+
+        # 1. Generate the Garment Image using Pollinations.ai based on text prompt
+        log.info("   Generating garment image for: %s", prompt)
+        garment_prompt = quote(f"{prompt}, flat lay, white background, high quality clothing photography")
+        garment_url = f"https://image.pollinations.ai/prompt/{garment_prompt}?width=768&height=1024&nologo=true"
+        
+        garment_img_path = TEMP_DIR / f"{job_id}_garment.jpg"
+        async with httpx.AsyncClient(timeout=60, follow_redirects=True) as client:
+            resp = await client.get(garment_url)
+            resp.raise_for_status()
+            with open(garment_img_path, "wb") as f:
+                f.write(resp.content)
+
+        # 2. Run Replicate IDM-VTON (Virtual Try-On)
+        log.info("   Running Replicate Virtual Try-On...")
+        output = replicate.run(
+            "cuuupid/idm-vton:c020904037d0793b5a19857d42cf3b0f55b1ffcd272d14210a566580f8364b66",
+            input={
+                "garm_img": open(garment_img_path, "rb"),
+                "human_img": open(user_img_path, "rb"),
+                "garment_des": prompt,
+                "category": "upper_body" # Assuming upper body for most prompts, or dress
+            }
+        )
+        
+        # Replicate returns a URL to the final image
+        final_image_url = output
+        log.info("✅  Clothes swapped successfully! %s", final_image_url)
+        
+        # Cleanup
+        _cleanup_temp_files(job_id)
+        
+        return JSONResponse(content={"image_url": final_image_url})
+        
+    except Exception as exc:
+        log.exception("❌  Clothes Change failed: %s", exc)
+        _cleanup_temp_files(job_id)
+        raise HTTPException(status_code=500, detail=f"Failed to change clothes: {str(exc)}")
+
+
+# ─────────────────────────────────────────────────────────────
+# 12.  Dev Runner
 # ─────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
