@@ -435,7 +435,7 @@ async def change_clothes(
         # 2. Run Replicate IDM-VTON (Virtual Try-On)
         log.info("   Running Replicate Virtual Try-On...")
         output = replicate.run(
-            "cuuupid/idm-vton:c020904037d0793b5a19857d42cf3b0f55b1ffcd272d14210a566580f8364b66",
+            "cuuupid/idm-vton:0513734a452173b8173e907e3a59d19a36266e55b48528559432bd21c7d7e985",
             input={
                 "garm_img": open(garment_img_path, "rb"),
                 "human_img": open(user_img_path, "rb"),
