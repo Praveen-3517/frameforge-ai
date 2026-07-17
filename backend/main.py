@@ -186,9 +186,11 @@ async def generate_scene_image(prompt: str, scene_index: int, job_id: str, style
     image_path = TEMP_DIR / f"{job_id}_scene_{scene_index}.jpg"
 
     max_retries = 3
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+    
     for attempt in range(max_retries):
         try:
-            async with httpx.AsyncClient(timeout=120, follow_redirects=True) as client:
+            async with httpx.AsyncClient(timeout=120, follow_redirects=True, headers=headers) as client:
                 resp = await client.get(url)
                 if resp.status_code == 429:
                     log.warning("   ⚠️ 429 Too Many Requests. Retrying image %d in 5s... (Attempt %d/%d)", scene_index, attempt+1, max_retries)
@@ -443,7 +445,8 @@ async def change_clothes(
         garment_url = f"https://image.pollinations.ai/prompt/{garment_prompt}?width=768&height=1024&nologo=true"
         
         garment_img_path = TEMP_DIR / f"{job_id}_garment.jpg"
-        async with httpx.AsyncClient(timeout=60, follow_redirects=True) as client:
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+        async with httpx.AsyncClient(timeout=60, follow_redirects=True, headers=headers) as client:
             resp = await client.get(garment_url)
             resp.raise_for_status()
             with open(garment_img_path, "wb") as f:
