@@ -421,9 +421,25 @@ async def change_clothes(
         with open(user_img_path, "wb") as f:
             f.write(await image.read())
 
-        # 1. Generate the Garment Image using Pollinations.ai based on text prompt
-        log.info("   Generating garment image for: %s", prompt)
-        garment_prompt = quote(f"{prompt}, flat lay, white background, high quality clothing photography")
+        # 0. Optimize the prompt using Gemini for hyper-realism
+        log.info("   Optimizing prompt using Gemini...")
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        gemini_prompt = f"""
+        You are a professional fashion AI prompt engineer.
+        The user wants to generate a picture of clothing based on this input: "{prompt}"
+        
+        Extract ONLY the description of the clothing itself. Remove any references to people (e.g. "for this person", "wear a").
+        Format your response as a single, highly detailed, photorealistic prompt for an isolated piece of clothing.
+        Keep it under 15 words.
+        Example output: A stylish black winter coat, high-end designer, detailed texture
+        """
+        gemini_response = model.generate_content(gemini_prompt)
+        optimized_prompt = gemini_response.text.strip().replace('\n', ' ')
+        log.info("   Optimized Garment Prompt: %s", optimized_prompt)
+
+        # 1. Generate the Garment Image using Pollinations.ai based on optimized text prompt
+        log.info("   Generating garment image...")
+        garment_prompt = quote(f"{optimized_prompt}, isolated flat lay on solid white background, fashion catalog photography")
         garment_url = f"https://image.pollinations.ai/prompt/{garment_prompt}?width=768&height=1024&nologo=true"
         
         garment_img_path = TEMP_DIR / f"{job_id}_garment.jpg"
