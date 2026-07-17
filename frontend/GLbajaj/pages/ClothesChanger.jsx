@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, Upload, Shirt, Image as ImageIcon } from 'lucide-react'
+import { ArrowLeft, Upload, Shirt, Image as ImageIcon, Download } from 'lucide-react'
 import axios from 'axios'
 import StarField from '../components/StarField'
 
@@ -129,6 +129,16 @@ export default function ClothesChanger() {
               >
                 {isLoading ? 'Processing...' : 'Change Clothes'}
               </button>
+              
+              {result && (
+                <a
+                  href={result}
+                  download="new_outfit.webp"
+                  className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-3.5 rounded-xl border border-white/10 transition-all flex items-center justify-center gap-2"
+                >
+                  <Download size={20} /> Download Photo
+                </a>
+              )}
             </div>
 
           </div>
