@@ -455,7 +455,7 @@ async def change_clothes(
         # 2. Run Free Hugging Face IDM-VTON
         log.info("   Running Hugging Face Virtual Try-On (Free)...")
         
-        hf_client = Client("yisol/IDM-VTON")
+        hf_client = Client("yisol/IDM-VTON", hf_token=os.getenv("HF_TOKEN"))
         
         human_dict = {
             "background": handle_file(str(user_img_path)),
