@@ -30,7 +30,8 @@ import edge_tts
 import google.generativeai as genai
 import httpx
 import numpy as np
-import replicate
+import base64
+from gradio_client import Client, handle_file
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, BackgroundTasks, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
@@ -432,21 +433,38 @@ async def change_clothes(
             with open(garment_img_path, "wb") as f:
                 f.write(resp.content)
 
-        # 2. Run Replicate IDM-VTON (Virtual Try-On)
-        log.info("   Running Replicate Virtual Try-On...")
-        output = replicate.run(
-            "cuuupid/idm-vton:0513734a452173b8173e907e3a59d19a36266e55b48528559432bd21c7d7e985",
-            input={
-                "garm_img": open(garment_img_path, "rb"),
-                "human_img": open(user_img_path, "rb"),
-                "garment_des": prompt,
-                "category": "upper_body" # Assuming upper body for most prompts, or dress
-            }
+        # 2. Run Free Hugging Face IDM-VTON
+        log.info("   Running Hugging Face Virtual Try-On (Free)...")
+        
+        hf_client = Client("yisol/IDM-VTON")
+        
+        human_dict = {
+            "background": handle_file(str(user_img_path)),
+            "layers": [],
+            "composite": None
+        }
+        
+        result = hf_client.predict(
+            dict=human_dict,
+            garm_img=handle_file(str(garment_img_path)),
+            garment_des=prompt,
+            is_checked=True,
+            is_checked_crop=False,
+            denoise_steps=30,
+            seed=42,
+            api_name="/tryon"
         )
         
-        # Replicate returns a URL to the final image
-        final_image_url = output
-        log.info("✅  Clothes swapped successfully! %s", final_image_url)
+        # Result is a tuple: (final_img_path, masked_img_path)
+        final_img_path = result[0]
+        
+        # Convert to base64 so we can send it directly to the frontend without needing an image host
+        with open(final_img_path, "rb") as image_file:
+            encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
+        
+        final_image_url = f"data:image/webp;base64,{encoded_string}"
+        
+        log.info("✅  Clothes swapped successfully via Hugging Face!")
         
         # Cleanup
         _cleanup_temp_files(job_id)

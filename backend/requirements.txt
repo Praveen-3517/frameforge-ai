@@ -24,11 +24,16 @@ distro==1.9.0
 executing==2.2.1
 fastapi==0.139.0
 fastjsonschema==2.21.2
+filelock==3.30.2
 fqdn==1.5.1
+fsspec==2026.6.0
+gradio_client==2.5.0
 h11==0.16.0
+hf-xet==1.5.2
 httpcore==1.0.9
 httptools==0.8.0
 httpx==0.28.1
+huggingface_hub==1.23.0
 idna==3.18
 ImageIO==2.37.3
 imageio-ffmpeg==0.6.0
@@ -93,7 +98,6 @@ pywinpty==3.0.5
 PyYAML==6.0.3
 pyzmq==27.1.0
 referencing==0.37.0
-replicate==1.0.7
 requests==2.34.2
 rfc3339-validator==0.1.4
 rfc3986-validator==0.1.1
