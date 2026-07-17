@@ -423,7 +423,7 @@ async def change_clothes(
 
         # 0. Optimize the prompt using Gemini for hyper-realism
         log.info("   Optimizing prompt using Gemini...")
-        model = genai.GenerativeModel("gemini-1.5-flash")
+        model = genai.GenerativeModel("gemini-pro")
         gemini_prompt = f"""
         You are a professional fashion AI prompt engineer.
         The user wants to generate a picture of clothing based on this input: "{prompt}"
