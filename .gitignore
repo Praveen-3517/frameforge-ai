@@ -1,13 +1,13 @@
 # ─── Backend ───────────────────────────────────────
 backend/.env
-backend/__pycache__/
-backend/*.pyc
-backend/*.pyo
+**/__pycache__/
+*.pyc
+*.pyo
 backend/outputs/
 backend/temp/
 backend/.venv/
 backend/venv/
-backend/.pytest_cache/
+.pytest_cache/
 
 # ─── Frontend ──────────────────────────────────────
 frontend/node_modules/

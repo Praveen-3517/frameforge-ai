@@ -354,19 +354,21 @@ async def generate_video(payload: GenerateRequest) -> FileResponse:
         # Step 1 — Scene prompts
         scene_prompts = await generate_scene_prompts(payload.text)
 
-        # Step 2 + 3 — Voiceover and Images sequentially to avoid API limits
-        log.info("⚡  Generating voiceover …")
-        voiceover_path = await generate_voiceover(payload.text, job_id)
+        # Step 2 + 3 — Voiceover and Images in parallel for 2x speedup
+        log.info("⚡  Generating voiceover & images concurrently …")
+        
+        async def fetch_image_with_stagger(prompt: str, idx: int):
+            # Light stagger to avoid burst rate limits
+            await asyncio.sleep(idx * 0.4)
+            return await generate_scene_image(prompt, idx + 1, job_id, payload.style, w, h)
 
-        log.info("⚡  Generating 3 images sequentially (to prevent 429 Too Many Requests) …")
-        image_paths = []
-        for i, prompt in enumerate(scene_prompts):
-            try:
-                img_path = await generate_scene_image(prompt, i + 1, job_id, payload.style, w, h)
-                image_paths.append(img_path)
-            except Exception as e:
-                log.error("Failed to generate image %d: %s", i + 1, e)
-                raise HTTPException(status_code=500, detail=f"Image {i + 1} failed: {e}")
+        image_tasks = [fetch_image_with_stagger(p, i) for i, p in enumerate(scene_prompts)]
+        voiceover_task = generate_voiceover(payload.text, job_id)
+
+        # Execute voiceover and image downloads concurrently
+        results = await asyncio.gather(voiceover_task, *image_tasks)
+        voiceover_path = results[0]
+        image_paths = list(results[1:])
 
         # Step 4 — Stitch video
         log.info("⚡  Stitching video …")
@@ -494,6 +496,323 @@ async def change_clothes(
         log.exception("❌  Clothes Change failed: %s", exc)
         _cleanup_temp_files(job_id)
         raise HTTPException(status_code=500, detail=f"Failed to change clothes: {str(exc)}")
+
+
+# ─────────────────────────────────────────────────────────────
+# 12.  Video Variant Generator Endpoints
+# ─────────────────────────────────────────────────────────────
+
+from services.variant_generator import generate_video_variant_sync, probe_media_metadata
+from services.fingerprint_analyzer import (
+    analyze_audio_fingerprint,
+    analyze_video_fingerprint,
+    compare_media_fingerprints,
+)
+from services.smart_transform import derive_transform_params
+
+@app.post("/api/variants/create", tags=["Media Variants"])
+async def create_video_variant(
+    file: UploadFile = File(...),
+    resolution: str = Form("original"),
+    fit_mode: str = Form("fit"),
+    fps: str = Form("original"),
+    quality: str = Form("balanced"),
+    brightness: float = Form(0.0),
+    contrast: float = Form(1.0),
+    saturation: float = Form(1.0),
+    gamma: float = Form(1.0),
+    normalize_audio: bool = Form(True),
+    audio_sample_rate: int = Form(48000),
+    strip_metadata: bool = Form(True),
+    # Deep visual & audio transforms (for own original media re-uploading)
+    deep_visual: bool = Form(False),
+    zoom_pct: float = Form(2.0),
+    hue_shift_deg: float = Form(0.0),
+    add_grain: bool = Form(False),
+    pitch_shift_semitones: float = Form(0.0),
+    time_stretch_pct: float = Form(0.0),
+):
+    job_id = uuid.uuid4().hex[:12]
+    ext = Path(file.filename or "video.mp4").suffix or ".mp4"
+    input_path = TEMP_DIR / f"{job_id}_orig{ext}"
+    output_path = OUTPUT_DIR / f"variant_{job_id}.mp4"
+
+    log.info("🎥 Variant creation request received: %s [%s]", file.filename, job_id)
+
+    try:
+        # Save original uploaded file safely
+        with open(input_path, "wb") as f:
+            f.write(await file.read())
+
+        # Offload CPU-bound FFmpeg rendering to worker thread
+        loop = asyncio.get_event_loop()
+        result = await loop.run_in_executor(
+            None,
+            lambda: generate_video_variant_sync(
+                input_file=input_path,
+                output_file=output_path,
+                resolution=resolution,
+                fit_mode=fit_mode,
+                fps=fps,
+                quality=quality,
+                brightness=brightness,
+                contrast=contrast,
+                saturation=saturation,
+                gamma=gamma,
+                normalize_audio=normalize_audio,
+                audio_sample_rate=audio_sample_rate,
+                strip_metadata=strip_metadata,
+                deep_visual=deep_visual,
+                zoom_pct=zoom_pct,
+                hue_shift_deg=hue_shift_deg,
+                add_grain=add_grain,
+                pitch_shift_semitones=pitch_shift_semitones,
+                time_stretch_pct=time_stretch_pct,
+            )
+        )
+
+        result["job_id"] = job_id
+        result["variant_url"] = f"/api/media/{output_path.name}"
+        result["download_url"] = f"/api/media/{output_path.name}"
+
+        return JSONResponse(content=result)
+
+    except Exception as exc:
+        log.exception("❌ Variant generation failed: %s", exc)
+        raise HTTPException(status_code=500, detail=f"Variant generation failed: {str(exc)}")
+    finally:
+        # Cleanup original upload in temp directory after processing
+        if input_path.exists():
+            try:
+                input_path.unlink()
+            except Exception:
+                pass
+
+
+# ─────────────────────────────────────────────────────────────
+# 13.  Audio & Video Fingerprint Analyzer Endpoints
+# ─────────────────────────────────────────────────────────────
+
+@app.post("/api/fingerprints/analyze", tags=["Media Forensics"])
+async def analyze_media_fingerprint(file: UploadFile = File(...)):
+    job_id = uuid.uuid4().hex[:12]
+    ext = Path(file.filename or "media.mp4").suffix or ".mp4"
+    temp_path = TEMP_DIR / f"{job_id}_analyze{ext}"
+
+    log.info("🔬 Fingerprint analysis request received: %s [%s]", file.filename, job_id)
+
+    try:
+        with open(temp_path, "wb") as f:
+            f.write(await file.read())
+
+        loop = asyncio.get_event_loop()
+
+        # Probe basic technical metadata
+        meta = await loop.run_in_executor(None, lambda: probe_media_metadata(temp_path))
+
+        # Perform acoustic signal analysis
+        audio_analysis = await loop.run_in_executor(None, lambda: analyze_audio_fingerprint(temp_path))
+
+        # Perform visual perceptual hashing & CV analysis
+        video_analysis = await loop.run_in_executor(None, lambda: analyze_video_fingerprint(temp_path))
+
+        return JSONResponse(content={
+            "status": "success",
+            "job_id": job_id,
+            "filename": file.filename,
+            "metadata": meta,
+            "audio_fingerprint": audio_analysis,
+            "video_fingerprint": video_analysis,
+        })
+
+    except Exception as exc:
+        log.exception("❌ Fingerprint analysis failed: %s", exc)
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(exc)}")
+    finally:
+        if temp_path.exists():
+            try:
+                temp_path.unlink()
+            except Exception:
+                pass
+
+
+@app.post("/api/fingerprints/compare", tags=["Media Forensics"])
+async def compare_two_fingerprints(
+    file_a: UploadFile = File(...),
+    file_b: UploadFile = File(...),
+):
+    job_id = uuid.uuid4().hex[:12]
+    ext_a = Path(file_a.filename or "file_a.mp4").suffix or ".mp4"
+    ext_b = Path(file_b.filename or "file_b.mp4").suffix or ".mp4"
+    path_a = TEMP_DIR / f"{job_id}_compare_a{ext_a}"
+    path_b = TEMP_DIR / f"{job_id}_compare_b{ext_b}"
+
+    log.info("⚖️ Dual fingerprint comparison requested: %s vs %s", file_a.filename, file_b.filename)
+
+    try:
+        with open(path_a, "wb") as fa:
+            fa.write(await file_a.read())
+        with open(path_b, "wb") as fb:
+            fb.write(await file_b.read())
+
+        loop = asyncio.get_event_loop()
+        comparison = await loop.run_in_executor(
+            None,
+            lambda: compare_media_fingerprints(path_a, path_b)
+        )
+
+        comparison["job_id"] = job_id
+        return JSONResponse(content=comparison)
+
+    except Exception as exc:
+        log.exception("❌ Media comparison failed: %s", exc)
+        raise HTTPException(status_code=500, detail=f"Media comparison failed: {str(exc)}")
+    finally:
+        for p in (path_a, path_b):
+            if p.exists():
+                try:
+                    p.unlink()
+                except Exception:
+                    pass
+
+
+# ─────────────────────────────────────────────────────────────
+# 14.  Smart Fingerprint Auto-Transform Endpoint
+# ─────────────────────────────────────────────────────────────
+
+@app.post("/api/fingerprints/smart-transform", tags=["Media Forensics"])
+async def smart_fingerprint_transform(
+    file: UploadFile = File(...),
+    fingerprint_data: Optional[str] = Form(None),
+):
+    """
+    One-click Smart Auto-Transform:
+    1. Read pre-computed or perform fast parallel fingerprint analysis
+    2. Derive optimal transformation params from detected characteristics
+    3. Re-encode a transformed variant with all parameters shifted
+    4. Return fingerprint data + transform params + before/after comparison
+    """
+    job_id = uuid.uuid4().hex[:12]
+    ext = Path(file.filename or "media.mp4").suffix or ".mp4"
+    input_path = TEMP_DIR / f"{job_id}_smart_orig{ext}"
+    output_path = OUTPUT_DIR / f"smart_variant_{job_id}.mp4"
+
+    log.info("🎯 Smart Auto-Transform requested: %s [%s]", file.filename, job_id)
+
+    try:
+        with open(input_path, "wb") as f:
+            f.write(await file.read())
+
+        loop = asyncio.get_event_loop()
+
+        # Step 1 — Check for cached fingerprint data to eliminate redundant re-analysis
+        meta, audio_fp, video_fp = None, None, None
+        if fingerprint_data:
+            try:
+                cached = json.loads(fingerprint_data)
+                meta = cached.get("metadata")
+                audio_fp = cached.get("audio_fingerprint")
+                video_fp = cached.get("video_fingerprint")
+                log.info("  ⚡ Using cached fingerprint analysis (0.0s analysis time)")
+            except Exception as e:
+                log.warning("Could not parse cached fingerprint: %s", e)
+
+        if not audio_fp or not video_fp:
+            log.info("  🔬 Running fast parallel fingerprint analysis …")
+            meta, audio_fp, video_fp = await asyncio.gather(
+                loop.run_in_executor(None, lambda: probe_media_metadata(input_path)),
+                loop.run_in_executor(None, lambda: analyze_audio_fingerprint(input_path)),
+                loop.run_in_executor(None, lambda: analyze_video_fingerprint(input_path)),
+            )
+
+        fingerprint_payload = {
+            "audio_fingerprint": audio_fp,
+            "video_fingerprint": video_fp,
+        }
+
+        # Step 2 — Derive transform params
+        log.info("  🧠 Deriving smart transform params …")
+        params = derive_transform_params(fingerprint_payload)
+
+        # Step 3 — Generate transformed variant
+        log.info("  Generating smart variant -> %s", output_path.name)
+        transform_result = await loop.run_in_executor(
+            None,
+            lambda: generate_video_variant_sync(
+                input_file=input_path,
+                output_file=output_path,
+                resolution=params["resolution"],
+                fit_mode=params["fit_mode"],
+                fps=params["fps"],
+                quality=params["quality"],
+                brightness=params["brightness"],
+                contrast=params["contrast"],
+                saturation=params["saturation"],
+                gamma=params["gamma"],
+                normalize_audio=params["normalize_audio"],
+                audio_sample_rate=params["audio_sample_rate"],
+                strip_metadata=params["strip_metadata"],
+                # Deep visual transforms
+                deep_visual=params.get("deep_visual", True),
+                zoom_pct=params.get("zoom_pct", 2.0),
+                hue_shift_deg=params.get("hue_shift_deg", 0.0),
+                add_grain=params.get("add_grain", False),
+                # Deep audio transforms
+                pitch_shift_semitones=params.get("pitch_shift_semitones", 0.0),
+                time_stretch_pct=params.get("time_stretch_pct", 0.0),
+            )
+        )
+
+        log.info("  ✅ Smart variant ready: %s", output_path.name)
+
+        return JSONResponse(content={
+            "status": "success",
+            "job_id": job_id,
+            "filename": file.filename,
+            "metadata": meta,
+            "audio_fingerprint": audio_fp,
+            "video_fingerprint": video_fp,
+            "auto_transform_params": params,
+            "transform_result": transform_result,
+            "output_filename": f"smart_variant_{job_id}.mp4",
+            "download_url": f"/api/media/smart_variant_{job_id}.mp4",
+        })
+
+    except Exception as exc:
+        log.exception("❌ Smart transform failed: %s", exc)
+        raise HTTPException(status_code=500, detail=f"Smart transform failed: {str(exc)}")
+    finally:
+        if input_path.exists():
+            try:
+                input_path.unlink()
+            except Exception:
+                pass
+
+
+# ─────────────────────────────────────────────────────────────
+# 15.  Media File Serving Endpoint
+# ─────────────────────────────────────────────────────────────
+
+@app.get("/api/media/{filename}", tags=["System"])
+async def serve_media_file(filename: str):
+    # Sanitize filename
+    safe_name = os.path.basename(filename)
+    file_path = OUTPUT_DIR / safe_name
+
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Requested media file not found.")
+
+    media_type = "video/mp4"
+    if safe_name.endswith(".mp3"):
+        media_type = "audio/mpeg"
+    elif safe_name.endswith(".jpg") or safe_name.endswith(".jpeg"):
+        media_type = "image/jpeg"
+
+    return FileResponse(
+        path=str(file_path),
+        media_type=media_type,
+        filename=safe_name,
+    )
 
 
 # ─────────────────────────────────────────────────────────────
