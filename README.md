@@ -1,170 +1,74 @@
-# 🎬 FrameForge AI — Text to Video Generator
+# 🎬 FrameForge AI — One-Click AI Tools & Media Forensics Suite
 
-> Transform any text or story into a fully narrated, cinematic MP4 video using AI.
-
-Built with **FastAPI · GPT-4o · OpenAI TTS · Replicate (Wan2.1) · MoviePy · React · Tailwind CSS**
+> Multi-modal AI media engine featuring Text-to-Video synthesis, AI Virtual Try-On, Video Variant Generator & Perceptual Forensic Fingerprint Suite. 100% Free-Tier Architecture.
 
 ---
 
-## ✨ How It Works
+## ✨ Tools & Capabilities
 
-```
-Your Text
-   │
-   ├─ Step 1  GPT-4o        → 3 cinematic scene prompts
-   │
-   ├─ Step 2  OpenAI TTS    → MP3 voiceover narration       ┐  (parallel)
-   ├─ Step 3  Replicate AI  → 3 short video clips (MP4)     ┘
-   │
-   ├─ Step 4  MoviePy       → Stitch clips + merge audio
-   │
-   └─ Output               → Final narrated MP4
-```
+1. **Text-to-Video Engine (`/video`)**: Turn any text story into a cinematic, fully narrated MP4 video using Gemini Flash, Pollinations FLUX, Microsoft Edge-TTS, and MoviePy.
+2. **AI Virtual Try-On (`/clothes`)**: Swap garments and virtual outfits on full-body photos while preserving pose and lighting via Hugging Face IDM-VTON.
+3. **Create New Video Variant (`/variant`)**: Re-encode, re-scale, color grade, normalize (EBU R128), and apply Deep Perceptual Transforms (zoom+crop, hue rotation, film grain, pitch shift, time stretch) for legitimate cross-platform re-purposing of user-owned media.
+4. **Audio & Video Fingerprint Analyzer (`/fingerprint`)**: Forensic media analysis extracting PCM waveforms, 7-band FFT spectrums, BPM tempo, perceptual dHash streams, dominant color palettes, scene cuts, and dual-media cross-correlation matching with One-Click Smart Auto-Transform.
 
 ---
 
-## 📁 Project Structure
+## 🛠️ Architecture & Free-Tier Tech Stack
 
-```
-AI tool/
-├── backend/
-│   ├── main.py              ← FastAPI app (all pipeline logic)
-│   ├── requirements.txt     ← Python deps
-│   └── .env.example         ← API key template
-└── frontend/
-    ├── src/
-    │   ├── App.jsx           ← Main app shell & state machine
-    │   ├── index.css         ← Global design system
-    │   ├── main.jsx          ← React entry point
-    │   └── components/
-    │       ├── Hero.jsx          ← Animated hero section
-    │       ├── TextInput.jsx     ← Story textarea + examples
-    │       ├── PipelineSteps.jsx ← Live step progress tracker
-    │       ├── VideoPlayer.jsx   ← Custom MP4 player + download
-    │       ├── ErrorBanner.jsx   ← Error display
-    │       └── StarField.jsx     ← Animated star background
-    ├── index.html
-    ├── package.json
-    ├── vite.config.js
-    ├── tailwind.config.js
-    └── postcss.config.js
-```
+| Layer | Technology | Cost |
+|---|---|---|
+| **Backend** | FastAPI + Uvicorn + Python 3.10+ | Free / Open-Source |
+| **Video Scripting** | Deterministic Chunking / Gemini 1.5 Flash | Free Tier |
+| **Image Synthesis** | Pollinations.ai (FLUX Model) | 100% Free (No API Key) |
+| **Voiceover Synthesis**| Microsoft Edge-TTS (`hi-IN-MadhurNeural`) | 100% Free (No API Key) |
+| **Virtual Dressing** | Hugging Face Spaces (`yisol/IDM-VTON`) | Free Public Space |
+| **Signal Forensics** | SciPy (FFT) + OpenCV (dHash / K-Means) | Local / Zero Cost |
+| **Video Re-encoding**| FFmpeg 7.1 Multi-Threaded Static | Local / Zero Cost |
+| **Frontend** | React 18 + Vite 5 + Tailwind CSS v3 | Open-Source |
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Quick Start (Local Run)
 
 ### 1. Backend
 
 ```bash
 cd backend
-
-# Create & activate virtualenv
 python -m venv .venv
-.venv\Scripts\activate          # Windows
-# source .venv/bin/activate     # macOS/Linux
-
-# Install dependencies
+.venv\Scripts\activate       # Windows (.venv/bin/activate on Linux/Mac)
 pip install -r requirements.txt
-
-# Set up environment
-copy .env.example .env
-# → Fill in OPENAI_API_KEY and REPLICATE_API_TOKEN in .env
-
-# Start the server
 python main.py
-# API live at:   http://localhost:8000
-# Swagger docs:  http://localhost:8000/docs
+# Backend live at: http://localhost:8000
+# Swagger API docs: http://localhost:8000/docs
 ```
 
 ### 2. Frontend
 
 ```bash
 cd frontend
-
-# Install dependencies (already done)
 npm install
-
-# Start dev server
 npm run dev
-# App live at: http://localhost:5173
+# Frontend live at: http://localhost:5173
 ```
 
 ---
 
-## 🔑 API Keys Required
+## 🌐 Deploying to Production (Render / Railway / Vercel)
 
-| Key | Where to Get |
-|---|---|
-| `OPENAI_API_KEY` | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) |
-| `REPLICATE_API_TOKEN` | [replicate.com/account/api-tokens](https://replicate.com/account/api-tokens) |
+### Backend (Render / Railway):
+- **Build Command:** `pip install -r backend/requirements.txt`
+- **Start Command:** `uvicorn main:app --host 0.0.0.0 --port $PORT --app-dir backend`
+- **Environment Variables:** `OUTPUT_DIR=outputs`, `TEMP_DIR=temp`, `FRONTEND_ORIGIN=*`
 
-> ⚠️ Never commit your `.env` file. It is already in `.gitignore`.
-
----
-
-## 📡 API Reference
-
-### `POST /generate-video`
-
-**Request:**
-```json
-{ "text": "A lone astronaut discovers a glowing artifact on Mars..." }
-```
-
-**Response:** Raw MP4 binary stream (`video/mp4`)
-
-**Headers returned:**
-- `X-Job-Id` — Unique job identifier
-- `X-Processing-Time` — Total server-side time in seconds
-
-### `GET /health`
-
-```json
-{
-  "status": "ok",
-  "openai_configured": true,
-  "replicate_configured": true,
-  "output_dir": "..."
-}
-```
+### Frontend (Vercel / Netlify):
+- **Root Directory:** `frontend`
+- **Build Command:** `npm run build`
+- **Output Directory:** `dist`
+- **Environment Variables:** `VITE_API_URL=<your-deployed-backend-url>`
 
 ---
 
-## ⚙️ Tech Stack
+## 🔒 Security & Privacy Notice
+- All secrets are managed strictly in `backend/.env` (excluded from git).
+- Generated variants and uploads are saved locally/ephemerally and cleaned up automatically.
 
-| Layer | Technology |
-|---|---|
-| Backend Framework | FastAPI + Uvicorn |
-| Scene Writing | OpenAI GPT-4o |
-| Text-to-Speech | OpenAI TTS (`tts-1-hd`, voice: `onyx`) |
-| Video Generation | Replicate — `wan-video/wan2.1-t2v-480p` |
-| Video Processing | MoviePy + imageio-ffmpeg |
-| Frontend | React 18 + Vite |
-| Styling | Tailwind CSS v3 |
-| HTTP Client | Axios |
-| Icons | Lucide React |
-
----
-
-## 🎨 UI Features
-
-- 🌌 **Cosmic dark-mode** design with animated star field and ambient orbs
-- 🪟 **Glassmorphism** cards with subtle borders and glow effects
-- 📊 **Live pipeline tracker** — 4-step progress indicator during generation
-- 🎥 **Custom video player** — gradient progress bar, play/pause/mute/fullscreen
-- ⬇️ **One-click download** of the final MP4
-- 📝 **3 example prompts** to get started instantly
-- 📱 **Fully responsive** layout
-
----
-
-## 🔧 Troubleshooting
-
-| Problem | Fix |
-|---|---|
-| `OPENAI_API_KEY not set` | Add key to `backend/.env` |
-| `REPLICATE_API_TOKEN not set` | Add token to `backend/.env` |
-| Timeout error | Replicate can be slow. The 15-min timeout should cover it. |
-| `moviepy` error | Ensure `ffmpeg` is installed: `pip install imageio-ffmpeg` |
-| CORS error | Check `FRONTEND_ORIGIN` in `.env` matches your Vite port |
