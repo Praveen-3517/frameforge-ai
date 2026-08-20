@@ -41,11 +41,11 @@ def derive_transform_params(fingerprint: Dict[str, Any]) -> Dict[str, Any]:
     - Audio pitch shift ±1-2 semitones
     - Audio time stretch ±1-3%
     """
-    audio_fp = fingerprint.get("audio_fingerprint", {})
-    video_fp = fingerprint.get("video_fingerprint", {})
+    audio_fp = fingerprint.get("audio_fingerprint") if isinstance(fingerprint.get("audio_fingerprint"), dict) else {}
+    video_fp = fingerprint.get("video_fingerprint") if isinstance(fingerprint.get("video_fingerprint"), dict) else {}
 
     # ── FPS Derivation ──────────────────────────────────────────
-    detected_fps = float(video_fp.get("fps", 30.0))
+    detected_fps = float(video_fp.get("fps") or 30.0)
     if detected_fps >= 50:
         target_fps = "24"
     elif detected_fps >= 28:
@@ -54,8 +54,8 @@ def derive_transform_params(fingerprint: Dict[str, Any]) -> Dict[str, Any]:
         target_fps = "30"
 
     # ── Resolution Derivation ───────────────────────────────────
-    detected_width = int(video_fp.get("width", 1280))
-    detected_height = int(video_fp.get("height", 720))
+    detected_width = int(video_fp.get("width") or 1280)
+    detected_height = int(video_fp.get("height") or 720)
 
     if detected_height >= 1080 and detected_width >= 1920:
         target_resolution = "720p"
@@ -71,7 +71,7 @@ def derive_transform_params(fingerprint: Dict[str, Any]) -> Dict[str, Any]:
     fit_mode = "crop" if aspect_ratio < 0.7 else "fit"
 
     # ── Motion → Brightness & Contrast ─────────────────────────
-    avg_motion = float(video_fp.get("average_motion_pct", 15.0))
+    avg_motion = float(video_fp.get("average_motion_pct") or 15.0)
     if avg_motion > 30.0:
         brightness = 0.06
         contrast = 1.12
@@ -83,9 +83,9 @@ def derive_transform_params(fingerprint: Dict[str, Any]) -> Dict[str, Any]:
         contrast = 1.0
 
     # ── Spectral Bass → Saturation ──────────────────────────────
-    bands = audio_fp.get("frequency_bands", {})
-    bass_energy = bands.get("Bass (60-250 Hz)", 0.0)
-    sub_bass_energy = bands.get("Sub-Bass (20-60 Hz)", 0.0)
+    bands = audio_fp.get("frequency_bands") if isinstance(audio_fp.get("frequency_bands"), dict) else {}
+    bass_energy = float(bands.get("Bass (60-250 Hz)") or 0.0)
+    sub_bass_energy = float(bands.get("Sub-Bass (20-60 Hz)") or 0.0)
     bass_ratio = (bass_energy + sub_bass_energy) / 2.0
 
     if bass_ratio > 60.0:
@@ -96,7 +96,7 @@ def derive_transform_params(fingerprint: Dict[str, Any]) -> Dict[str, Any]:
         saturation = 0.95
 
     # ── Scene Cuts → Gamma ──────────────────────────────────────
-    scene_cuts = int(video_fp.get("scene_changes_count", 0))
+    scene_cuts = int(video_fp.get("scene_changes_count") or 0)
     if scene_cuts > 12:
         gamma = 1.08
     elif scene_cuts > 5:

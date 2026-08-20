@@ -710,22 +710,25 @@ async def smart_fingerprint_transform(
         if fingerprint_data:
             try:
                 cached = json.loads(fingerprint_data)
-                meta = cached.get("metadata")
-                audio_fp = cached.get("audio_fingerprint")
-                video_fp = cached.get("video_fingerprint")
-                log.info("  ⚡ Using cached fingerprint analysis (0.0s analysis time)")
+                if isinstance(cached, dict):
+                    meta = cached.get("metadata")
+                    audio_fp = cached.get("audio_fingerprint")
+                    video_fp = cached.get("video_fingerprint")
+                    log.info("  ⚡ Using cached fingerprint analysis (0.0s analysis time)")
             except Exception as e:
                 log.warning("Could not parse cached fingerprint: %s", e)
 
-        if not audio_fp or not video_fp:
-            log.info("  🔬 Running fast parallel fingerprint analysis …")
-            meta, audio_fp, video_fp = await asyncio.gather(
-                loop.run_in_executor(None, lambda: probe_media_metadata(input_path)),
-                loop.run_in_executor(None, lambda: analyze_audio_fingerprint(input_path)),
-                loop.run_in_executor(None, lambda: analyze_video_fingerprint(input_path)),
-            )
+        if not meta or not isinstance(meta, dict):
+            meta = await loop.run_in_executor(None, lambda: probe_media_metadata(input_path))
+
+        if not audio_fp or not isinstance(audio_fp, dict):
+            audio_fp = await loop.run_in_executor(None, lambda: analyze_audio_fingerprint(input_path))
+
+        if not video_fp or not isinstance(video_fp, dict):
+            video_fp = await loop.run_in_executor(None, lambda: analyze_video_fingerprint(input_path))
 
         fingerprint_payload = {
+            "metadata": meta,
             "audio_fingerprint": audio_fp,
             "video_fingerprint": video_fp,
         }
