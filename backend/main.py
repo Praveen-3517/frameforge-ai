@@ -14,8 +14,6 @@
 ╚══════════════════════════════════════════════════════════════╝
 """
 
-from __future__ import annotations
-
 import asyncio
 import json
 import logging
@@ -23,7 +21,7 @@ import os
 import time
 import uuid
 from pathlib import Path
-from typing import List
+from typing import List, Optional, Dict, Any, Union, Tuple
 from urllib.parse import quote
 
 import edge_tts
@@ -683,7 +681,7 @@ async def compare_two_fingerprints(
 @app.post("/api/fingerprints/smart-transform", tags=["Media Forensics"])
 async def smart_fingerprint_transform(
     file: UploadFile = File(...),
-    fingerprint_data: Optional[str] = Form(None),
+    fingerprint_data: str = Form(None),
 ):
     """
     One-click Smart Auto-Transform:
