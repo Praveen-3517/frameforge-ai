@@ -337,6 +337,7 @@ def generate_video_variant_sync(
 
     cmd.extend([
         "-c:v", "libx264",
+        "-pix_fmt", "yuv420p",
         "-preset", "ultrafast",   # 8x encoding speedup
         "-crf", crf_val,
         "-tune", "fastdecode",
