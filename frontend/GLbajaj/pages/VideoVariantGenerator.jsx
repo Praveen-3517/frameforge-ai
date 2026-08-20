@@ -112,10 +112,16 @@ export default function VideoVariantGenerator() {
       })
       setResult(res.data)
     } catch (err) {
-      setError(
-        err.response?.data?.detail ||
-        'Variant creation failed. Please check file format and try again.'
-      )
+      if (!err.response) {
+        setError(
+          'Cannot connect to backend server at http://localhost:8000. Please ensure the backend is running (uvicorn main:app --reload --port 8000).'
+        )
+      } else {
+        setError(
+          err.response?.data?.detail ||
+          'Variant creation failed. Please check file format and try again.'
+        )
+      }
     } finally {
       setIsLoading(false)
     }

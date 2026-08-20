@@ -401,6 +401,8 @@ f:\AI tool\
 
 ## 15. 📜 Changelog
 
+- **2026-08-20 (v3.2.1 - Network Error Diagnostics & UI Resilience Patch):**
+  - **Enhanced Network Error Diagnostics:** Updated error handlers in `FingerprintAnalyzer.jsx` and `VideoVariantGenerator.jsx` to explicitly alert users when the backend server on `http://localhost:8000` is offline.
 - **2026-08-20 (v3.2.0 - Production Git Sync & Speed Optimization Release):**
   - **Pushed to GitHub:** Synced all commits to `https://github.com/Praveen-3517/frameforge-ai.git` on `main` branch.
   - **3x-5x Speed Optimizations:** Added Zero-Latency Smart Transform caching, representative 90s audio windowing, multi-threaded FFmpeg input/output flags (`-threads 0 -sn -dn`), and 4MB hash I/O buffers.

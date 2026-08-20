@@ -116,9 +116,15 @@ export default function FingerprintAnalyzer() {
       })
       setSingleResult(res.data)
     } catch (err) {
-      setSingleError(
-        err.response?.data?.detail || 'Fingerprint analysis failed. Please verify media format.'
-      )
+      if (!err.response) {
+        setSingleError(
+          'Cannot connect to backend server at http://localhost:8000. Please ensure the backend is running (uvicorn main:app --reload --port 8000).'
+        )
+      } else {
+        setSingleError(
+          err.response?.data?.detail || 'Fingerprint analysis failed. Please verify media format.'
+        )
+      }
     } finally {
       setSingleLoading(false)
     }
@@ -152,9 +158,15 @@ export default function FingerprintAnalyzer() {
       })
       setSmartResult(res.data)
     } catch (err) {
-      setSmartError(
-        err.response?.data?.detail || 'Smart transform failed. Please try again.'
-      )
+      if (!err.response) {
+        setSmartError(
+          'Cannot connect to backend server at http://localhost:8000. Please ensure the backend is running.'
+        )
+      } else {
+        setSmartError(
+          err.response?.data?.detail || 'Smart transform failed. Please try again.'
+        )
+      }
     } finally {
       setSmartLoading(false)
     }
@@ -179,9 +191,15 @@ export default function FingerprintAnalyzer() {
       })
       setCompareResult(res.data)
     } catch (err) {
-      setCompareError(
-        err.response?.data?.detail || 'Media comparison failed. Please try again.'
-      )
+      if (!err.response) {
+        setCompareError(
+          'Cannot connect to backend server at http://localhost:8000. Please ensure the backend is running.'
+        )
+      } else {
+        setCompareError(
+          err.response?.data?.detail || 'Media comparison failed. Please try again.'
+        )
+      }
     } finally {
       setCompareLoading(false)
     }
