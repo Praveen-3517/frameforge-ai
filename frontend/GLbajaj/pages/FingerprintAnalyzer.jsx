@@ -118,7 +118,7 @@ export default function FingerprintAnalyzer() {
     } catch (err) {
       if (!err.response) {
         setSingleError(
-          'Cannot connect to backend server at http://localhost:8000. Please ensure the backend is running (uvicorn main:app --reload --port 8000).'
+          'Cannot connect to backend server. If using cloud deployment (Render), please wait ~30s for server to wake up and try again.'
         )
       } else {
         setSingleError(
@@ -160,7 +160,7 @@ export default function FingerprintAnalyzer() {
     } catch (err) {
       if (!err.response) {
         setSmartError(
-          'Cannot connect to backend server at http://localhost:8000. Please ensure the backend is running.'
+          'Cannot connect to backend server. If using cloud deployment (Render), please wait ~30s for server to wake up and try again.'
         )
       } else {
         setSmartError(
@@ -193,7 +193,7 @@ export default function FingerprintAnalyzer() {
     } catch (err) {
       if (!err.response) {
         setCompareError(
-          'Cannot connect to backend server at http://localhost:8000. Please ensure the backend is running.'
+          'Cannot connect to backend server. If using cloud deployment (Render), please wait ~30s for server to wake up and try again.'
         )
       } else {
         setCompareError(

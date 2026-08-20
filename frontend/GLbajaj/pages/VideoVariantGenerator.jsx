@@ -114,7 +114,7 @@ export default function VideoVariantGenerator() {
     } catch (err) {
       if (!err.response) {
         setError(
-          'Cannot connect to backend server at http://localhost:8000. Please ensure the backend is running (uvicorn main:app --reload --port 8000).'
+          'Cannot connect to backend server. If using cloud deployment (Render), please wait ~30s for server to wake up and try again.'
         )
       } else {
         setError(
