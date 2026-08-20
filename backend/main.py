@@ -540,7 +540,11 @@ async def create_video_variant(
     try:
         # Save original uploaded file safely
         with open(input_path, "wb") as f:
-            f.write(await file.read())
+            while True:
+                chunk = await file.read(1024 * 1024)
+                if not chunk:
+                    break
+                f.write(chunk)
 
         # Offload CPU-bound FFmpeg rendering to worker thread
         loop = asyncio.get_event_loop()
@@ -601,7 +605,11 @@ async def analyze_media_fingerprint(file: UploadFile = File(...)):
 
     try:
         with open(temp_path, "wb") as f:
-            f.write(await file.read())
+            while True:
+                chunk = await file.read(1024 * 1024)
+                if not chunk:
+                    break
+                f.write(chunk)
 
         loop = asyncio.get_event_loop()
 
@@ -699,7 +707,11 @@ async def smart_fingerprint_transform(
 
     try:
         with open(input_path, "wb") as f:
-            f.write(await file.read())
+            while True:
+                chunk = await file.read(1024 * 1024)
+                if not chunk:
+                    break
+                f.write(chunk)
 
         loop = asyncio.get_event_loop()
 

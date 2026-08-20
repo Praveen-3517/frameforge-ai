@@ -358,6 +358,7 @@ def generate_video_variant_sync(
         cmd.append("-an")
 
     cmd.extend([
+        "-max_muxing_queue_size", "1024",
         "-async", "1",
         "-movflags", "+faststart",
     ])
