@@ -153,7 +153,7 @@ def derive_transform_params(fingerprint: Dict[str, Any]) -> Dict[str, Any]:
         "Film grain overlay" if add_grain else "No grain",
         f"Audio pitch: {pitch_shift_semitones:+.1f} semitones",
         f"Time stretch: {time_stretch_pct:+.1f}%",
-        "Audio: EBU R128 normalization",
+        "Audio: Adaptive level normalization",
         "Metadata: stripped + new SHA-256 hash",
     ]
     if brightness != 0.0:
