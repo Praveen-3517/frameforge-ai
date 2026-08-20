@@ -180,11 +180,11 @@ def build_filtergraph(
     # 1. Deep Visual Transforms (applied first, before scaling)
     if deep_visual:
         # Zoom in slightly then crop back — changes visual frame fingerprint
-        # zoom_pct=2.0 means scale up 2%, then crop back to original size
+        # trunc(.../2)*2 ensures pixel dimensions are always valid even integers
         zoom_factor = 1.0 + (zoom_pct / 100.0)
         filters.append(
-            f"scale=iw*{zoom_factor:.4f}:ih*{zoom_factor:.4f},"
-            f"crop=iw/{zoom_factor:.4f}:ih/{zoom_factor:.4f}"
+            f"scale=trunc(iw*{zoom_factor:.4f}/2)*2:trunc(ih*{zoom_factor:.4f}/2)*2,"
+            f"crop=trunc(iw/{zoom_factor:.4f}/2)*2:trunc(ih/{zoom_factor:.4f}/2)*2"
         )
 
         # Hue shift — changes color fingerprint (perceptual hash)
@@ -265,6 +265,7 @@ def generate_video_variant_sync(
 
     # 1. Probe input metadata
     before_meta = probe_media_metadata(input_file)
+    has_audio = bool(before_meta.get("audio_codec") or before_meta.get("audio_sample_rate_hz"))
 
     # 2. Determine FPS target
     fps_val = None
@@ -300,27 +301,24 @@ def generate_video_variant_sync(
     # 5. Audio Filter Chain
     af_filters = []
 
-    # Audio pitch shift via sample rate trick: asetrate changes pitch, atempo corrects speed
-    # pitch_shift_semitones: +1 = one semitone up, -1 = one semitone down
-    if pitch_shift_semitones != 0.0:
-        # 2^(semitones/12) gives the frequency ratio
-        pitch_ratio = 2 ** (pitch_shift_semitones / 12.0)
-        new_rate = int(audio_sample_rate * pitch_ratio)
-        # asetrate shifts pitch, atempo corrects duration back to original
-        af_filters.append(f"asetrate={new_rate}")
-        af_filters.append(f"atempo={1.0 / pitch_ratio:.6f}")
-        af_filters.append(f"aresample={audio_sample_rate}")
+    if has_audio:
+        # Audio pitch shift via sample rate trick: asetrate changes pitch, atempo corrects speed
+        if pitch_shift_semitones != 0.0:
+            pitch_ratio = 2 ** (pitch_shift_semitones / 12.0)
+            new_rate = int(audio_sample_rate * pitch_ratio)
+            af_filters.append(f"asetrate={new_rate}")
+            af_filters.append(f"atempo={1.0 / pitch_ratio:.6f}")
+            af_filters.append(f"aresample={audio_sample_rate}")
 
-    # Audio time stretch: atempo range is 0.5–2.0
-    # time_stretch_pct: +2.0 = 2% faster, -2.0 = 2% slower
-    if time_stretch_pct != 0.0:
-        stretch_factor = 1.0 + (time_stretch_pct / 100.0)
-        stretch_factor = max(0.5, min(2.0, stretch_factor))
-        af_filters.append(f"atempo={stretch_factor:.6f}")
+        # Audio time stretch: atempo range is 0.5–2.0
+        if time_stretch_pct != 0.0:
+            stretch_factor = 1.0 + (time_stretch_pct / 100.0)
+            stretch_factor = max(0.5, min(2.0, stretch_factor))
+            af_filters.append(f"atempo={stretch_factor:.6f}")
 
-    if normalize_audio:
-        # EBU R128 broadcast loudness normalization
-        af_filters.append("loudnorm=I=-16:TP=-1.5:LRA=11:linear=true")
+        if normalize_audio:
+            # EBU R128 broadcast loudness normalization
+            af_filters.append("loudnorm=I=-16:TP=-1.5:LRA=11:linear=true")
 
     af = ",".join(af_filters) if af_filters else None
 
@@ -346,15 +344,18 @@ def generate_video_variant_sync(
         "-dn",                    # Skip data streams to avoid parsing overhead
     ])
 
-    if af:
-        cmd.extend(["-af", af])
-    cmd.extend([
-        "-c:a", "aac",
-        "-b:a", "192k",
-        "-ar", str(audio_sample_rate),
-        "-ac", "2",
-        "-threads", "0",          # Multi-threaded audio encoder
-    ])
+    if has_audio:
+        if af:
+            cmd.extend(["-af", af])
+        cmd.extend([
+            "-c:a", "aac",
+            "-b:a", "192k",
+            "-ar", str(audio_sample_rate),
+            "-ac", "2",
+            "-threads", "0",          # Multi-threaded audio encoder
+        ])
+    else:
+        cmd.append("-an")
 
     cmd.extend([
         "-async", "1",
