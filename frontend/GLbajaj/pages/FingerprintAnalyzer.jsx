@@ -142,14 +142,20 @@ export default function FingerprintAnalyzer() {
 
   // Smart Auto-Transform Handler (uses current singleFile + cached fingerprint)
   const handleSmartTransform = async () => {
-    if (!singleFile) return
+    if (!singleFile && !singleResult?.job_id) return
     setSmartLoading(true)
     setSmartProgress(0)
     setSmartError('')
     setSmartResult(null)
 
     const formData = new FormData()
-    formData.append('file', singleFile)
+    if (singleResult?.job_id) {
+      // Instantly reuse existing uploaded file on server (0 KB upload!)
+      formData.append('existing_job_id', singleResult.job_id)
+    } else if (singleFile) {
+      formData.append('file', singleFile)
+    }
+
     if (singleResult) {
       formData.append(
         'fingerprint_data',

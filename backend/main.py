@@ -634,12 +634,6 @@ async def analyze_media_fingerprint(file: UploadFile = File(...)):
     except Exception as exc:
         log.exception("❌ Fingerprint analysis failed: %s", exc)
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(exc)}")
-    finally:
-        if temp_path.exists():
-            try:
-                temp_path.unlink()
-            except Exception:
-                pass
 
 
 @app.post("/api/fingerprints/compare", tags=["Media Forensics"])
@@ -688,7 +682,8 @@ async def compare_two_fingerprints(
 
 @app.post("/api/fingerprints/smart-transform", tags=["Media Forensics"])
 async def smart_fingerprint_transform(
-    file: UploadFile = File(...),
+    file: UploadFile = File(default=None),
+    existing_job_id: str = Form(None),
     fingerprint_data: str = Form(None),
 ):
     """
@@ -699,19 +694,36 @@ async def smart_fingerprint_transform(
     4. Return fingerprint data + transform params + before/after comparison
     """
     job_id = uuid.uuid4().hex[:12]
-    ext = Path(file.filename or "media.mp4").suffix or ".mp4"
-    input_path = TEMP_DIR / f"{job_id}_smart_orig{ext}"
-    output_path = OUTPUT_DIR / f"smart_variant_{job_id}.mp4"
+    filename = "media.mp4"
+    input_path = None
 
-    log.info("🎯 Smart Auto-Transform requested: %s [%s]", file.filename, job_id)
+    # Step 0 — Check if file is already on server from Step 1 analysis (0 bytes upload!)
+    if existing_job_id:
+        for p in TEMP_DIR.glob(f"{existing_job_id}_analyze*"):
+            if p.exists() and p.stat().st_size > 0:
+                input_path = p
+                filename = p.name
+                log.info("  ⚡ Instant Transform: Reusing existing media on server: %s (0 bytes re-uploaded!)", p.name)
+                break
+
+    if input_path is None:
+        if file is not None and file.filename:
+            filename = file.filename
+            ext = Path(file.filename or "media.mp4").suffix or ".mp4"
+            input_path = TEMP_DIR / f"{job_id}_smart_orig{ext}"
+            with open(input_path, "wb") as f:
+                while True:
+                    chunk = await file.read(1024 * 1024)
+                    if not chunk:
+                        break
+                    f.write(chunk)
+        else:
+            raise HTTPException(status_code=400, detail="No media file or valid analysis ID provided.")
+
+    output_path = OUTPUT_DIR / f"smart_variant_{job_id}.mp4"
+    log.info("🎯 Smart Auto-Transform requested: %s [%s]", filename, job_id)
 
     try:
-        with open(input_path, "wb") as f:
-            while True:
-                chunk = await file.read(1024 * 1024)
-                if not chunk:
-                    break
-                f.write(chunk)
 
         loop = asyncio.get_event_loop()
 
@@ -781,7 +793,7 @@ async def smart_fingerprint_transform(
         return JSONResponse(content={
             "status": "success",
             "job_id": job_id,
-            "filename": file.filename,
+            "filename": filename,
             "metadata": meta,
             "audio_fingerprint": audio_fp,
             "video_fingerprint": video_fp,
