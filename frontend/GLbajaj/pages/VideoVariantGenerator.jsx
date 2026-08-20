@@ -28,6 +28,7 @@ export default function VideoVariantGenerator() {
   const [file, setFile] = useState(null)
   const [previewUrl, setPreviewUrl] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
   const [error, setError] = useState('')
   const [result, setResult] = useState(null)
   const [copiedHash, setCopiedHash] = useState(null)
@@ -80,6 +81,7 @@ export default function VideoVariantGenerator() {
     if (!file) return
 
     setIsLoading(true)
+    setUploadProgress(0)
     setError('')
     setResult(null)
 
@@ -108,13 +110,19 @@ export default function VideoVariantGenerator() {
       const API_URL = import.meta.env.VITE_API_URL || ''
       const res = await axios.post(`${API_URL}/api/variants/create`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
-        timeout: 10 * 60 * 1000, // 10 minutes timeout
+        timeout: 15 * 60 * 1000, // 15 minutes timeout
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const pct = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+            setUploadProgress(pct)
+          }
+        },
       })
       setResult(res.data)
     } catch (err) {
       if (!err.response) {
         setError(
-          'Cannot connect to backend server. If using cloud deployment (Render), please wait ~30s for server to wake up and try again.'
+          'Upload or network connection interrupted. For large videos (>50MB), keep tab active or run locally on http://localhost:5173 for instantaneous processing.'
         )
       } else {
         setError(
@@ -572,6 +580,24 @@ export default function VideoVariantGenerator() {
                   </label>
                 </div>
 
+                {/* Progress bar if loading */}
+                {isLoading && (
+                  <div className="space-y-1.5 p-3 rounded-xl bg-white/5 border border-white/10">
+                    <div className="flex justify-between text-xs font-mono">
+                      <span className="text-white/70">
+                        {uploadProgress < 100 ? `Uploading Video (${(file.size / (1024 * 1024)).toFixed(1)} MB)…` : 'Re-encoding & Applying Transformation Filters…'}
+                      </span>
+                      <span className="text-cyan-400 font-bold">{uploadProgress}%</span>
+                    </div>
+                    <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
+                      <div
+                        className="bg-gradient-to-r from-violet-500 to-cyan-400 h-full transition-all duration-300 rounded-full"
+                        style={{ width: `${uploadProgress}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+
                 {/* Generate Button */}
                 <button
                   onClick={handleGenerate}
@@ -584,7 +610,11 @@ export default function VideoVariantGenerator() {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                       </svg>
-                      <span>Re-encoding and Generating Variant…</span>
+                      <span>
+                        {uploadProgress < 100
+                          ? `Uploading Video (${uploadProgress}%)…`
+                          : 'Re-encoding and Generating Variant…'}
+                      </span>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">

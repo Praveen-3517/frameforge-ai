@@ -38,6 +38,7 @@ export default function FingerprintAnalyzer() {
   const [singleFile, setSingleFile] = useState(null)
   const [singlePreview, setSinglePreview] = useState(null)
   const [singleLoading, setSingleLoading] = useState(false)
+  const [singleProgress, setSingleProgress] = useState(0)
   const [singleResult, setSingleResult] = useState(null)
   const [singleError, setSingleError] = useState('')
 
@@ -47,6 +48,7 @@ export default function FingerprintAnalyzer() {
   const [previewA, setPreviewA] = useState(null)
   const [previewB, setPreviewB] = useState(null)
   const [compareLoading, setCompareLoading] = useState(false)
+  const [compareProgress, setCompareProgress] = useState(0)
   const [compareResult, setCompareResult] = useState(null)
   const [compareError, setCompareError] = useState('')
 
@@ -54,6 +56,7 @@ export default function FingerprintAnalyzer() {
 
   // Smart Auto-Transform State
   const [smartLoading, setSmartLoading] = useState(false)
+  const [smartProgress, setSmartProgress] = useState(0)
   const [smartResult, setSmartResult] = useState(null)
   const [smartError, setSmartError] = useState('')
 
@@ -102,6 +105,7 @@ export default function FingerprintAnalyzer() {
   const handleSingleAnalyze = async () => {
     if (!singleFile) return
     setSingleLoading(true)
+    setSingleProgress(0)
     setSingleError('')
     setSingleResult(null)
 
@@ -112,13 +116,19 @@ export default function FingerprintAnalyzer() {
       const API_URL = import.meta.env.VITE_API_URL || ''
       const res = await axios.post(`${API_URL}/api/fingerprints/analyze`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
-        timeout: 10 * 60 * 1000,
+        timeout: 15 * 60 * 1000,
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const pct = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+            setSingleProgress(pct)
+          }
+        },
       })
       setSingleResult(res.data)
     } catch (err) {
       if (!err.response) {
         setSingleError(
-          'Cannot connect to backend server. If using cloud deployment (Render), please wait ~30s for server to wake up and try again.'
+          'Upload or network connection interrupted. For large videos (>50MB), please keep this tab active during upload or run locally on http://localhost:5173 for instantaneous processing.'
         )
       } else {
         setSingleError(
@@ -134,6 +144,7 @@ export default function FingerprintAnalyzer() {
   const handleSmartTransform = async () => {
     if (!singleFile) return
     setSmartLoading(true)
+    setSmartProgress(0)
     setSmartError('')
     setSmartResult(null)
 
@@ -155,12 +166,18 @@ export default function FingerprintAnalyzer() {
       const res = await axios.post(`${API_URL}/api/fingerprints/smart-transform`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 20 * 60 * 1000,
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const pct = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+            setSmartProgress(pct)
+          }
+        },
       })
       setSmartResult(res.data)
     } catch (err) {
       if (!err.response) {
         setSmartError(
-          'Cannot connect to backend server. If using cloud deployment (Render), please wait ~30s for server to wake up and try again.'
+          'Transform upload interrupted. For large files, keep this tab active or run locally on http://localhost:5173.'
         )
       } else {
         setSmartError(
@@ -176,6 +193,7 @@ export default function FingerprintAnalyzer() {
   const handleCompare = async () => {
     if (!fileA || !fileB) return
     setCompareLoading(true)
+    setCompareProgress(0)
     setCompareError('')
     setCompareResult(null)
 
@@ -187,13 +205,19 @@ export default function FingerprintAnalyzer() {
       const API_URL = import.meta.env.VITE_API_URL || ''
       const res = await axios.post(`${API_URL}/api/fingerprints/compare`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
-        timeout: 10 * 60 * 1000,
+        timeout: 15 * 60 * 1000,
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const pct = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+            setCompareProgress(pct)
+          }
+        },
       })
       setCompareResult(res.data)
     } catch (err) {
       if (!err.response) {
         setCompareError(
-          'Cannot connect to backend server. If using cloud deployment (Render), please wait ~30s for server to wake up and try again.'
+          'Comparison upload interrupted. Please keep tab active or run locally.'
         )
       } else {
         setCompareError(
@@ -336,6 +360,29 @@ export default function FingerprintAnalyzer() {
                         )}
                       </div>
 
+                      {/* Upload Progress Bar if loading */}
+                      {singleLoading && (
+                        <div className="space-y-1.5 p-3 rounded-xl bg-white/5 border border-white/10">
+                          <div className="flex justify-between text-xs font-mono">
+                            <span className="text-white/70">
+                              {singleProgress < 100 ? `Uploading Media (${(singleFile.size / (1024 * 1024)).toFixed(1)} MB)…` : 'Extracting Acoustic FFT & Visual dHash Forensics…'}
+                            </span>
+                            <span className="text-cyan-400 font-bold">{singleProgress}%</span>
+                          </div>
+                          <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
+                            <div
+                              className="bg-gradient-to-r from-violet-500 to-cyan-400 h-full transition-all duration-300 rounded-full"
+                              style={{ width: `${singleProgress}%` }}
+                            />
+                          </div>
+                          {singleFile.size > 30 * 1024 * 1024 && singleProgress < 100 && (
+                            <p className="text-[11px] text-amber-400/80">
+                              ⚡ Large media detected. Please keep this browser tab active until upload completes.
+                            </p>
+                          )}
+                        </div>
+                      )}
+
                       <div className="flex gap-3">
                         <button
                           onClick={handleSingleAnalyze}
@@ -348,7 +395,11 @@ export default function FingerprintAnalyzer() {
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                               </svg>
-                              <span>Extracting Acoustic & Visual Fingerprints…</span>
+                              <span>
+                                {singleProgress < 100
+                                  ? `Uploading Media (${singleProgress}%)…`
+                                  : 'Extracting Acoustic & Visual Fingerprints…'}
+                              </span>
                             </div>
                           ) : (
                             <div className="flex items-center justify-center gap-2">
@@ -695,6 +746,24 @@ export default function FingerprintAnalyzer() {
                     </div>
                   )}
 
+                  {/* Progress bar if smart loading */}
+                  {smartLoading && (
+                    <div className="space-y-1.5 p-3 rounded-xl bg-white/5 border border-white/10">
+                      <div className="flex justify-between text-xs font-mono">
+                        <span className="text-white/70">
+                          {smartProgress < 100 ? `Uploading video for transformation (${(singleFile.size / (1024 * 1024)).toFixed(1)} MB)…` : 'Re-encoding transformed media & shifting perceptual hashes…'}
+                        </span>
+                        <span className="text-cyan-400 font-bold">{smartProgress}%</span>
+                      </div>
+                      <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
+                        <div
+                          className="bg-gradient-to-r from-violet-500 to-cyan-400 h-full transition-all duration-300 rounded-full"
+                          style={{ width: `${smartProgress}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   {/* Generate Button */}
                   {!smartResult ? (
                     <button
@@ -711,7 +780,11 @@ export default function FingerprintAnalyzer() {
                       {smartLoading ? (
                         <>
                           <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          <span>Applying Deep Visual &amp; Audio Transformations… (may take 20–40s)</span>
+                          <span>
+                            {smartProgress < 100
+                              ? `Uploading Media (${smartProgress}%)…`
+                              : 'Applying Deep Visual & Audio Transformations… (may take 20–40s)'}
+                          </span>
                         </>
                       ) : (
                         <>
