@@ -187,7 +187,30 @@ def build_filtergraph(
     """
     filters = []
 
-    # 1. Horizontal Mirror / Flip (Extremely powerful anti-Content ID visual transformation)
+    if is_shorts:
+        # 9:16 Vertical Video (720x1280) with Viral Hook Header & Footer
+        if flip_horizontal:
+            filters.append("hflip")
+        filters.append("scale=720:405:force_original_aspect_ratio=decrease,pad=720:1280:(ow-iw)/2:(oh-ih)/2:color=#080d1a")
+        font_path = "C\\:/Windows/Fonts/arialbd.ttf"
+        filters.append(f"drawtext=fontfile='{font_path}':text='WAIT FOR END 😂🔥':fontcolor=yellow:fontsize=38:x=(w-text_w)/2:y=220")
+        filters.append(f"drawtext=fontfile='{font_path}':text='🔔 SUBSCRIBE FOR MORE 🔔':fontcolor=white:fontsize=30:x=(w-text_w)/2:y=h-260")
+        if speed_multiplier != 1.0 and 0.5 <= speed_multiplier <= 2.0:
+            filters.append(f"setpts=PTS/{speed_multiplier:.4f}")
+        filters.append("format=yuv420p")
+        return ",".join(filters)
+
+    elif canvas_border:
+        # Clean Single-Pass Full-Screen 16:9 Landscape (Crops 14% corner watermarks/TV logos and rescales in 1 pass)
+        if flip_horizontal:
+            filters.append("hflip")
+        filters.append("crop=trunc(iw*0.86/2)*2:trunc(ih*0.86/2)*2,scale=1280:720")
+        if speed_multiplier != 1.0 and 0.5 <= speed_multiplier <= 2.0:
+            filters.append(f"setpts=PTS/{speed_multiplier:.4f}")
+        filters.append("format=yuv420p")
+        return ",".join(filters)
+
+    # 1. Horizontal Mirror / Flip
     if flip_horizontal:
         filters.append("hflip")
 
@@ -198,13 +221,11 @@ def build_filtergraph(
             f"crop=trunc(iw*{crop_w_ratio:.4f}/2)*2:trunc(ih*{crop_w_ratio:.4f}/2)*2"
         )
 
-    # 3. Scaling & Reframing + Cinema Border Padding (Breaks 16:9 visual neural grid)
+    # 3. Scaling & Reframing
     dim_map = {
         "1080p": (1920, 1080),
         "720p": (1280, 720),
         "480p": (854, 480),
-        "9:16_1080p": (1080, 1920),
-        "9:16_720p": (720, 1280),
         "1:1": (1080, 1080),
         "4:5": (1080, 1350),
     }
@@ -217,25 +238,8 @@ def build_filtergraph(
             filters.append(f"scale={tw}:{th}")
         else:
             filters.append(f"scale={tw}:{th}:force_original_aspect_ratio=decrease,pad={tw}:{th}:(ow-iw)/2:(oh-ih)/2:black")
-    elif is_shorts:
-        # 9:16 Vertical Video (720x1280) with Viral Hook Header & Footer
-        filters.append("scale=720:405:force_original_aspect_ratio=decrease,pad=720:1280:(ow-iw)/2:(oh-ih)/2:color=#080d1a")
-        font_path = "C\\:/Windows/Fonts/arialbd.ttf"
-        filters.append(f"drawtext=fontfile='{font_path}':text='WAIT FOR END 😂🔥':fontcolor=yellow:fontsize=38:x=(w-text_w)/2:y=220")
-        filters.append(f"drawtext=fontfile='{font_path}':text='🔔 SUBSCRIBE FOR MORE 🔔':fontcolor=white:fontsize=30:x=(w-text_w)/2:y=h-260")
-    elif canvas_border:
-        # Clean Full-Screen 16:9 Landscape Video (Crops 14% corner watermarks/TV logos and rescales cleanly to 1280x720)
-        filters.append("scale=1280:720:force_original_aspect_ratio=increase,crop=1100:618,scale=1280:720")
 
-
-
-
-
-    # 4. Hue Shift & Perceptual Color Delta
-    if deep_visual and hue_shift_deg != 0.0:
-        filters.append(f"hue=h={hue_shift_deg:.1f}")
-
-    # 5. Color Grading & Equalization
+    # 4. Color Grading & Equalization
     b = max(-0.5, min(0.5, brightness))
     c = max(0.5, min(2.0, contrast))
     s = max(0.0, min(2.5, saturation))
@@ -244,24 +248,13 @@ def build_filtergraph(
     if b != 0.0 or c != 1.0 or s != 1.0 or g != 1.0:
         filters.append(f"eq=brightness={b:.2f}:contrast={c:.2f}:saturation={s:.2f}:gamma={g:.2f}")
 
-    # 6. Soft Corner Vignette
-    if add_vignette:
-        filters.append("vignette=PI/6")
-
-    # 7. Film Grain Noise — only when explicitly requested (adds ~20% encoding time)
-    if add_grain:
-        filters.append("noise=alls=2:allf=t+u")
-
-    # 8. Synchronized Video Speed Shift (Disrupts temporal timestamp matching)
+    # 5. Synchronized Video Speed Shift
     if speed_multiplier != 1.0 and 0.5 <= speed_multiplier <= 2.0:
         filters.append(f"setpts=PTS/{speed_multiplier:.4f}")
 
-    # 9. Framerate filter
-    if fps and fps in [24, 30, 60]:
-        filters.append(f"fps={fps}")
-
     filters.append("format=yuv420p")
     return ",".join(filters)
+
 
 
 def generate_video_variant_sync(
