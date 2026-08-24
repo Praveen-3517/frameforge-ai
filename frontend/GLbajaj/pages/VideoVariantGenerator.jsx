@@ -33,26 +33,40 @@ export default function VideoVariantGenerator() {
   const [result, setResult] = useState(null)
   const [copiedHash, setCopiedHash] = useState(null)
 
-  // Transformation Options State
+  // Transformation Options State (Defaulted with Full Anti-Detection & Low MB Size)
   const [options, setOptions] = useState({
     resolution: 'original',
     fit_mode: 'fit',
     fps: 'original',
     quality: 'balanced',
     brightness: 0.0,
-    contrast: 1.0,
-    saturation: 1.0,
+    contrast: 1.05,
+    saturation: 1.05,
     gamma: 1.0,
     normalize_audio: true,
     audio_sample_rate: 48000,
     strip_metadata: true,
-    // Deep Transforms (Original Content Re-purposing)
-    deep_visual: false,
-    zoom_pct: 2.0,
-    hue_shift_deg: 0.0,
-    add_grain: false,
-    pitch_shift_semitones: 0.0,
+    // Deep Transforms & Anti-Detection (Enabled by default for maximum copyright safety)
+    deep_visual: true,
+    zoom_pct: 5.0,
+    hue_shift_deg: 8.0,
+    add_grain: true,
+    flip_horizontal: true,
+    speed_multiplier: 1.04,
+    add_vignette: true,
+    // Audio Anti-Detection Modes
+    audio_mode: 'max_protection', // 'max_protection' | 'cartoon_morph' | 'bhakti_filter' | 'mute'
+    pitch_shift_semitones: 2.5,
     time_stretch_pct: 0.0,
+    mute_audio: false,
+    audio_eq_filter: true,
+    watermark_cleaner: true,
+    stereo_decorrelate: true,
+    // Special Bhakti & Devotional Suite
+    tuning_432hz: false,
+    temple_reverb: false,
+    om_drone_resonance: false,
+    loop_count: 1,
   })
 
   const fileInputRef = useRef(null)
@@ -98,13 +112,27 @@ export default function VideoVariantGenerator() {
     formData.append('normalize_audio', options.normalize_audio)
     formData.append('audio_sample_rate', options.audio_sample_rate)
     formData.append('strip_metadata', options.strip_metadata)
-    // Deep transforms
+    // Deep transforms & Anti-detection
     formData.append('deep_visual', options.deep_visual)
     formData.append('zoom_pct', options.zoom_pct)
     formData.append('hue_shift_deg', options.hue_shift_deg)
     formData.append('add_grain', options.add_grain)
+    formData.append('flip_horizontal', options.flip_horizontal)
+    formData.append('speed_multiplier', options.speed_multiplier)
+    formData.append('add_vignette', options.add_vignette)
+    // Audio Anti-Detection
+    formData.append('audio_mode', options.audio_mode)
     formData.append('pitch_shift_semitones', options.pitch_shift_semitones)
     formData.append('time_stretch_pct', options.time_stretch_pct)
+    formData.append('mute_audio', options.mute_audio || options.audio_mode === 'mute')
+    formData.append('audio_eq_filter', options.audio_eq_filter)
+    formData.append('watermark_cleaner', options.watermark_cleaner)
+    formData.append('stereo_decorrelate', options.stereo_decorrelate)
+    // Special Bhakti & Devotional Shield Suite
+    formData.append('tuning_432hz', options.tuning_432hz || options.audio_mode === 'bhakti_filter')
+    formData.append('temple_reverb', options.temple_reverb || options.audio_mode === 'bhakti_filter')
+    formData.append('om_drone_resonance', options.om_drone_resonance || options.audio_mode === 'bhakti_filter')
+    formData.append('loop_count', options.loop_count || 1)
 
     try {
       const API_URL = import.meta.env.VITE_API_URL || ''
@@ -248,9 +276,79 @@ export default function VideoVariantGenerator() {
 
               {/* Transformation Controls Panel */}
               <div className="glass-card p-6 space-y-6">
-                <div className="flex items-center gap-2 text-white/90 font-semibold text-sm pb-2 border-b border-white/10">
-                  <Sliders size={16} className="text-cyan-400" />
-                  Transformation & Encoding Parameters
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/10">
+                  <div className="flex items-center gap-2 text-white/90 font-semibold text-sm">
+                    <Sliders size={16} className="text-cyan-400" />
+                    Transformation &amp; Encoding Parameters
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setOptions({
+                        ...options,
+                        deep_visual: true,
+                        flip_horizontal: true,
+                        speed_multiplier: 1.04,
+                        zoom_pct: 5.0,
+                        hue_shift_deg: 8.0,
+                        add_grain: true,
+                        add_vignette: true,
+                        audio_mode: 'max_protection',
+                        pitch_shift_semitones: 2.5,
+                        audio_eq_filter: true,
+                        mute_audio: false,
+                      })}
+                      className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm ${
+                        options.audio_mode === 'max_protection' && !options.mute_audio
+                          ? 'bg-gradient-to-r from-violet-500/30 to-cyan-500/30 border-cyan-500/50 text-cyan-300 ring-1 ring-cyan-500/30'
+                          : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10'
+                      }`}
+                    >
+                      <Sparkles size={13} className="text-cyan-400" /> 🛡️ Universal Mode
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setOptions({
+                        ...options,
+                        deep_visual: true,
+                        flip_horizontal: true,
+                        speed_multiplier: 1.04,
+                        zoom_pct: 4.0,
+                        hue_shift_deg: 6.0,
+                        add_vignette: true,
+                        audio_mode: 'bhakti_filter',
+                        tuning_432hz: true,
+                        temple_reverb: true,
+                        om_drone_resonance: true,
+                        pitch_shift_semitones: 2.0,
+                        audio_eq_filter: true,
+                        mute_audio: false,
+                      })}
+                      className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm ${
+                        options.audio_mode === 'bhakti_filter'
+                          ? 'bg-gradient-to-r from-amber-500/30 to-orange-500/30 border-amber-500/50 text-amber-300 ring-1 ring-amber-500/30'
+                          : 'bg-white/5 border-white/10 text-amber-200/70 hover:bg-white/10'
+                      }`}
+                    >
+                      🌸 🕉️ Bhakti Shield Mode
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setOptions({
+                        ...options,
+                        mute_audio: !options.mute_audio,
+                      })}
+                      className={`px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all ${
+                        options.mute_audio
+                          ? 'bg-red-500/20 border-red-500/40 text-red-300'
+                          : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10'
+                      }`}
+                    >
+                      {options.mute_audio ? '🔇 Audio Muted' : '🔊 Audio Active'}
+                    </button>
+                  </div>
                 </div>
 
                 {/* Grid of options */}
@@ -431,19 +529,79 @@ export default function VideoVariantGenerator() {
                   </div>
                 </div>
 
-                {/* Deep Forensic & Perceptual Transforms Panel (Original Content Re-uploading) */}
+                {/* Deep Forensic & Perceptual Transforms Panel (Anti-Detection & Re-purposing) */}
                 <div className="pt-4 border-t border-violet-500/20 space-y-4 rounded-xl p-4 bg-gradient-to-br from-violet-500/10 via-cyan-500/5 to-transparent border border-violet-500/30">
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <div className="flex items-center gap-2">
                         <Sparkles size={15} className="text-violet-400" />
-                        <span className="text-xs font-bold text-white uppercase tracking-wider">Deep Forensic &amp; Perceptual Transforms</span>
-                        <span className="px-2 py-0.5 rounded-full bg-violet-500/20 text-[9px] font-mono text-violet-300 font-semibold">ORIGINAL RE-PURPOSING</span>
+                        <span className="text-xs font-bold text-white uppercase tracking-wider">Anti-Detection &amp; Forensic Fingerprint Shifting</span>
+                        <span className="px-2 py-0.5 rounded-full bg-violet-500/20 text-[9px] font-mono text-violet-300 font-semibold">CONTENT ID BYPASS</span>
                       </div>
                       <p className="text-[11px] text-white/50 mt-1">
-                        Subtly shifts frame-by-frame visual dHash, pixel noise, and acoustic frequency/tempo so platform re-uploads register distinct perceptual signatures while preserving source video quality and clarity.
+                        Transforms video &amp; audio signatures to disrupt automated Content ID / Rights Manager matching while preserving source quality, lip-sync, and audio clarity.
                       </p>
                     </div>
+                  </div>
+
+                  {/* Horizontal Flip & Speed Multiplier Quick Row */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {/* Horizontal Flip Toggle */}
+                    <label className="flex items-center gap-2.5 cursor-pointer p-2.5 rounded-lg bg-black/40 border border-white/10 hover:bg-black/60 transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={options.flip_horizontal}
+                        onChange={(e) => setOptions({ ...options, flip_horizontal: e.target.checked })}
+                        disabled={isLoading}
+                        className="rounded accent-violet-500 w-4 h-4"
+                      />
+                      <div>
+                        <span className="text-xs font-semibold text-white/90 block">🪞 Horizontal Mirror (Flip)</span>
+                        <span className="text-[10px] text-white/40">Mirrors frames horizontally (breaks 2D spatial matching)</span>
+                      </div>
+                    </label>
+
+                    {/* Edge Vignette Toggle */}
+                    <label className="flex items-center gap-2.5 cursor-pointer p-2.5 rounded-lg bg-black/40 border border-white/10 hover:bg-black/60 transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={options.add_vignette}
+                        onChange={(e) => setOptions({ ...options, add_vignette: e.target.checked })}
+                        disabled={isLoading}
+                        className="rounded accent-cyan-500 w-4 h-4"
+                      />
+                      <div>
+                        <span className="text-xs font-semibold text-white/90 block">🎭 Soft Corner Vignette</span>
+                        <span className="text-[10px] text-white/40">Shifts spatial corner luminance gradients</span>
+                      </div>
+                    </label>
+                  </div>
+
+                  {/* Speed Multiplier */}
+                  <div className="p-3 rounded-lg bg-black/40 border border-white/10 space-y-2">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="font-semibold text-white/80">⏩ Synchronized Video+Audio Playback Speed</span>
+                      <span className="font-mono text-cyan-300 font-bold">{options.speed_multiplier.toFixed(2)}x</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {[1.0, 1.04, 1.06, 0.96].map((spd) => (
+                        <button
+                          key={spd}
+                          type="button"
+                          onClick={() => setOptions({ ...options, speed_multiplier: spd })}
+                          className={`px-2.5 py-1 rounded text-xs font-mono transition-all ${
+                            options.speed_multiplier === spd
+                              ? 'bg-cyan-500 text-white font-bold shadow-md shadow-cyan-500/30'
+                              : 'bg-white/5 text-white/60 hover:bg-white/10'
+                          }`}
+                        >
+                          {spd === 1.0 ? '1.0x (Normal)' : `${spd}x`}
+                        </button>
+                      ))}
+                    </div>
+                    <span className="text-[10px] text-white/30 block">
+                      Sync shifts both video frames and audio timestamps by 4-6% (disrupts temporal timeline matching).
+                    </span>
                   </div>
 
                   {/* Deep Visual Toggle */}
@@ -457,7 +615,7 @@ export default function VideoVariantGenerator() {
                     />
                     <div>
                       <span className="text-xs font-semibold text-white/90 block">Enable Deep Visual Hash Shifting</span>
-                      <span className="text-[10px] text-white/40">Applies subtle frame zoom+crop, hue rotation, and micro-noise overlay</span>
+                      <span className="text-[10px] text-white/40">Applies frame zoom+crop, hue rotation, and micro-noise overlay</span>
                     </div>
                   </label>
 
@@ -472,15 +630,15 @@ export default function VideoVariantGenerator() {
                         </div>
                         <input
                           type="range"
-                          min="0.5"
-                          max="5.0"
+                          min="1.0"
+                          max="8.0"
                           step="0.5"
                           value={options.zoom_pct}
                           onChange={(e) => setOptions({ ...options, zoom_pct: parseFloat(e.target.value) })}
                           disabled={isLoading}
                           className="w-full accent-cyan-500"
                         />
-                        <span className="text-[10px] text-white/30 block">Subtly alters outer boundary to change per-frame dHash</span>
+                        <span className="text-[10px] text-white/30 block">Alters outer boundary to change per-frame dHash</span>
                       </div>
 
                       {/* Hue Shift */}
@@ -491,8 +649,8 @@ export default function VideoVariantGenerator() {
                         </div>
                         <input
                           type="range"
-                          min="-15.0"
-                          max="15.0"
+                          min="-20.0"
+                          max="20.0"
                           step="1.0"
                           value={options.hue_shift_deg}
                           onChange={(e) => setOptions({ ...options, hue_shift_deg: parseFloat(e.target.value) })}
@@ -512,57 +670,220 @@ export default function VideoVariantGenerator() {
                             disabled={isLoading}
                             className="rounded accent-emerald-500 w-3.5 h-3.5"
                           />
-                          <span>Add imperceptible film grain noise (scrambles pixel-level temporal dHash sequence)</span>
+                          <span>Add film grain noise (scrambles pixel-level temporal dHash sequence)</span>
                         </label>
                       </div>
                     </div>
                   )}
 
-                  {/* Deep Audio Transforms */}
+                  {/* Deep Audio Transforms & Voice Morpher */}
                   <div className="pt-2 border-t border-white/5 space-y-3">
-                    <div className="text-[11px] font-semibold text-white/70 uppercase tracking-wider flex items-center gap-1.5">
-                      <Volume2 size={13} className="text-cyan-400" />
-                      Deep Acoustic Frequency &amp; Timing Shifts
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-semibold text-white/70 uppercase tracking-wider flex items-center gap-1.5">
+                        <Volume2 size={13} className="text-cyan-400" /> Audio Copyright Defense &amp; Voice Morpher
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full bg-cyan-500/20 text-[9px] font-mono text-cyan-300 font-semibold">ACOUSTIC SHIELD</span>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                      {/* Pitch Shift */}
-                      <div>
-                        <div className="flex justify-between text-xs text-white/60 mb-1">
-                          <span>Audio Pitch Shift</span>
-                          <span className="font-mono text-sky-300">{options.pitch_shift_semitones > 0 ? `+${options.pitch_shift_semitones.toFixed(1)}` : options.pitch_shift_semitones.toFixed(1)} semitones</span>
-                        </div>
-                        <input
-                          type="range"
-                          min="-3.0"
-                          max="3.0"
-                          step="0.5"
-                          value={options.pitch_shift_semitones}
-                          onChange={(e) => setOptions({ ...options, pitch_shift_semitones: parseFloat(e.target.value) })}
-                          disabled={isLoading}
-                          className="w-full accent-sky-500"
-                        />
-                        <span className="text-[10px] text-white/30 block">Shifts acoustic fundamental frequency (tempo preserved)</span>
-                      </div>
 
-                      {/* Time Stretch */}
-                      <div>
-                        <div className="flex justify-between text-xs text-white/60 mb-1">
-                          <span>Audio Time Stretch / Tempo</span>
-                          <span className="font-mono text-indigo-300">{options.time_stretch_pct > 0 ? `+${options.time_stretch_pct.toFixed(1)}%` : `${options.time_stretch_pct.toFixed(1)}%`}</span>
-                        </div>
-                        <input
-                          type="range"
-                          min="-5.0"
-                          max="5.0"
-                          step="0.5"
-                          value={options.time_stretch_pct}
-                          onChange={(e) => setOptions({ ...options, time_stretch_pct: parseFloat(e.target.value) })}
-                          disabled={isLoading}
-                          className="w-full accent-indigo-500"
-                        />
-                        <span className="text-[10px] text-white/30 block">Micro tempo speed-up/slow-down shifts acoustic landmarks</span>
-                      </div>
+                    {/* 4 Preset Audio Defense Modes */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                      {[
+                        {
+                          id: 'max_protection',
+                          title: '🛡️ Universal Max',
+                          desc: 'Formant EQ Notch + +2.5st Pitch + Watermark Cleaner',
+                          border: 'border-violet-500/40',
+                          bg: 'from-violet-500/20 to-transparent',
+                        },
+                        {
+                          id: 'cartoon_morph',
+                          title: '🎭 Cartoon Voice',
+                          desc: 'Morphs character voice timbre & dubbing formants (+3.2st)',
+                          border: 'border-pink-500/40',
+                          bg: 'from-pink-500/20 to-transparent',
+                        },
+                        {
+                          id: 'bhakti_filter',
+                          title: '🕉️ Bhakti / Music',
+                          desc: 'Scrambles devotional melody & percussion harmonics',
+                          border: 'border-amber-500/40',
+                          bg: 'from-amber-500/20 to-transparent',
+                        },
+                        {
+                          id: 'mute',
+                          title: '🔇 Strip Audio',
+                          desc: '100% immune (replace with custom BGM/voiceover)',
+                          border: 'border-red-500/40',
+                          bg: 'from-red-500/20 to-transparent',
+                        },
+                      ].map((mode) => (
+                        <button
+                          key={mode.id}
+                          type="button"
+                          onClick={() => {
+                            setOptions({
+                              ...options,
+                              audio_mode: mode.id,
+                              mute_audio: mode.id === 'mute',
+                              pitch_shift_semitones: mode.id === 'cartoon_morph' ? 3.2 : mode.id === 'bhakti_filter' ? 2.5 : mode.id === 'max_protection' ? 2.5 : options.pitch_shift_semitones,
+                            })
+                          }}
+                          className={`p-2.5 rounded-xl text-left border transition-all ${
+                            options.audio_mode === mode.id || (mode.id === 'mute' && options.mute_audio)
+                              ? `bg-gradient-to-br ${mode.bg} ${mode.border} shadow-lg ring-1 ring-white/20`
+                              : 'bg-black/30 border-white/10 hover:bg-black/50'
+                          }`}
+                        >
+                          <div className="text-xs font-bold text-white mb-0.5">{mode.title}</div>
+                          <div className="text-[10px] text-white/50 leading-tight">{mode.desc}</div>
+                        </button>
+                      ))}
                     </div>
+
+                    {!options.mute_audio && options.audio_mode !== 'mute' ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                        {/* Pitch Shift Slider */}
+                        <div>
+                          <div className="flex justify-between text-xs text-white/60 mb-1">
+                            <span>Pitch / Formant Shift</span>
+                            <span className="font-mono text-sky-300 font-bold">{options.pitch_shift_semitones > 0 ? `+${options.pitch_shift_semitones.toFixed(1)}` : options.pitch_shift_semitones.toFixed(1)} st</span>
+                          </div>
+                          <input
+                            type="range"
+                            min="-4.0"
+                            max="4.0"
+                            step="0.5"
+                            value={options.pitch_shift_semitones}
+                            onChange={(e) => setOptions({ ...options, pitch_shift_semitones: parseFloat(e.target.value) })}
+                            disabled={isLoading}
+                            className="w-full accent-sky-500"
+                          />
+                        </div>
+
+                        {/* Ultrasonic / Sub-bass Watermark cleaner toggle */}
+                        <label className="flex items-center gap-2 cursor-pointer p-2 rounded-lg bg-black/40 border border-white/10 hover:bg-black/60 transition-colors">
+                          <input
+                            type="checkbox"
+                            checked={options.watermark_cleaner}
+                            onChange={(e) => setOptions({ ...options, watermark_cleaner: e.target.checked })}
+                            disabled={isLoading}
+                            className="rounded accent-emerald-500 w-4 h-4"
+                          />
+                          <div>
+                            <span className="text-xs font-semibold text-white/90 block">🧼 Watermark Strip</span>
+                            <span className="text-[9px] text-white/40">75Hz-15.5kHz bandpass</span>
+                          </div>
+                        </label>
+
+                        {/* Stereo Phase Decorrelation */}
+                        <label className="flex items-center gap-2 cursor-pointer p-2 rounded-lg bg-black/40 border border-white/10 hover:bg-black/60 transition-colors">
+                          <input
+                            type="checkbox"
+                            checked={options.stereo_decorrelate}
+                            onChange={(e) => setOptions({ ...options, stereo_decorrelate: e.target.checked })}
+                            disabled={isLoading}
+                            className="rounded accent-teal-500 w-4 h-4"
+                          />
+                          <div>
+                            <span className="text-xs font-semibold text-white/90 block">🔀 Phase Decorrelate</span>
+                            <span className="text-[9px] text-white/40">Scrambles L/R landmark map</span>
+                          </div>
+                        </label>
+                      </div>
+                    ) : (
+                      <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-xs text-red-300 flex items-center gap-2">
+                        <span>🔇 Audio track will be completely removed (100% immune to audio copyright claims).</span>
+                      </div>
+                    )}
+
+                    {/* Special Bhakti & Devotional Shield Suite (Active on Bhakti Mode) */}
+                    {options.audio_mode === 'bhakti_filter' && (
+                      <div className="pt-3 border-t border-amber-500/20 space-y-3 p-3.5 rounded-xl bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent border border-amber-500/30 animate-in">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm">🕉️</span>
+                            <span className="text-xs font-bold text-amber-300 uppercase tracking-wider">Special Bhakti, Bhajan &amp; Jaap Shield</span>
+                          </div>
+                          <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-[9px] font-mono text-amber-300 font-semibold">ZERO COPYRIGHT</span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                          {/* 432 Hz Healing Pitch Toggle */}
+                          <label className="flex items-center gap-2.5 cursor-pointer p-2.5 rounded-lg bg-black/50 border border-amber-500/20 hover:bg-black/70 transition-colors">
+                            <input
+                              type="checkbox"
+                              checked={options.tuning_432hz || options.audio_mode === 'bhakti_filter'}
+                              onChange={(e) => setOptions({ ...options, tuning_432hz: e.target.checked })}
+                              disabled={isLoading}
+                              className="rounded accent-amber-500 w-4 h-4"
+                            />
+                            <div>
+                              <span className="text-xs font-semibold text-white/90 block">🌸 432 Hz Sacred Pitch</span>
+                              <span className="text-[9px] text-amber-300/60">Bypasses 440Hz standard concert scans</span>
+                            </div>
+                          </label>
+
+                          {/* Mandir Sanctum Reverb Toggle */}
+                          <label className="flex items-center gap-2.5 cursor-pointer p-2.5 rounded-lg bg-black/50 border border-amber-500/20 hover:bg-black/70 transition-colors">
+                            <input
+                              type="checkbox"
+                              checked={options.temple_reverb || options.audio_mode === 'bhakti_filter'}
+                              onChange={(e) => setOptions({ ...options, temple_reverb: e.target.checked })}
+                              disabled={isLoading}
+                              className="rounded accent-amber-500 w-4 h-4"
+                            />
+                            <div>
+                              <span className="text-xs font-semibold text-white/90 block">🏛️ Mandir Echo Reverb</span>
+                              <span className="text-[9px] text-amber-300/60">Washes out dry studio vocal signature</span>
+                            </div>
+                          </label>
+
+                          {/* 108Hz Om Resonance Boost */}
+                          <label className="flex items-center gap-2.5 cursor-pointer p-2.5 rounded-lg bg-black/50 border border-amber-500/20 hover:bg-black/70 transition-colors">
+                            <input
+                              type="checkbox"
+                              checked={options.om_drone_resonance || options.audio_mode === 'bhakti_filter'}
+                              onChange={(e) => setOptions({ ...options, om_drone_resonance: e.target.checked })}
+                              disabled={isLoading}
+                              className="rounded accent-amber-500 w-4 h-4"
+                            />
+                            <div>
+                              <span className="text-xs font-semibold text-white/90 block">🧘 108Hz Om Drone</span>
+                              <span className="text-[9px] text-amber-300/60">Cosmic harmonic drone layer</span>
+                            </div>
+                          </label>
+                        </div>
+
+                        {/* Jaap / Mantra Stream Looper for 1-Hour Long Videos */}
+                        <div className="pt-2 border-t border-amber-500/15 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <div>
+                            <span className="text-xs font-semibold text-amber-200 block">🔄 108x Jaap Video/Audio Looper (1-Hour Creator)</span>
+                            <span className="text-[10px] text-white/40">Seamlessly loops short Bhakti clips/mantras into extended YouTube duration</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            {[
+                              { label: '1x (Normal)', count: 1 },
+                              { label: '11x Jaap (~15m)', count: 11 },
+                              { label: '21x Jaap (~30m)', count: 21 },
+                              { label: '108x (1-Hour)', count: 108 },
+                            ].map((loop) => (
+                              <button
+                                key={loop.count}
+                                type="button"
+                                onClick={() => setOptions({ ...options, loop_count: loop.count })}
+                                className={`px-2.5 py-1 rounded-lg text-[11px] font-mono transition-all ${
+                                  options.loop_count === loop.count
+                                    ? 'bg-amber-500 text-black font-bold shadow-md shadow-amber-500/30'
+                                    : 'bg-black/40 text-amber-200/70 border border-amber-500/20 hover:bg-black/60'
+                                }`}
+                              >
+                                {loop.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 

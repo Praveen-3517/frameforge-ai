@@ -29,7 +29,6 @@ import google.generativeai as genai
 import httpx
 import numpy as np
 import base64
-from gradio_client import Client, handle_file
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, BackgroundTasks, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
@@ -522,20 +521,34 @@ async def create_video_variant(
     normalize_audio: bool = Form(True),
     audio_sample_rate: int = Form(48000),
     strip_metadata: bool = Form(True),
-    # Deep visual & audio transforms (for own original media re-uploading)
+    # Deep visual & audio transforms (Anti-detection & Original Content Re-purposing)
     deep_visual: bool = Form(False),
     zoom_pct: float = Form(2.0),
     hue_shift_deg: float = Form(0.0),
     add_grain: bool = Form(False),
+    flip_horizontal: bool = Form(False),
+    speed_multiplier: float = Form(1.0),
+    add_vignette: bool = Form(False),
+    # Advanced Audio Modes (Cartoon Morph, Bhakti Scrambler, Max Protection, Mute)
+    audio_mode: str = Form("max_protection"),
     pitch_shift_semitones: float = Form(0.0),
     time_stretch_pct: float = Form(0.0),
+    mute_audio: bool = Form(False),
+    audio_eq_filter: bool = Form(False),
+    watermark_cleaner: bool = Form(True),
+    stereo_decorrelate: bool = Form(True),
+    # Special Bhakti & Devotional Shield Suite
+    tuning_432hz: bool = Form(False),
+    temple_reverb: bool = Form(False),
+    om_drone_resonance: bool = Form(False),
+    loop_count: int = Form(1),
 ):
     job_id = uuid.uuid4().hex[:12]
     ext = Path(file.filename or "video.mp4").suffix or ".mp4"
     input_path = TEMP_DIR / f"{job_id}_orig{ext}"
     output_path = OUTPUT_DIR / f"variant_{job_id}.mp4"
 
-    log.info("🎥 Variant creation request received: %s [%s]", file.filename, job_id)
+    log.info("🎥 Variant creation request received: %s [%s] (Audio Mode: %s, 432Hz: %s, Loop: %dx)", file.filename, job_id, audio_mode, tuning_432hz, loop_count)
 
     try:
         # Save original uploaded file safely
@@ -568,8 +581,20 @@ async def create_video_variant(
                 zoom_pct=zoom_pct,
                 hue_shift_deg=hue_shift_deg,
                 add_grain=add_grain,
+                flip_horizontal=flip_horizontal,
+                speed_multiplier=speed_multiplier,
+                add_vignette=add_vignette,
+                audio_mode=audio_mode,
                 pitch_shift_semitones=pitch_shift_semitones,
                 time_stretch_pct=time_stretch_pct,
+                mute_audio=mute_audio,
+                audio_eq_filter=audio_eq_filter,
+                watermark_cleaner=watermark_cleaner,
+                stereo_decorrelate=stereo_decorrelate,
+                tuning_432hz=tuning_432hz,
+                temple_reverb=temple_reverb,
+                om_drone_resonance=om_drone_resonance,
+                loop_count=loop_count,
             )
         )
 
@@ -685,17 +710,19 @@ async def smart_fingerprint_transform(
     file: UploadFile = File(default=None),
     existing_job_id: str = Form(None),
     fingerprint_data: str = Form(None),
+    mode: str = Form("auto"),
 ):
     """
     One-click Smart Auto-Transform:
     1. Read pre-computed or perform fast parallel fingerprint analysis
-    2. Derive optimal transformation params from detected characteristics
+    2. Derive optimal transformation params from detected characteristics (or forced mode)
     3. Re-encode a transformed variant with all parameters shifted
     4. Return fingerprint data + transform params + before/after comparison
     """
     job_id = uuid.uuid4().hex[:12]
     filename = "media.mp4"
     input_path = None
+    is_new_upload = False
 
     # Step 0 — Check if file is already on server from Step 1 analysis (0 bytes upload!)
     if existing_job_id:
@@ -711,6 +738,7 @@ async def smart_fingerprint_transform(
             filename = file.filename
             ext = Path(file.filename or "media.mp4").suffix or ".mp4"
             input_path = TEMP_DIR / f"{job_id}_smart_orig{ext}"
+            is_new_upload = True
             with open(input_path, "wb") as f:
                 while True:
                     chunk = await file.read(1024 * 1024)
@@ -718,10 +746,10 @@ async def smart_fingerprint_transform(
                         break
                     f.write(chunk)
         else:
-            raise HTTPException(status_code=400, detail="No media file or valid analysis ID provided.")
+            raise HTTPException(status_code=400, detail="No media file or valid analysis ID provided. Please re-upload your file.")
 
     output_path = OUTPUT_DIR / f"smart_variant_{job_id}.mp4"
-    log.info("🎯 Smart Auto-Transform requested: %s [%s]", filename, job_id)
+    log.info("🎯 Smart Auto-Transform requested: %s [%s] (Shield Mode: %s)", filename, job_id, mode)
 
     try:
 
@@ -756,8 +784,20 @@ async def smart_fingerprint_transform(
         }
 
         # Step 2 — Derive transform params
-        log.info("  🧠 Deriving smart transform params …")
-        params = derive_transform_params(fingerprint_payload)
+        log.info("  🧠 Deriving smart transform params for mode '%s' …", mode)
+        from services.smart_transform import derive_transform_params, generate_ai_cartoon_narration
+        params = derive_transform_params(fingerprint_payload, forced_mode=mode)
+
+        # Step 2b — Auto AI Hindi Voiceover Dubbing for Cartoons (100% Audio Mute & Fresh Narration)
+        custom_audio_path = None
+        if mode in ["cartoon", "cartoon_shorts", "cartoon_dub"]:
+            try:
+                log.info("  🎙️ Analyzing cartoon & generating AI Hindi Voiceover narration for %s...", filename)
+                ai_audio_file = await generate_ai_cartoon_narration(filename, output_dir="temp")
+                custom_audio_path = Path(ai_audio_file)
+                log.info("  ✅ AI Hindi Voiceover track ready: %s", custom_audio_path.name)
+            except Exception as voice_err:
+                log.warning("  ⚠️ Voiceover generation warning: %s", voice_err)
 
         # Step 3 — Generate transformed variant
         log.info("  Generating smart variant -> %s", output_path.name)
@@ -777,16 +817,38 @@ async def smart_fingerprint_transform(
                 normalize_audio=params["normalize_audio"],
                 audio_sample_rate=params["audio_sample_rate"],
                 strip_metadata=params["strip_metadata"],
-                # Deep visual transforms
+                # Deep visual transforms (Anti-detection)
                 deep_visual=params.get("deep_visual", True),
-                zoom_pct=params.get("zoom_pct", 2.0),
-                hue_shift_deg=params.get("hue_shift_deg", 0.0),
-                add_grain=params.get("add_grain", False),
+                zoom_pct=params.get("zoom_pct", 5.0),
+                hue_shift_deg=params.get("hue_shift_deg", 8.0),
+                add_grain=params.get("add_grain", True),
+                flip_horizontal=params.get("flip_horizontal", True),
+                speed_multiplier=params.get("speed_multiplier", 1.04),
+                add_vignette=params.get("add_vignette", True),
                 # Deep audio transforms
-                pitch_shift_semitones=params.get("pitch_shift_semitones", 0.0),
+                audio_mode=params.get("audio_mode", "max_protection"),
+                pitch_shift_semitones=params.get("pitch_shift_semitones", 2.5),
                 time_stretch_pct=params.get("time_stretch_pct", 0.0),
+                mute_audio=params.get("mute_audio", False),
+                audio_eq_filter=params.get("audio_eq_filter", True),
+                watermark_cleaner=params.get("watermark_cleaner", True),
+                stereo_decorrelate=params.get("stereo_decorrelate", True),
+                # Bhakti Suite
+                tuning_432hz=params.get("tuning_432hz", False),
+                temple_reverb=params.get("temple_reverb", False),
+                om_drone_resonance=params.get("om_drone_resonance", False),
+                trim_start_sec=params.get("trim_start_sec", 0.0),
+                canvas_border=params.get("canvas_border", False),
+                is_shorts=params.get("is_shorts", False),
+                clip_duration_sec=params.get("clip_duration_sec", 0.0),
+                custom_audio_file=custom_audio_path,
             )
         )
+
+
+
+
+
 
         log.info("  ✅ Smart variant ready: %s", output_path.name)
 
@@ -807,7 +869,8 @@ async def smart_fingerprint_transform(
         log.exception("❌ Smart transform failed: %s", exc)
         raise HTTPException(status_code=500, detail=f"Smart transform failed: {str(exc)}")
     finally:
-        if input_path.exists():
+        # Only clean up if it was a newly uploaded file for this request
+        if is_new_upload and input_path and input_path.exists():
             try:
                 input_path.unlink()
             except Exception:
@@ -847,9 +910,9 @@ async def serve_media_file(filename: str):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
-        "main:app",
+        app,
         host=os.getenv("HOST", "0.0.0.0"),
         port=int(os.getenv("PORT", "8000")),
-        reload=True,
+        reload=False,
         log_level="info",
     )

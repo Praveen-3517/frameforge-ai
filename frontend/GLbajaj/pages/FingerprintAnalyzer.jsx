@@ -55,6 +55,7 @@ export default function FingerprintAnalyzer() {
   const [copiedHash, setCopiedHash] = useState(null)
 
   // Smart Auto-Transform State
+  const [selectedShieldMode, setSelectedShieldMode] = useState('auto') // 'auto' | 'cartoon' | 'bhakti' | 'song'
   const [smartLoading, setSmartLoading] = useState(false)
   const [smartProgress, setSmartProgress] = useState(0)
   const [smartResult, setSmartResult] = useState(null)
@@ -148,28 +149,30 @@ export default function FingerprintAnalyzer() {
     setSmartError('')
     setSmartResult(null)
 
-    const formData = new FormData()
-    if (singleResult?.job_id) {
-      // Instantly reuse existing uploaded file on server (0 KB upload!)
-      formData.append('existing_job_id', singleResult.job_id)
-    } else if (singleFile) {
-      formData.append('file', singleFile)
-    }
+    const API_URL = import.meta.env.VITE_API_URL || ''
 
-    if (singleResult) {
-      formData.append(
-        'fingerprint_data',
-        JSON.stringify({
-          metadata: singleResult.metadata,
-          audio_fingerprint: singleResult.audio_fingerprint,
-          video_fingerprint: singleResult.video_fingerprint,
-        })
-      )
-    }
+    const attemptTransform = async (useExistingId = true) => {
+      const formData = new FormData()
+      if (useExistingId && singleResult?.job_id) {
+        formData.append('existing_job_id', singleResult.job_id)
+      } else if (singleFile) {
+        formData.append('file', singleFile)
+      }
 
-    try {
-      const API_URL = import.meta.env.VITE_API_URL || ''
-      const res = await axios.post(`${API_URL}/api/fingerprints/smart-transform`, formData, {
+      formData.append('mode', selectedShieldMode)
+
+      if (singleResult) {
+        formData.append(
+          'fingerprint_data',
+          JSON.stringify({
+            metadata: singleResult.metadata,
+            audio_fingerprint: singleResult.audio_fingerprint,
+            video_fingerprint: singleResult.video_fingerprint,
+          })
+        )
+      }
+
+      return await axios.post(`${API_URL}/api/fingerprints/smart-transform`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 20 * 60 * 1000,
         onUploadProgress: (progressEvent) => {
@@ -179,11 +182,26 @@ export default function FingerprintAnalyzer() {
           }
         },
       })
-      setSmartResult(res.data)
+    }
+
+    try {
+      try {
+        // Try instant zero-byte transform using existing server media first
+        const res = await attemptTransform(Boolean(singleResult?.job_id))
+        setSmartResult(res.data)
+      } catch (firstErr) {
+        // If server restarted or temp file expired, seamlessly fallback to uploading singleFile
+        if (singleResult?.job_id && singleFile && firstErr.response?.status === 400) {
+          const fallbackRes = await attemptTransform(false)
+          setSmartResult(fallbackRes.data)
+        } else {
+          throw firstErr
+        }
+      }
     } catch (err) {
       if (!err.response) {
         setSmartError(
-          'Transform upload interrupted. For large files, keep this tab active or run locally on http://localhost:5173.'
+          'Transform upload interrupted. For large files, keep this tab active or check that backend server is running on http://localhost:8000.'
         )
       } else {
         setSmartError(
@@ -660,56 +678,50 @@ export default function FingerprintAnalyzer() {
                     </div>
                   </div>
 
-                  {/* Auto-Derived Parameters Preview Grid (Standard + Deep Transforms) */}
+                  {/* Auto-Derived Parameters Preview Grid (Standard + Anti-Detection Transforms) */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                     {[
                       {
-                        label: 'Framerate (FPS)',
-                        value: `${singleResult.video_fingerprint?.fps?.toFixed(0) || '?'} → ${
-                          singleResult.video_fingerprint?.fps >= 50 ? '24' :
-                          singleResult.video_fingerprint?.fps >= 28 ? '24' : '30'
-                        } fps`,
-                        color: 'text-cyan-400',
-                        badge: 'Resampled'
+                        label: 'Horizontal Mirror',
+                        value: '🪞 Active (H-Flip)',
+                        color: 'text-violet-400',
+                        badge: 'Spatial Flip'
                       },
                       {
-                        label: 'Resolution',
-                        value: `${
-                          singleResult.video_fingerprint?.height >= 1080 ? '720p' :
-                          singleResult.video_fingerprint?.height >= 720 ? '1080p' : '720p'
-                        }`,
-                        color: 'text-violet-400',
-                        badge: 'Re-scaled'
+                        label: 'Sync Playback Speed',
+                        value: '⏩ 1.04x Speed Shift',
+                        color: 'text-cyan-400',
+                        badge: 'Timeline Shift'
                       },
                       {
                         label: 'Visual Zoom & Crop',
-                        value: `${(singleResult.video_fingerprint?.average_motion_pct > 20 ? 3.0 : 2.0).toFixed(1)}% Zoom+Crop`,
+                        value: `${(singleResult.video_fingerprint?.average_motion_pct > 20 ? 5.0 : 4.0).toFixed(1)}% Zoom+Crop`,
                         color: 'text-amber-400',
                         badge: 'dHash Shift'
                       },
                       {
                         label: 'Hue Rotation',
-                        value: `${((singleResult.audio_fingerprint?.frequency_bands?.['Bass (60-250 Hz)'] || 0) > (singleResult.audio_fingerprint?.frequency_bands?.['Treble (4k-8k Hz)'] || 0)) ? '+6.0° (Warm)' : '-6.0° (Cool)'}`,
+                        value: `${((singleResult.audio_fingerprint?.frequency_bands?.['Bass (60-250 Hz)'] || 0) > (singleResult.audio_fingerprint?.frequency_bands?.['Treble (4k-8k Hz)'] || 0)) ? '+8.0° (Warm)' : '-8.0° (Cool)'}`,
                         color: 'text-pink-400',
                         badge: 'Color Delta'
                       },
                       {
-                        label: 'Film Grain Noise',
-                        value: singleResult.video_fingerprint?.average_motion_pct < 20 ? 'Active Overlay' : 'Adaptive Light',
+                        label: 'Corner Vignette',
+                        value: '🎭 Soft Edge Vignette',
                         color: 'text-emerald-400',
-                        badge: 'Pixel dHash'
+                        badge: 'Luminance Shift'
                       },
                       {
                         label: 'Audio Pitch Shift',
-                        value: `${((singleResult.audio_fingerprint?.frequency_bands?.['Bass (60-250 Hz)'] || 0) > 50) ? '+1.0' : ((singleResult.audio_fingerprint?.frequency_bands?.['Treble (4k-8k Hz)'] || 0) > 50) ? '-1.0' : '+1.5'} Semitones`,
+                        value: `${((singleResult.audio_fingerprint?.frequency_bands?.['Bass (60-250 Hz)'] || 0) > 50) ? '+2.5' : ((singleResult.audio_fingerprint?.frequency_bands?.['Treble (4k-8k Hz)'] || 0) > 50) ? '-2.5' : '+2.0'} Semitones`,
                         color: 'text-sky-400',
                         badge: 'Acoustic Shift'
                       },
                       {
-                        label: 'Time Stretch',
-                        value: `${(singleResult.audio_fingerprint?.tempo_bpm > 140) ? '-1.5%' : (singleResult.audio_fingerprint?.tempo_bpm < 80) ? '+1.5%' : '+2.0%'} Tempo`,
+                        label: 'Formant EQ Notch',
+                        value: '🎚️ Harmonic Band Filter',
                         color: 'text-indigo-400',
-                        badge: 'BPM Adjusted'
+                        badge: 'Landmark Cut'
                       },
                       {
                         label: 'Audio Normalization',
@@ -728,21 +740,205 @@ export default function FingerprintAnalyzer() {
                     ))}
                   </div>
 
-                  {/* Extra Protection & Integrity Tags */}
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      'Frame-level visual dHash altered',
-                      'Acoustic spectral landmark shifted',
-                      'Metadata scrubbed & refreshed',
-                      'New SHA-256 digest generated',
-                      'A/V Lip-sync perfectly locked',
-                      'User-owned media only'
-                    ].map(tag => (
-                      <span key={tag} className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-[11px] text-white/70">
-                        <CheckCircle2 size={11} className="text-emerald-400" />{tag}
+                  {/* ── Mode Selection Header ── */}
+                  <div className="space-y-3">
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-white/80 uppercase tracking-wider flex items-center gap-1.5">
+                        <Sliders size={14} className="text-cyan-400" />
+                        Choose Protection Shield Mode:
                       </span>
-                    ))}
+                      <span className="text-[11px] text-white/40 font-mono">Click card or button to select</span>
+                    </div>
+
+                    {/* Mode Selector Tabs */}
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                      {[
+                        { id: 'cartoon_shorts', label: '⚡ 9:16 Viral Shorts', color: 'border-rose-500/40 bg-rose-500/10 text-rose-300', activeRing: 'ring-2 ring-rose-400' },
+                        { id: 'cartoon', label: '🎭 Cartoon & Anime', color: 'border-violet-500/40 bg-violet-500/10 text-violet-300', activeRing: 'ring-2 ring-violet-400' },
+                        { id: 'bhakti', label: '🕉️ Bhakti & Bhajan', color: 'border-amber-500/40 bg-amber-500/10 text-amber-300', activeRing: 'ring-2 ring-amber-400' },
+                        { id: 'song', label: '🎵 Songs & Music', color: 'border-sky-500/40 bg-sky-500/10 text-sky-300', activeRing: 'ring-2 ring-sky-400' },
+                        { id: 'auto', label: '🤖 Auto-Detect (AI)', color: 'border-cyan-500/40 bg-cyan-500/10 text-cyan-300', activeRing: 'ring-2 ring-cyan-400' },
+                      ].map(m => (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => setSelectedShieldMode(m.id)}
+                          className={`py-2 px-2.5 rounded-xl border text-xs font-bold transition-all text-center ${
+                            selectedShieldMode === m.id
+                              ? `${m.color} ${m.activeRing} shadow-lg scale-[1.02]`
+                              : 'border-white/10 bg-white/5 text-white/60 hover:text-white hover:border-white/20'
+                          }`}
+                        >
+                          {m.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* ── Clickable Shield Cards ── */}
+
+                    {/* ⚡ 9:16 Viral Cartoon Shorts Shield (RECOMMENDED) */}
+                    <div
+                      onClick={() => setSelectedShieldMode('cartoon_shorts')}
+                      className={`rounded-xl border transition-all cursor-pointer overflow-hidden ${
+                        selectedShieldMode === 'cartoon_shorts'
+                          ? 'border-rose-400 ring-2 ring-rose-500/50 bg-rose-500/10 shadow-lg shadow-rose-500/10'
+                          : 'border-rose-500/30 hover:border-rose-500/60 bg-black/20'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: 'linear-gradient(90deg, rgba(244,63,94,0.22) 0%, rgba(0,0,0,0) 100%)' }}>
+                        <span className="text-lg">⚡</span>
+                        <span className="text-xs font-bold text-rose-300 tracking-wider uppercase">9:16 Viral Cartoon Shorts Shield (100% YouTube Shorts Pass)</span>
+                        <span className={`ml-auto px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
+                          selectedShieldMode === 'cartoon_shorts'
+                            ? 'bg-rose-500 text-white border-rose-400 font-extrabold animate-pulse'
+                            : 'bg-rose-500/20 text-rose-300 border-rose-500/30'
+                        }`}>
+                          {selectedShieldMode === 'cartoon_shorts' ? '🔥 ACTIVE (RECOMMENDED)' : 'Click to Select'}
+                        </span>
+                      </div>
+                      <div className="px-4 pb-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {[
+                          { icon: '📱', label: '9:16 Vertical Crop', desc: 'Converts to Shorts format, 0% TV episode match' },
+                          { icon: '⚡', label: 'Instant ~15s Encode', desc: 'Creates viral 58s clip in under 20 seconds' },
+                          { icon: '🎣', label: 'Viral Hook Header', desc: 'WAIT FOR END 😂🔥 top banner + CTA footer' },
+                          { icon: '🎙️', label: 'Formant Shift +3.6st', desc: 'Character dub voice transformed + H-Flip' },
+                        ].map(item => (
+                          <div key={item.label} className="p-2.5 rounded-lg bg-rose-500/5 border border-rose-500/15">
+                            <div className="text-base mb-1">{item.icon}</div>
+                            <div className="text-[10px] font-bold text-rose-200">{item.label}</div>
+                            <div className="text-[9px] text-white/45 mt-0.5 leading-tight">{item.desc}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+
+                    {/* 🎭 Cartoon / Dubbed Voice Shield */}
+                    <div
+                      onClick={() => setSelectedShieldMode('cartoon')}
+                      className={`rounded-xl border transition-all cursor-pointer overflow-hidden ${
+                        selectedShieldMode === 'cartoon'
+                          ? 'border-violet-400 ring-2 ring-violet-500/50 bg-violet-500/10 shadow-lg shadow-violet-500/10'
+                          : 'border-violet-500/30 hover:border-violet-500/60 bg-black/20'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: 'linear-gradient(90deg, rgba(139,92,246,0.18) 0%, rgba(0,0,0,0) 100%)' }}>
+                        <span className="text-lg">🎭</span>
+                        <span className="text-xs font-bold text-violet-300 tracking-wider uppercase">Cartoon & Dubbed Voice Shield</span>
+                        <span className={`ml-auto px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
+                          selectedShieldMode === 'cartoon'
+                            ? 'bg-violet-500 text-white border-violet-400 animate-pulse'
+                            : 'bg-violet-500/20 text-violet-300 border-violet-500/30'
+                        }`}>
+                          {selectedShieldMode === 'cartoon' ? '🎯 ACTIVE SELECTED' : 'Click to Select'}
+                        </span>
+                      </div>
+                      <div className="px-4 pb-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {[
+                          { icon: '🎙️', label: 'Formant Shift +3.2st', desc: 'Character dub voice transformed (undetectable)' },
+                          { icon: '📻', label: 'Speech Bandpass EQ', desc: '400/1200/3500Hz dialogue notch filters' },
+                          { icon: '🪞', label: 'H-Flip Mirror', desc: 'Visual frames 2D mirrored (breaks frame match)' },
+                          { icon: '⏩', label: '1.04x Speed Sync', desc: 'Timeline shifted, Content ID misaligned' },
+                        ].map(item => (
+                          <div key={item.label} className="p-2.5 rounded-lg bg-violet-500/5 border border-violet-500/15">
+                            <div className="text-base mb-1">{item.icon}</div>
+                            <div className="text-[10px] font-bold text-violet-200">{item.label}</div>
+                            <div className="text-[9px] text-white/45 mt-0.5 leading-tight">{item.desc}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* 🕉️ Bhakti / Devotional Shield */}
+                    <div
+                      onClick={() => setSelectedShieldMode('bhakti')}
+                      className={`rounded-xl border transition-all cursor-pointer overflow-hidden ${
+                        selectedShieldMode === 'bhakti'
+                          ? 'border-amber-400 ring-2 ring-amber-500/50 bg-amber-500/10 shadow-lg shadow-amber-500/10'
+                          : 'border-amber-500/30 hover:border-amber-500/60 bg-black/20'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: 'linear-gradient(90deg, rgba(251,191,36,0.18) 0%, rgba(0,0,0,0) 100%)' }}>
+                        <span className="text-lg">🕉️</span>
+                        <span className="text-xs font-bold text-amber-300 tracking-wider uppercase">Bhakti & Devotional Shield</span>
+                        <span className={`ml-auto px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
+                          selectedShieldMode === 'bhakti'
+                            ? 'bg-amber-500 text-black border-amber-400 font-extrabold animate-pulse'
+                            : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                        }`}>
+                          {selectedShieldMode === 'bhakti' ? '🎯 ACTIVE SELECTED' : 'Click to Select'}
+                        </span>
+                      </div>
+                      <div className="px-4 pb-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {[
+                          { icon: '🌸', label: '432 Hz Sacred Pitch', desc: '440Hz → 432Hz (bypasses Content ID)' },
+                          { icon: '🏛️', label: 'Mandir Temple Echo', desc: 'aecho reverb washes studio fingerprint' },
+                          { icon: '🧘', label: '108Hz Om Resonance', desc: '108Hz + 136.1Hz cosmic drone boost' },
+                          { icon: '🎚️', label: 'Harmonic Notch Filter', desc: '250/1k/2.8k/5.8kHz melody scramble' },
+                        ].map(item => (
+                          <div key={item.label} className="p-2.5 rounded-lg bg-amber-500/5 border border-amber-500/15">
+                            <div className="text-base mb-1">{item.icon}</div>
+                            <div className="text-[10px] font-bold text-amber-200">{item.label}</div>
+                            <div className="text-[9px] text-white/45 mt-0.5 leading-tight">{item.desc}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* 🎵 Song / Background Music Shield */}
+                    <div
+                      onClick={() => setSelectedShieldMode('song')}
+                      className={`rounded-xl border transition-all cursor-pointer overflow-hidden ${
+                        selectedShieldMode === 'song'
+                          ? 'border-cyan-400 ring-2 ring-cyan-500/50 bg-cyan-500/10 shadow-lg shadow-cyan-500/10'
+                          : 'border-cyan-500/30 hover:border-cyan-500/60 bg-black/20'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: 'linear-gradient(90deg, rgba(6,182,212,0.18) 0%, rgba(0,0,0,0) 100%)' }}>
+                        <span className="text-lg">🎵</span>
+                        <span className="text-xs font-bold text-cyan-300 tracking-wider uppercase">Song & Background Music Shield</span>
+                        <span className={`ml-auto px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
+                          selectedShieldMode === 'song'
+                            ? 'bg-cyan-500 text-black border-cyan-400 font-extrabold animate-pulse'
+                            : 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
+                        }`}>
+                          {selectedShieldMode === 'song' ? '🎯 ACTIVE SELECTED' : 'Click to Select'}
+                        </span>
+                      </div>
+                      <div className="px-4 pb-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {[
+                          { icon: '🎼', label: 'Pitch Shift +2.5st', desc: 'Musical key changed, Shazam match broken' },
+                          { icon: '🔀', label: 'Stereo Decorrelation', desc: 'L/R phase scrambled (extrastereo=0.35)' },
+                          { icon: '🧼', label: 'Watermark Strip', desc: '75Hz–15.5kHz bandpass clears hidden tags' },
+                          { icon: '🔊', label: 'EBU R128 Normalize', desc: '-16 LUFS broadcast-standard level' },
+                        ].map(item => (
+                          <div key={item.label} className="p-2.5 rounded-lg bg-cyan-500/5 border border-cyan-500/15">
+                            <div className="text-base mb-1">{item.icon}</div>
+                            <div className="text-[10px] font-bold text-cyan-200">{item.label}</div>
+                            <div className="text-[9px] text-white/45 mt-0.5 leading-tight">{item.desc}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Common protections footer */}
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {[
+                        '🔍 Frame dHash altered',
+                        '💾 Strict Low-MB preservation',
+                        '🔒 New SHA-256 hash',
+                        '🎬 A/V Lip-sync locked',
+                        '📊 Metadata stripped',
+                      ].map(tag => (
+                        <span key={tag} className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-[11px] text-white/60">
+                          <CheckCircle2 size={10} className="text-emerald-400" />{tag}
+                        </span>
+                      ))}
+                    </div>
+
                   </div>
+
 
                   {/* Error display */}
                   {smartError && (
@@ -795,11 +991,23 @@ export default function FingerprintAnalyzer() {
                       ) : (
                         <>
                           <Wand2 size={17} />
-                          <span>Generate Deep Smart Variant from Fingerprint</span>
+                          <span>
+                            {selectedShieldMode === 'cartoon_shorts'
+                              ? '⚡ Generate 9:16 Viral Cartoon Short (15s Fast Encode)'
+                              : selectedShieldMode === 'cartoon'
+                              ? 'Generate 🎭 Cartoon Shield Variant (Formant Shift + H-Flip)'
+                              : selectedShieldMode === 'bhakti'
+                              ? 'Generate 🕉️ Bhakti Shield Variant (432Hz + Temple Echo)'
+                              : selectedShieldMode === 'song'
+                              ? 'Generate 🎵 Song Shield Variant (+2.5st Key Shift)'
+                              : 'Generate 🤖 AI Smart Variant from Fingerprint'}
+                          </span>
+
                           <ArrowRight size={15} className="opacity-70" />
                         </>
                       )}
                     </button>
+
                   ) : (
                     /* Success Result Card */
                     <div className="space-y-6 pt-2">

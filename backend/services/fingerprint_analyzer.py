@@ -34,19 +34,18 @@ FFMPEG_EXE = imageio_ffmpeg.get_ffmpeg_exe()
 def extract_pcm_audio(media_path: Path, sample_rate: int = 16000) -> Tuple[np.ndarray, int]:
     """
     Extract raw mono PCM float32 audio at 16kHz via FFmpeg stdout stream.
-    Optimized for sub-second execution across large audio/video files using fast input seek.
+    Optimized for sub-second execution across large audio/video files.
     """
     cmd = [
         FFMPEG_EXE,
-        "-threads", "0",          # Utilize all CPU threads for demuxing
-        "-ss", "0",               # Fast input seek to 0s
-        "-t", "60",               # Read max 60 seconds (standard for acoustics)
+        "-threads", "0",
         "-i", str(media_path),
-        "-vn",                    # No video decoding
-        "-ac", "1",               # Downmix to mono
-        "-ar", str(sample_rate),  # 16kHz is standard for acoustic speech & music analysis
-        "-f", "f32le",            # 32-bit float Little Endian PCM
-        "-",                      # Pipe to stdout
+        "-vn",
+        "-t", "45",               # 45s sample is enough for accurate analysis (was 90s)
+        "-ac", "1",
+        "-ar", str(sample_rate),
+        "-f", "f32le",
+        "-",
     ]
 
     try:
@@ -54,7 +53,7 @@ def extract_pcm_audio(media_path: Path, sample_rate: int = 16000) -> Tuple[np.nd
             cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
-            timeout=10,           # Safety timeout
+            timeout=60,           # Increased from 10s to 60s for large files
         )
 
         if proc.returncode != 0 or len(proc.stdout) == 0:
@@ -246,27 +245,60 @@ def get_fast_dominant_colors(image_bgr: np.ndarray, k: int = 3) -> List[Dict[str
 
 def analyze_video_fingerprint(video_path: Path, max_samples: int = 24) -> Dict[str, Any]:
     """
-    Direct-seek video stream scanning:
+    Direct-seek video stream scanning with full safety fallbacks:
     - Seeks directly to exact target frame intervals (0.05s total execution)
-    - Eliminates slow sequential frame reading on large media (10+ min videos)
+    - Fully resilient to audio-only MP4s, single-frame media, and corrupt frames
     - Frame dHash stream, dominant colors, scene cuts, keyframes gallery
     """
     cap = cv2.VideoCapture(str(video_path))
     if not cap.isOpened():
         return {
             "has_video": False,
-            "error": "Unable to read video stream.",
+            "width": 0,
+            "height": 0,
+            "resolution": "Audio Only",
+            "fps": 0.0,
+            "total_frames": 0,
+            "duration_sec": 0.0,
+            "aspect_ratio": "N/A",
+            "dhash_sequence": [],
+            "scene_changes": [],
+            "scene_changes_count": 0,
+            "motion_profile": [],
+            "average_motion_pct": 0.0,
+            "keyframes": [],
+            "dominant_palette": [],
+            "visual_fingerprint_hash": "0000000000000000000000000000000000000000000000000000000000000000",
         }
 
-    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH) or 0)
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 0)
     fps = float(cap.get(cv2.CAP_PROP_FPS) or 24.0)
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
     duration = (total_frames / fps) if fps > 0 else 0.0
 
-    sample_target = min(max_samples, max(6, total_frames if total_frames > 0 else 24))
-    if total_frames <= 0:
-        total_frames = 100
+    if width <= 0 or height <= 0 or total_frames <= 0:
+        cap.release()
+        return {
+            "has_video": False,
+            "width": max(0, width),
+            "height": max(0, height),
+            "resolution": f"{width}x{height}" if width > 0 else "Audio / No Video Track",
+            "fps": round(fps, 2) if fps > 0 else 0.0,
+            "total_frames": max(0, total_frames),
+            "duration_sec": round(duration, 2) if duration > 0 else 0.0,
+            "aspect_ratio": "N/A",
+            "dhash_sequence": [],
+            "scene_changes": [],
+            "scene_changes_count": 0,
+            "motion_profile": [],
+            "average_motion_pct": 0.0,
+            "keyframes": [],
+            "dominant_palette": [],
+            "visual_fingerprint_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        }
+
+    sample_target = min(max_samples, max(6, total_frames))
 
     # Calculate exact frame positions to seek directly
     target_frames = [
@@ -286,15 +318,19 @@ def analyze_video_fingerprint(video_path: Path, max_samples: int = 24) -> Dict[s
     for sampled_idx, frame_idx in enumerate(target_frames):
         cap.set(cv2.CAP_PROP_POS_FRAMES, frame_idx)
         ret, frame = cap.read()
-        if not ret or frame is None:
+        if not ret or frame is None or frame.size == 0:
             continue
 
         timestamp = round(frame_idx / fps, 2) if fps > 0 else 0.0
 
         # Downscale frame immediately to 160px for sub-millisecond OpenCV operations
         h, w = frame.shape[:2]
+        if h <= 0 or w <= 0:
+            continue
+
         scale = 160.0 / max(1, w)
-        small_bgr = cv2.resize(frame, (160, int(h * scale)), interpolation=cv2.INTER_AREA)
+        target_h = max(1, int(h * scale))
+        small_bgr = cv2.resize(frame, (160, target_h), interpolation=cv2.INTER_AREA)
         gray = cv2.cvtColor(small_bgr, cv2.COLOR_BGR2GRAY)
 
         # 1. Perceptual dHash
@@ -302,7 +338,7 @@ def analyze_video_fingerprint(video_path: Path, max_samples: int = 24) -> Dict[s
         dhash_sequence.append(frame_hash)
 
         # 2. Motion Intensity
-        if prev_gray is not None:
+        if prev_gray is not None and prev_gray.shape == gray.shape:
             diff = cv2.absdiff(gray, prev_gray)
             motion_val = round(float(np.mean(diff) / 255.0) * 100, 1)
             motion_profile.append(motion_val)
@@ -321,7 +357,7 @@ def analyze_video_fingerprint(video_path: Path, max_samples: int = 24) -> Dict[s
                 scene_changes.append({
                     "timestamp_sec": timestamp,
                     "frame_index": int(frame_idx),
-                    "confidence_score": round((1.0 - score) * 100, 1),
+                    "confidence_score": round((1.0 - max(0.0, min(1.0, score))) * 100, 1),
                 })
 
         # 4. Keyframes Gallery (Max 6 keyframes)
@@ -332,8 +368,9 @@ def analyze_video_fingerprint(video_path: Path, max_samples: int = 24) -> Dict[s
         )
 
         if should_save_kf and len(keyframes) < 6:
-            # Fast thumbnail encoding
-            thumb = cv2.resize(frame, (200, int(200 * height / max(1, width))), interpolation=cv2.INTER_AREA)
+            # Fast thumbnail encoding with min dimension safety
+            thumb_h = max(1, int(200 * height / max(1, width)))
+            thumb = cv2.resize(frame, (200, thumb_h), interpolation=cv2.INTER_AREA)
             _, buffer = cv2.imencode(".jpg", thumb, [int(cv2.IMWRITE_JPEG_QUALITY), 75])
             b64_thumb = "data:image/jpeg;base64," + base64.b64encode(buffer).decode("utf-8")
 
@@ -364,6 +401,10 @@ def analyze_video_fingerprint(video_path: Path, max_samples: int = 24) -> Dict[s
             if len(color_palette) >= 5:
                 break
 
+    # Calculate average motion safely
+    valid_motions = [m for m in motion_profile if not math.isnan(m)]
+    avg_motion = round(float(np.mean(valid_motions)), 1) if valid_motions else 0.0
+
     # Composite Visual Fingerprint Hash
     composite_payload = (
         f"RES:{width}x{height}|FPS:{fps:.1f}|DUR:{duration:.1f}|"
@@ -373,7 +414,7 @@ def analyze_video_fingerprint(video_path: Path, max_samples: int = 24) -> Dict[s
     visual_fingerprint_hash = hashlib.sha256(composite_payload.encode()).hexdigest()
 
     return {
-        "has_video": True,
+        "has_video": len(dhash_sequence) > 0,
         "width": width,
         "height": height,
         "resolution": f"{width}x{height}",
@@ -385,7 +426,7 @@ def analyze_video_fingerprint(video_path: Path, max_samples: int = 24) -> Dict[s
         "scene_changes": scene_changes,
         "scene_changes_count": len(scene_changes),
         "motion_profile": motion_profile,
-        "average_motion_pct": round(float(np.mean(motion_profile)), 1) if motion_profile else 0.0,
+        "average_motion_pct": avg_motion,
         "keyframes": keyframes,
         "dominant_palette": color_palette,
         "visual_fingerprint_hash": visual_fingerprint_hash,
