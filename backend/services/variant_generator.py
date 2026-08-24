@@ -252,8 +252,12 @@ def build_filtergraph(
     if speed_multiplier != 1.0 and 0.5 <= speed_multiplier <= 2.0:
         filters.append(f"setpts=PTS/{speed_multiplier:.4f}")
 
+    if not filters:
+        return ""
+
     filters.append("format=yuv420p")
     return ",".join(filters)
+
 
 
 
@@ -383,8 +387,6 @@ def generate_video_variant_sync(
         effective_pitch = pitch_shift_semitones
         if audio_mode == "cartoon_morph" and effective_pitch == 0.0:
             effective_pitch = 3.2
-        elif audio_mode == "bhakti_filter" and effective_pitch == 0.0:
-            effective_pitch = 2.0
 
         use_432hz = tuning_432hz or audio_mode == "bhakti_filter"
 
@@ -393,9 +395,7 @@ def generate_video_variant_sync(
             pitch_ratio = 2 ** (effective_pitch / 12.0)
             combined_ratio = (432.0 / 440.0) * pitch_ratio
             combined_rate = int(audio_sample_rate * combined_ratio)
-            # atempo must compensate for both: 440/432 × 1/pitch_ratio
             combined_tempo = (440.0 / 432.0) * (1.0 / pitch_ratio)
-            # Clamp atempo to safe 0.5–2.0 range
             combined_tempo = max(0.5, min(2.0, combined_tempo))
             af_filters.append(f"asetrate={combined_rate},atempo={combined_tempo:.6f},aresample={audio_sample_rate}")
         elif use_432hz:
@@ -413,14 +413,13 @@ def generate_video_variant_sync(
                 af_filters.append("equalizer=f=350:t=q:w=1.2:g=-4.5,equalizer=f=950:t=q:w=1.2:g=-4.5,equalizer=f=2200:t=q:w=1.5:g=-5.0,equalizer=f=3600:t=q:w=1.5:g=-4.5")
                 af_filters.append("vibrato=f=4.0:d=0.08")
             elif audio_mode == "bhakti_filter" or om_drone_resonance:
-                af_filters.append("equalizer=f=108:t=q:w=1.5:g=+3.0,equalizer=f=136.1:t=q:w=2.0:g=+2.5,equalizer=f=250:t=q:w=1.5:g=-4.0,equalizer=f=1000:t=q:w=1.2:g=-4.5,equalizer=f=2800:t=q:w=1.5:g=-4.5,equalizer=f=5800:t=q:w=2.0:g=-3.5")
+                af_filters.append("equalizer=f=108:t=q:w=1.5:g=+3.0,equalizer=f=136.1:t=q:w=2.0:g=+2.5,equalizer=f=1000:t=q:w=1.2:g=-3.5,equalizer=f=4000:t=q:w=1.5:g=-3.0")
             else:
                 af_filters.append("equalizer=f=280:t=q:w=1.5:g=-3.5,equalizer=f=1000:t=q:w=1.2:g=-4.0,equalizer=f=3000:t=q:w=1.5:g=-4.0,equalizer=f=6000:t=q:w=2.0:g=-3.0")
 
-
         # E. Mandir Sanctum Reverb (Bhakti mode only)
         if temple_reverb or audio_mode == "bhakti_filter":
-            af_filters.append("aecho=0.8:0.7:55|110:0.25|0.15")
+            af_filters.append("aecho=0.8:0.5:60:0.2")
 
         # F. Stereo Phase Decorrelation
         if stereo_decorrelate:
@@ -446,6 +445,8 @@ def generate_video_variant_sync(
         FFMPEG_EXE,
         "-y",
         "-threads", "0",
+        "-filter_threads", "0",
+        "-filter_complex_threads", "0",
     ]
 
     # Extended Jaap / Mantra Stream Looping if requested (e.g. 11x, 21x, 108x)

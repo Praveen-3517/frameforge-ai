@@ -6,7 +6,7 @@
     "dev": "npm run dev --prefix frontend",
     "frontend": "npm run dev --prefix frontend",
     "backend": "npm run dev:backend",
-    "dev:backend": "cd backend && .\\.venv\\Scripts\\uvicorn.exe main:app --reload --port 8005",
+    "dev:backend": "cd backend && .\\.venv\\Scripts\\uvicorn.exe main:app --reload --port 8000",
     "build": "npm run build --prefix frontend"
   }
 }
