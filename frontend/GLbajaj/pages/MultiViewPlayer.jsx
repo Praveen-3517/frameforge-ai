@@ -202,7 +202,8 @@ export default function MultiViewPlayer() {
     let base = 'https://www.youtube.com/embed/'
 
     if (type === 'playlist' && playlistId) {
-      return `https://www.youtube.com/embed/videoseries?list=${playlistId}&autoplay=1&mute=${muteParam}&loop=1&controls=1&enablejsapi=1&rel=0&origin=${window.location.origin}`
+      const startIndex = screen?.id ? ((screen.id - 1) % 2) + 1 : 1
+      return `https://www.youtube.com/embed/videoseries?list=${playlistId}&index=${startIndex}&autoplay=1&mute=${muteParam}&loop=1&controls=1&enablejsapi=1&rel=0&origin=${window.location.origin}`
     } else if (type === 'video_in_playlist' && videoId && playlistId) {
       return `https://www.youtube.com/embed/${videoId}?list=${playlistId}&autoplay=1&mute=${muteParam}&loop=1&controls=1&enablejsapi=1&rel=0&origin=${window.location.origin}`
     } else if (videoId) {
