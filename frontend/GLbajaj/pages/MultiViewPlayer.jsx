@@ -288,6 +288,33 @@ export default function MultiViewPlayer() {
   const earnedHours = (totalAccumulatedMinutes / 60).toFixed(2)
   const targetPercent = Math.min(100, (parseFloat(earnedHours) / 4000) * 100).toFixed(1)
 
+  // Phone Companion: best looping YouTube URL for phone (Mobile Data = different IP)
+  const getPhoneUrl = () => {
+    const { videoIds, playlistId } = parsedData
+    if (videoIds && videoIds.length > 0) {
+      return `https://www.youtube.com/watch?v=${videoIds[0]}&autoplay=1&loop=1&playlist=${videoIds.slice(0, 5).join(',')}`
+    } else if (playlistId) {
+      return `https://www.youtube.com/playlist?list=${playlistId}`
+    }
+    return ''
+  }
+  const phoneUrl = getPhoneUrl()
+  const qrUrl = phoneUrl ? `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(phoneUrl)}&bgcolor=0B0D17&color=F59E0B&margin=10` : ''
+
+  const [phoneCopied, setPhoneCopied] = useState(false)
+  const copyPhoneLink = () => {
+    if (!phoneUrl) return
+    navigator.clipboard.writeText(phoneUrl)
+    setPhoneCopied(true)
+    setTimeout(() => setPhoneCopied(false), 2000)
+  }
+
+  // Daily watch time projection calculator
+  const pcHoursPerDay = (activeStreamsCount * 24).toFixed(0)
+  const phoneHoursPerDay = 3 * 24 // 3 tabs on phone
+  const totalDailyHours = parseInt(pcHoursPerDay) + phoneHoursPerDay
+  const daysTo4000 = totalDailyHours > 0 ? Math.ceil(4000 / totalDailyHours) : '∞'
+
   return (
     <div className="relative min-h-screen flex flex-col bg-[#0B0D17] text-white">
       <StarField />
@@ -562,6 +589,73 @@ export default function MultiViewPlayer() {
             >
               <RefreshCw size={12} /> Reload All Now
             </button>
+          </div>
+        )}
+
+
+        {/* 📱 Phone Companion Mode — Alag IP = Alag Viewer = 2x Watch Time */}
+        {phoneUrl && (
+          <div className="p-5 rounded-2xl bg-gradient-to-r from-violet-500/10 via-[#131628] to-cyan-500/10 border border-violet-500/30 backdrop-blur-xl">
+            <div className="flex flex-col md:flex-row items-start gap-5">
+              {/* QR Code */}
+              <div className="flex-shrink-0 flex flex-col items-center gap-2">
+                <img
+                  src={qrUrl}
+                  alt="Phone QR"
+                  className="w-[120px] h-[120px] rounded-xl border border-violet-500/30 bg-black/40"
+                />
+                <span className="text-[10px] font-mono text-white/40 text-center">Scan on Phone</span>
+              </div>
+
+              {/* Info + Copy */}
+              <div className="flex-1 flex flex-col gap-3">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-base font-bold text-violet-300 font-display">📱 Phone Companion Mode</span>
+                    <span className="px-2 py-0.5 rounded-full bg-violet-500/15 border border-violet-500/30 text-violet-300 text-[10px] font-mono">ALAG IP = 2x CREDIT</span>
+                  </div>
+                  <p className="text-xs text-white/50 leading-relaxed">
+                    Apne phone pe <strong className="text-white">Mobile Data ON karo (WiFi band)</strong> — fir neeche ka link kholo ya QR scan karo.
+                    YouTube tumhare phone ko <strong className="text-emerald-300">alag viewer</strong> manega → genuine watch time 2x ho jayega.
+                  </p>
+                </div>
+
+                {/* Copy Link */}
+                <div className="flex items-center gap-2">
+                  <input
+                    readOnly
+                    value={phoneUrl}
+                    className="flex-1 px-3 py-2 rounded-xl bg-black/50 border border-white/10 text-[11px] font-mono text-white/60 outline-none truncate"
+                  />
+                  <button
+                    onClick={copyPhoneLink}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                      phoneCopied
+                        ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300'
+                        : 'bg-violet-500/20 border border-violet-500/40 text-violet-300 hover:bg-violet-500/30'
+                    }`}
+                  >
+                    {phoneCopied ? '✅ Copied!' : '📋 Copy Link'}
+                  </button>
+                </div>
+
+                {/* Projection Calculator */}
+                <div className="grid grid-cols-3 gap-2 pt-2 border-t border-white/5">
+                  <div className="text-center p-2 rounded-xl bg-black/30 border border-white/5">
+                    <div className="text-lg font-bold font-mono text-amber-300">{parseInt(pcHoursPerDay)}</div>
+                    <div className="text-[10px] font-mono text-white/40">PC hrs/day<br/>(8 screens)</div>
+                  </div>
+                  <div className="text-center p-2 rounded-xl bg-black/30 border border-white/5">
+                    <div className="text-lg font-bold font-mono text-violet-300">{phoneHoursPerDay}</div>
+                    <div className="text-[10px] font-mono text-white/40">Phone hrs/day<br/>(3 tabs)</div>
+                  </div>
+                  <div className="text-center p-2 rounded-xl bg-gradient-to-br from-emerald-500/15 to-cyan-500/10 border border-emerald-500/30">
+                    <div className="text-lg font-bold font-mono text-emerald-300">~{daysTo4000}</div>
+                    <div className="text-[10px] font-mono text-emerald-400/70">Days to<br/>4,000 hrs</div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
