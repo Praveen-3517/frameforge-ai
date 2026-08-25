@@ -151,14 +151,15 @@ export default function MultiViewPlayer() {
     for (let i = 0; i < screenCount; i++) {
       const assignedSpeed = randomizeSpeed ? speeds[i % speeds.length] : 1.0
       const delayMs = staggeredStart ? i * 2500 + Math.floor(Math.random() * 1500) : 0
+      const isFirst = i === 0
 
       initialScreens.push({
         id: i + 1,
-        loaded: !staggeredStart,
+        loaded: !staggeredStart || isFirst,
         delayRemainingMs: delayMs,
         speed: assignedSpeed,
         reloadKey: Date.now() + i,
-        status: staggeredStart ? 'Staggering...' : 'Active',
+        status: !staggeredStart || isFirst ? 'Active' : 'Staggering...',
       })
     }
 
@@ -168,7 +169,7 @@ export default function MultiViewPlayer() {
     // Staggered launch progression
     if (staggeredStart) {
       initialScreens.forEach((scr, idx) => {
-        if (idx === 0) return
+        if (idx === 0) return // Screen #1 is already loaded immediately
         setTimeout(() => {
           setScreenStates((prev) =>
             prev.map((item) =>
@@ -194,7 +195,7 @@ export default function MultiViewPlayer() {
   const handleReloadScreen = (id) => {
     setScreenStates((prev) =>
       prev.map((item) =>
-        item.id === id ? { ...item, reloadKey: Date.now() + Math.random() } : item
+        item.id === id ? { ...item, loaded: true, status: 'Active', reloadKey: Date.now() + Math.random() } : item
       )
     )
   }
