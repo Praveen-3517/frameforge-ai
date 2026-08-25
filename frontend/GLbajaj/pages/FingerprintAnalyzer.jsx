@@ -114,7 +114,7 @@ export default function FingerprintAnalyzer() {
     formData.append('file', singleFile)
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || ''
+      const API_URL = import.meta.env.VITE_API_URL || 'https://frameforge-ai-fa8z.onrender.com'
       const res = await axios.post(`${API_URL}/api/fingerprints/analyze`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 15 * 60 * 1000,
@@ -149,7 +149,7 @@ export default function FingerprintAnalyzer() {
     setSmartError('')
     setSmartResult(null)
 
-    const API_URL = import.meta.env.VITE_API_URL || ''
+    const API_URL = import.meta.env.VITE_API_URL || 'https://frameforge-ai-fa8z.onrender.com'
 
     const attemptTransform = async (useExistingId = true) => {
       const formData = new FormData()
@@ -226,7 +226,7 @@ export default function FingerprintAnalyzer() {
     formData.append('file_b', fileB)
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || ''
+      const API_URL = import.meta.env.VITE_API_URL || 'https://frameforge-ai-fa8z.onrender.com'
       const res = await axios.post(`${API_URL}/api/fingerprints/compare`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 15 * 60 * 1000,
@@ -1080,7 +1080,7 @@ export default function FingerprintAnalyzer() {
                           </div>
                           <div className="rounded-lg overflow-hidden bg-black aspect-video border border-violet-500/30">
                             <video
-                              src={`${import.meta.env.VITE_API_URL || ''}/api/media/${smartResult.output_filename}`}
+                              src={`${import.meta.env.VITE_API_URL || 'https://frameforge-ai-fa8z.onrender.com'}/api/media/${smartResult.output_filename}`}
                               controls
                               className="w-full h-full object-contain"
                             />
@@ -1123,7 +1123,7 @@ export default function FingerprintAnalyzer() {
                       {/* Download + Regenerate Buttons */}
                       <div className="flex flex-col sm:flex-row gap-3">
                         <a
-                          href={`${import.meta.env.VITE_API_URL || ''}/api/media/${smartResult.output_filename}`}
+                          href={`${import.meta.env.VITE_API_URL || 'https://frameforge-ai-fa8z.onrender.com'}/api/media/${smartResult.output_filename}`}
                           download={smartResult.output_filename}
                           className="flex-1 py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 text-white transition-all no-underline"
                           style={{ background: 'linear-gradient(135deg, #059669 0%, #0891B2 100%)', boxShadow: '0 0 16px rgba(5,150,105,0.3)' }}

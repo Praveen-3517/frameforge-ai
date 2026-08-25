@@ -135,7 +135,7 @@ export default function VideoVariantGenerator() {
     formData.append('loop_count', options.loop_count || 1)
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || ''
+      const API_URL = import.meta.env.VITE_API_URL || 'https://frameforge-ai-fa8z.onrender.com'
       const res = await axios.post(`${API_URL}/api/variants/create`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 15 * 60 * 1000, // 15 minutes timeout

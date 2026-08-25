@@ -1,6 +1,22 @@
 {
   "rewrites": [
     {
+      "source": "/api/(.*)",
+      "destination": "https://frameforge-ai-fa8z.onrender.com/api/$1"
+    },
+    {
+      "source": "/health",
+      "destination": "https://frameforge-ai-fa8z.onrender.com/health"
+    },
+    {
+      "source": "/generate-video",
+      "destination": "https://frameforge-ai-fa8z.onrender.com/generate-video"
+    },
+    {
+      "source": "/change-clothes",
+      "destination": "https://frameforge-ai-fa8z.onrender.com/change-clothes"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
