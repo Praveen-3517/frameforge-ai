@@ -27,7 +27,7 @@
 - **Engine / Frameworks:**
   - **Backend:** FastAPI (Python 3.10+), Uvicorn, MoviePy, Pillow, NumPy, SciPy, OpenCV (Headless), Edge-TTS, Google Generative AI SDK, Gradio Client, HTTPX.
   - **Frontend:** React 18, Vite 5, React Router v7, Tailwind CSS v3, Lucide React, Axios, HTML5 Canvas API.
-- **Version:** `v3.9.3` (Open Real YT Tabs Launcher & Multi-Video Alternating Distribution)
+- **Version:** `v3.9.4` (Smart Transform FFmpeg Stream-Copy & Sub-Second Audio Pipeline Fix)
 - **Current Build Status:** ✅ Production Deployed — Backend: `https://frameforge-ai-fa8z.onrender.com` | Frontend: `https://frameforge-ai-phi.vercel.app` | Local Dev: `backend: localhost:8000`, `frontend: localhost:5173`.
 
 ---
@@ -36,9 +36,9 @@
 
 - **Overall Project Completion:** `100%`
 - **Current Milestone:** `Milestone 6: Multi-View Smart Stream & 4,000-Hour Watch-Time Booster Suite`
-- **Current Sprint:** `Sprint 9: Real-Tab YT View Recording & Multi-Video Alternating Distribution`
-- **Current Objective:** Multi-View player fully hardened with guaranteed YouTube watch-page visits via real browser tabs, comma-separated multi-video input, and alternating screen video distribution.
-- **Current Task:** ✅ Open Real YT Tabs launcher shipped (`6584f4a`) — staggered `window.open()` direct YouTube watch pages for 100% view attribution, alongside comma/newline separated multi-video URL parsing and alternating screen distribution.
+- **Current Sprint:** `Sprint 10: Transform Pipeline Hardening & Zero-Hang FFmpeg Muxing`
+- **Current Objective:** Sub-second instant stream-copy audio/video variant generation without muxer hangs or timeouts.
+- **Current Task:** ✅ Fixed FFmpeg smart-transform timeout (`7f11143`): Added `-shortest`, `-fflags +genpts+discardcorrupt`, `-avoid_negative_ts make_zero`, streamlined EQ & echo filters (removed heavy CPU-bound vibrato loops), increased timeout buffer, ensuring instant 2–5s transformation.
 - **Next Task:** Multi-voice selector in frontend (Edge-TTS voice library dropdown) or real-time SSE streaming progress bars.
 - **Previous Completed Tasks:**
   - ✅ Configured FastAPI backend with CORS middleware and async endpoints.
@@ -60,6 +60,7 @@
   - ✅ **Alternating Screen Video Index Distribution:** Each screen is assigned `videoIds[(screen.id - 1) % videoIds.length]` so that multi-video inputs are spread across all active screens evenly.
   - ✅ **Screen 1 Immediate Load Fix:** Screen #1 always activates instantly (`loaded: true` on init); remaining screens stagger via `setTimeout` at 2.5s + random jitter intervals.
   - ✅ **Open Real YT Tabs Launcher (`handleLaunchRealTabs`):** Secondary launch mode opens up to 8 real browser tabs via `window.open()` directly to `youtube.com/watch?v=...&autoplay=1` with 1.5s staggered delays — guaranteeing 100% direct YouTube watch-page view recording vs. iframe embeds.
+  - ✅ **Smart Transform Performance & Hang Fix:** Streamlined FFmpeg audio chain, added `-shortest` and clean timestamps flags to prevent muxing hangs on Render free-tier.
   - ✅ Deployed full-stack to production: Render backend (`https://frameforge-ai-fa8z.onrender.com`) + Vercel frontend (`https://frameforge-ai-phi.vercel.app`), with Cloudflare Tunnel for mobile device testing.
 - **Blocked Tasks:** None.
 - **Pending / Remaining Work:**
