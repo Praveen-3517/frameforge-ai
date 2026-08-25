@@ -861,7 +861,7 @@ export default function FingerprintAnalyzer() {
                     >
                       <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: 'linear-gradient(90deg, rgba(251,191,36,0.18) 0%, rgba(0,0,0,0) 100%)' }}>
                         <span className="text-lg">🕉️</span>
-                        <span className="text-xs font-bold text-amber-300 tracking-wider uppercase">Bhakti & Devotional Shield</span>
+                        <span className="text-xs font-bold text-amber-300 tracking-wider uppercase">Bhakti & Devotional Shield (100% Natural Voice)</span>
                         <span className={`ml-auto px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
                           selectedShieldMode === 'bhakti'
                             ? 'bg-amber-500 text-black border-amber-400 font-extrabold animate-pulse'
@@ -872,8 +872,8 @@ export default function FingerprintAnalyzer() {
                       </div>
                       <div className="px-4 pb-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
                         {[
-                          { icon: '🌸', label: '432Hz + 1.4st Pitch', desc: 'Sacred tuning + melodic key shift' },
-                          { icon: '⏩', label: '1.04x Timeline Sync', desc: '4% speed shift breaks Content ID' },
+                          { icon: '🎙️', label: '100% Original Voice', desc: '0st Pitch Shift (NO child / squeaky pitch)' },
+                          { icon: '🌸', label: '432Hz Sacred Tuning', desc: 'Harmonic resonance bypasses 440Hz match' },
                           { icon: '🏛️', label: 'Mandir Temple Echo', desc: 'aecho reverb washes studio fingerprint' },
                           { icon: '🧘', label: '108Hz Om Drone Boost', desc: 'Cosmic resonance & harmonic scrambler' },
                         ].map(item => (
@@ -897,7 +897,7 @@ export default function FingerprintAnalyzer() {
                     >
                       <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: 'linear-gradient(90deg, rgba(6,182,212,0.18) 0%, rgba(0,0,0,0) 100%)' }}>
                         <span className="text-lg">🎵</span>
-                        <span className="text-xs font-bold text-cyan-300 tracking-wider uppercase">Song & Background Music Shield</span>
+                        <span className="text-xs font-bold text-cyan-300 tracking-wider uppercase">Natural Song & BGM Shield (Original Voice)</span>
                         <span className={`ml-auto px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
                           selectedShieldMode === 'song'
                             ? 'bg-cyan-500 text-black border-cyan-400 font-extrabold animate-pulse'
@@ -908,10 +908,10 @@ export default function FingerprintAnalyzer() {
                       </div>
                       <div className="px-4 pb-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
                         {[
-                          { icon: '🎼', label: 'Pitch Shift +2.5st', desc: 'Musical key changed, Shazam match broken' },
+                          { icon: '🎤', label: '100% Pure Voice', desc: '0st Pitch Shift (Normal adult voice)' },
                           { icon: '🔀', label: 'Stereo Decorrelation', desc: 'L/R phase scrambled (extrastereo=0.35)' },
                           { icon: '🧼', label: 'Watermark Strip', desc: '75Hz–15.5kHz bandpass clears hidden tags' },
-                          { icon: '🔊', label: 'EBU R128 Normalize', desc: '-16 LUFS broadcast-standard level' },
+                          { icon: '📻', label: 'Harmonic Notch EQ', desc: 'Subtle acoustic landmark bypass' },
                         ].map(item => (
                           <div key={item.label} className="p-2.5 rounded-lg bg-cyan-500/5 border border-cyan-500/15">
                             <div className="text-base mb-1">{item.icon}</div>

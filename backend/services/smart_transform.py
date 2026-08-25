@@ -118,27 +118,27 @@ def derive_transform_params(fingerprint: Dict[str, Any], forced_mode: str = "aut
 
 
     elif mode == "bhakti" or (mode == "auto" and music_pct > dialogue_pct and (music_pct > 50.0 or bass_ratio > 45.0)):
-        # 🕉️ BHAKTI & DEVOTIONAL 1-HOUR LONG MEDIA SHIELD (Ultra-Fast 15-20s Stream-Copy + Full Audio Immunity)
+        # 🕉️ BHAKTI & DEVOTIONAL NATURAL SHIELD (100% Original Natural Voice + 432Hz Sacred Tuning + Temple Reverb)
         audio_mode = "bhakti_filter"
-        pitch_shift_semitones = 1.5   # Sweet melodic key shift (+1.5st)
-        speed_multiplier = 1.0        # Stream-copy video mode (instant 15-20s processing for 1-hour video)
+        pitch_shift_semitones = 0.0   # 0.0 = 100% Original Natural Adult Voice (NO child / squeaky voice!)
+        speed_multiplier = 1.0        # Stream-copy video mode (instant processing)
         deep_visual = False           # Bypasses heavy frame re-encoding
         zoom_pct = 0.0
         flip_horizontal = False       # Keep visual natural
-        tuning_432hz = True
+        tuning_432hz = True           # Pure 432Hz harmonic tuning (soothing, zero chipmunk effect)
         temple_reverb = True
         om_drone_resonance = True
-        audio_mode_label = "🕉️ Bhakti Shield (Ultra-Fast 15s Stream-Copy + 432Hz/+1.5st Key + Temple Echo + Om Drone)"
+        audio_mode_label = "🕉️ Bhakti Shield (100% Natural Voice + 432Hz Sacred Tuning + Temple Echo)"
     elif mode == "song":
-        # 🎵 SONG & BGM MODE
+        # 🎵 NATURAL SONG & BGM SHIELD (100% Original Voice + Phase Scrambler + Harmonic Notch)
         audio_mode = "max_protection"
-        pitch_shift_semitones = 2.5
-        audio_mode_label = "🎵 Song & Background Music Shield (+2.5st Key Shift + Phase Decorrelation)"
+        pitch_shift_semitones = 0.0   # 0.0 = Pure Natural Voice (No child pitch)
+        audio_mode_label = "🎵 Natural Song Shield (Original Voice + Phase Scrambler + Notch EQ)"
     else:
         # UNIVERSAL SAFEGUARD
         audio_mode = "max_protection"
-        pitch_shift_semitones = 2.5
-        audio_mode_label = "🛡️ Universal Protection (+2.5st Shift + Watermark Strip)"
+        pitch_shift_semitones = 0.0
+        audio_mode_label = "🛡️ Universal Natural Protection (Original Voice + 432Hz/Watermark Strip)"
 
     time_stretch_pct = 0.0
     audio_eq_filter = True

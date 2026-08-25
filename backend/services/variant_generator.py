@@ -386,8 +386,8 @@ def generate_video_variant_sync(
         effective_pitch = pitch_shift_semitones
         if audio_mode == "cartoon_morph" and effective_pitch == 0.0:
             effective_pitch = 3.2
-        elif audio_mode == "bhakti_filter" and effective_pitch == 0.0:
-            effective_pitch = 1.4
+        elif audio_mode == "bhakti_filter":
+            effective_pitch = pitch_shift_semitones  # Keep 0.0 for natural original voice
 
         use_432hz = tuning_432hz or audio_mode == "bhakti_filter"
 
