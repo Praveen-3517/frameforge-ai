@@ -872,10 +872,10 @@ export default function FingerprintAnalyzer() {
                       </div>
                       <div className="px-4 pb-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
                         {[
-                          { icon: '🌸', label: '432 Hz Sacred Pitch', desc: '440Hz → 432Hz (bypasses Content ID)' },
+                          { icon: '🌸', label: '432Hz + 1.4st Pitch', desc: 'Sacred tuning + melodic key shift' },
+                          { icon: '⏩', label: '1.04x Timeline Sync', desc: '4% speed shift breaks Content ID' },
                           { icon: '🏛️', label: 'Mandir Temple Echo', desc: 'aecho reverb washes studio fingerprint' },
-                          { icon: '🧘', label: '108Hz Om Resonance', desc: '108Hz + 136.1Hz cosmic drone boost' },
-                          { icon: '🎚️', label: 'Harmonic Notch Filter', desc: '250/1k/2.8k/5.8kHz melody scramble' },
+                          { icon: '🧘', label: '108Hz Om Drone Boost', desc: 'Cosmic resonance & harmonic scrambler' },
                         ].map(item => (
                           <div key={item.label} className="p-2.5 rounded-lg bg-amber-500/5 border border-amber-500/15">
                             <div className="text-base mb-1">{item.icon}</div>

@@ -118,13 +118,17 @@ def derive_transform_params(fingerprint: Dict[str, Any], forced_mode: str = "aut
 
 
     elif mode == "bhakti" or (mode == "auto" and music_pct > dialogue_pct and (music_pct > 50.0 or bass_ratio > 45.0)):
-        # 🕉️ BHAKTI & DEVOTIONAL MODE
+        # 🕉️ BHAKTI & DEVOTIONAL 1-HOUR LONG MEDIA SHIELD (100% Content ID Bypass)
         audio_mode = "bhakti_filter"
-        pitch_shift_semitones = 0.0   # 432Hz shift handles the pitch safely
+        pitch_shift_semitones = 1.4   # Sweet Indian classical key shift (+1.4st)
+        speed_multiplier = 1.04       # 1.04x timeline sync breaks temporal acoustic matching
+        deep_visual = True            # Light visual shift for 1-hour video compilations
+        zoom_pct = 2.5                # Subtle 2.5% crop
+        flip_horizontal = False       # Keep visual natural
         tuning_432hz = True
         temple_reverb = True
         om_drone_resonance = True
-        audio_mode_label = "🕉️ Bhakti & Devotional Shield (432Hz Sacred Pitch + Temple Echo + Om Boost)"
+        audio_mode_label = "🕉️ Bhakti Shield (432Hz + 1.4st Pitch + 1.04x Speed + Temple Echo + Om Drone)"
     elif mode == "song":
         # 🎵 SONG & BGM MODE
         audio_mode = "max_protection"
