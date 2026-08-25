@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { Video, Shirt, Zap, Github, Layers, Fingerprint, Sparkles } from 'lucide-react'
+import { Video, Shirt, Zap, Github, Layers, Fingerprint, Sparkles, Tv } from 'lucide-react'
 import StarField from '../components/StarField'
 
 export default function Dashboard() {
@@ -22,7 +22,7 @@ export default function Dashboard() {
             One-Click <span className="gradient-text">AI Tools</span>
           </span>
           <span className="hidden sm:inline-block px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/50 text-[11px] font-mono">
-            Suite v3.0
+            Suite v3.9
           </span>
         </div>
         <nav className="flex items-center gap-4">
@@ -44,13 +44,13 @@ export default function Dashboard() {
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-mono text-white/70 mb-3">
             <Sparkles size={12} className="text-cyan-400" />
-            AI Media Synthesis & Forensics Workspace
+            AI Media Synthesis, Forensics & Growth Workspace
           </div>
           <h1 className="text-4xl sm:text-5xl font-display font-bold text-white tracking-tight mb-3">
             Select an <span className="gradient-text">AI Tool</span>
           </h1>
           <p className="text-white/50 text-base max-w-lg mx-auto">
-            Choose a generative video engine, virtual fashion try-on, variant transformer, or forensic media analyzer below.
+            Choose a generative video engine, virtual try-on, variant transformer, forensic analyzer, or watch-time booster.
           </p>
         </div>
 
@@ -129,6 +129,30 @@ export default function Dashboard() {
             </div>
             <p className="text-sm text-white/50 leading-relaxed">
               Analyze audio waveforms, frequency spectrums, tempo/BPM, visual perceptual dHash, scene cuts, and compare dual media files.
+            </p>
+          </Link>
+
+          {/* Tool 5: Multi-View Smart Watch-Time Booster */}
+          <Link
+            to="/multiview"
+            className="group block bg-gradient-to-r from-amber-500/10 via-[#131628] to-cyan-500/10 border border-amber-500/30 hover:border-amber-400 rounded-3xl p-6 transition-all hover:-translate-y-1 hover:shadow-2xl hover:shadow-amber-500/20 backdrop-blur-md text-left relative overflow-hidden md:col-span-2"
+          >
+            <div className="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <Tv className="text-amber-400" size={24} />
+            </div>
+            <div className="flex items-center justify-between mb-1.5">
+              <h2 className="text-xl font-bold text-white font-display flex items-center gap-2">
+                Multi-View Watch-Time Booster
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold">
+                  🛡️ 100% Anti-Drop Safe
+                </span>
+              </h2>
+              <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold">
+                4,000 Hours Fast Engine
+              </span>
+            </div>
+            <p className="text-sm text-white/60 leading-relaxed">
+              Safe 4x/8x/12x/16x multi-stream YouTube & Playlist player with staggered anti-spike launch, auto-sleep timer, low RAM data-saver, and live watch-time metrics.
             </p>
           </Link>
 
