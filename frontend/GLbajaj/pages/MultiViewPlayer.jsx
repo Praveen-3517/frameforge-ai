@@ -211,9 +211,12 @@ export default function MultiViewPlayer() {
       let targetUrl = ''
       if (videoIds && videoIds.length > 0) {
         const vid = videoIds[i % videoIds.length]
-        targetUrl = `https://www.youtube.com/watch?v=${vid}&autoplay=1`
+        // &loop=1&playlist=VIDEO_ID tricks YouTube into treating it as a
+        // single-item playlist — video repeats automatically forever
+        targetUrl = `https://www.youtube.com/watch?v=${vid}&autoplay=1&loop=1&playlist=${vid}`
       } else if (playlistId) {
-        targetUrl = `https://www.youtube.com/playlist?list=${playlistId}`
+        // Playlist mode: loops the full playlist continuously
+        targetUrl = `https://www.youtube.com/playlist?list=${playlistId}&loop=1`
       }
 
       if (targetUrl) {
@@ -223,6 +226,7 @@ export default function MultiViewPlayer() {
       }
     }
   }
+
 
   // Construct iframe embed URL
   const buildEmbedUrl = (screen) => {
