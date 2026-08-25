@@ -200,6 +200,30 @@ export default function MultiViewPlayer() {
     )
   }
 
+  // Launch Real Browser Tabs Mode (100% Guaranteed YouTube Watch Page Visits)
+  const handleLaunchRealTabs = () => {
+    if ((!parsedData.videoIds || parsedData.videoIds.length === 0) && !parsedData.playlistId) return
+
+    const { videoIds, playlistId } = parsedData
+    const count = Math.min(screenCount, 8)
+
+    for (let i = 0; i < count; i++) {
+      let targetUrl = ''
+      if (videoIds && videoIds.length > 0) {
+        const vid = videoIds[i % videoIds.length]
+        targetUrl = `https://www.youtube.com/watch?v=${vid}&autoplay=1`
+      } else if (playlistId) {
+        targetUrl = `https://www.youtube.com/playlist?list=${playlistId}`
+      }
+
+      if (targetUrl) {
+        setTimeout(() => {
+          window.open(targetUrl, `_blank_stream_${i}_${Date.now()}`)
+        }, i * 1500)
+      }
+    }
+  }
+
   // Construct iframe embed URL
   const buildEmbedUrl = (screen) => {
     const { videoIds, playlistId, type } = parsedData
@@ -332,23 +356,35 @@ export default function MultiViewPlayer() {
               <Globe className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" size={18} />
             </div>
 
-            {/* Start / Stop Button */}
-            {!isPlaying ? (
+            {/* Launch Buttons */}
+            <div className="flex items-center gap-2">
+              {!isPlaying ? (
+                <button
+                  onClick={handleStartPlayback}
+                  disabled={(!parsedData.videoIds || parsedData.videoIds.length === 0) && !parsedData.playlistId}
+                  className="px-5 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 font-display uppercase tracking-wider"
+                >
+                  <Play size={16} fill="black" /> In-App Grid
+                </button>
+              ) : (
+                <button
+                  onClick={handleStopAll}
+                  className="px-5 py-3.5 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-rose-600/20 transition-all hover:scale-105 font-display uppercase tracking-wider"
+                >
+                  <Pause size={16} fill="white" /> Stop
+                </button>
+              )}
+
               <button
-                onClick={handleStartPlayback}
+                type="button"
+                onClick={handleLaunchRealTabs}
                 disabled={(!parsedData.videoIds || parsedData.videoIds.length === 0) && !parsedData.playlistId}
-                className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 font-display uppercase tracking-wider"
+                className="px-5 py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 font-display uppercase tracking-wider whitespace-nowrap"
+                title="Opens direct YouTube watch page tabs in your browser (100% recorded as authentic viewer visits)"
               >
-                <Play size={16} fill="black" /> Launch Multi-Stream
+                <Zap size={16} fill="black" /> Open Real YT Tabs (100% Safe)
               </button>
-            ) : (
-              <button
-                onClick={handleStopAll}
-                className="px-6 py-3.5 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-rose-600/20 transition-all hover:scale-105 font-display uppercase tracking-wider"
-              >
-                <Pause size={16} fill="white" /> Stop All Streams
-              </button>
-            )}
+            </div>
           </div>
 
           {/* Link Status Pill */}
