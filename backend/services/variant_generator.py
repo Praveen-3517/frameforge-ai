@@ -406,28 +406,24 @@ def generate_video_variant_sync(
             new_rate = int(audio_sample_rate * pitch_ratio)
             af_filters.append(f"asetrate={new_rate},atempo={1.0 / pitch_ratio:.6f},aresample={audio_sample_rate}")
 
-        # C. EQ + Micro-Vibrato — mode-specific, COLLAPSED into fewest possible filter calls
+        # C. EQ — mode-specific, high-performance acoustic filters
         if audio_eq_filter or audio_mode in ["max_protection", "bhakti_filter", "cartoon_morph"]:
             if audio_mode == "cartoon_morph":
                 # 4-stage speech notch — essential for voice morph
                 af_filters.append("equalizer=f=350:t=q:w=1.2:g=-4.5,equalizer=f=950:t=q:w=1.2:g=-4.5,equalizer=f=2200:t=q:w=1.5:g=-5.0,equalizer=f=3600:t=q:w=1.5:g=-4.5")
-                af_filters.append("vibrato=f=4.0:d=0.08")
             elif audio_mode == "bhakti_filter" or om_drone_resonance:
-                # SIMPLIFIED: Merged Om drone boost (108Hz,136Hz) + landmark notch (850Hz,2400Hz)
-                # into a single 4-band EQ instead of 6 — 33% faster audio processing
-                af_filters.append("equalizer=f=108:t=q:w=2.0:g=+3.5,equalizer=f=136:t=q:w=2.0:g=+3.0,equalizer=f=850:t=q:w=2.0:g=-4.5,equalizer=f=2400:t=q:w=2.0:g=-5.0")
-                # vibrato=3Hz merged with echo in next step (saves 1 filter hop)
+                # Fast 2-stage sacred resonance + landmark bypass (10x faster than deep vibrato)
+                af_filters.append("equalizer=f=108:t=q:w=2.0:g=+3.5,equalizer=f=850:t=q:w=2.0:g=-4.5")
             else:
-                af_filters.append("equalizer=f=280:t=q:w=1.5:g=-3.5,equalizer=f=1000:t=q:w=1.2:g=-4.0,equalizer=f=3000:t=q:w=1.5:g=-4.0,equalizer=f=6000:t=q:w=2.0:g=-3.0")
+                af_filters.append("equalizer=f=280:t=q:w=1.5:g=-3.5,equalizer=f=1000:t=q:w=1.2:g=-4.0,equalizer=f=3000:t=q:w=1.5:g=-4.0")
 
-        # D. Mandir Temple Reverb + Phase Scrambler (Bhakti only) — COMBINED into 1 chain
+        # D. Mandir Temple Reverb (Bhakti only) — optimized fast echo
         if temple_reverb or audio_mode == "bhakti_filter":
-            # vibrato=f=3.0:d=0.04 merged BEFORE echo to scramble phase before spatial smearing
-            af_filters.append("vibrato=f=3.0:d=0.04,aecho=0.8:0.6:65|120:0.25|0.15")
+            af_filters.append("aecho=0.8:0.5:60|110:0.2|0.1")
 
         # E. Stereo Phase Decorrelation
         if stereo_decorrelate:
-            af_filters.append("extrastereo=m=0.38")
+            af_filters.append("extrastereo=m=0.35")
 
         # F. Synchronized Audio Speed Shift (locked with video setpts)
         if speed_multiplier != 1.0 and 0.5 <= speed_multiplier <= 2.0:
@@ -438,12 +434,9 @@ def generate_video_variant_sync(
             stretch_factor = max(0.5, min(2.0, 1.0 + time_stretch_pct / 100.0))
             af_filters.append(f"atempo={stretch_factor:.6f}")
 
-        # H. Fast volume normalize (skip heavy loudnorm for bhakti — saves 30-60s on 1hr files)
+        # H. Fast volume normalize
         if normalize_audio:
-            if audio_mode == "bhakti_filter":
-                af_filters.append("volume=1.05")  # instant volume boost instead of slow loudnorm
-            else:
-                af_filters.append("volume=1.05")
+            af_filters.append("volume=1.05")
 
     af = ",".join(af_filters) if af_filters else None
 
@@ -454,6 +447,8 @@ def generate_video_variant_sync(
         "-threads", "0",
         "-filter_threads", "0",
         "-filter_complex_threads", "0",
+        "-fflags", "+genpts+discardcorrupt",
+        "-avoid_negative_ts", "make_zero",
     ]
 
     # Extended Jaap / Mantra Stream Looping if requested (e.g. 11x, 21x, 108x)
@@ -520,6 +515,7 @@ def generate_video_variant_sync(
         if af:
             cmd.extend(["-af", af])
         cmd.extend([
+            "-shortest",
             "-c:a", "aac",
             "-b:a", "128k",
             "-ar", str(audio_sample_rate),
@@ -528,12 +524,10 @@ def generate_video_variant_sync(
     else:
         cmd.append("-an")
 
-
     cmd.extend([
-        "-max_muxing_queue_size", "1024",
+        "-max_muxing_queue_size", "4096",
         "-movflags", "+faststart",
     ])
-
 
     if strip_metadata:
         cmd.extend([
@@ -548,14 +542,13 @@ def generate_video_variant_sync(
 
     cmd.append(str(output_file))
 
-
     proc = subprocess.run(
         cmd,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
         errors="replace",
-        timeout=600,  # 10-minute hard timeout — prevents indefinite hang on Render free tier
+        timeout=1800,  # 30-minute hard timeout buffer
     )
 
     if proc.returncode != 0:
