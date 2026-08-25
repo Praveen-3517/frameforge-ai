@@ -91,13 +91,13 @@ export default function MultiViewPlayer() {
   const [parsedData, setParsedData] = useState({ videoIds: [], playlistId: '', type: 'invalid' })
   const [screenCount, setScreenCount] = useState(8) // Default 8x
   const [isPlaying, setIsPlaying] = useState(false)
-  const [isMuted, setIsMuted] = useState(true)
+  const [isMuted, setIsMuted] = useState(false) // DEFAULT UNMUTED — YouTube counts unmuted views better
 
   // Algorithmic Safety Options
-  const [staggeredStart, setStaggeredStart] = useState(true) // Stagger tab loads (2-5s)
-  const [randomizeSpeed, setRandomizeSpeed] = useState(true) // Vary speed across tabs
-  const [autoLoopDuration, setAutoLoopDuration] = useState(60) // in minutes (0 = continuous)
-  const [sleepTimerMinutes, setSleepTimerMinutes] = useState(0) // 0 = no sleep timer, or 60, 120, 360, 480
+  const [staggeredStart, setStaggeredStart] = useState(true)
+  const [randomizeSpeed, setRandomizeSpeed] = useState(true)
+  const [sleepTimerMinutes, setSleepTimerMinutes] = useState(0)
+  const [autoReloadMinutes, setAutoReloadMinutes] = useState(80) // Auto-reload iframes every N mins
 
   // Streaming State for each screen
   const [screenStates, setScreenStates] = useState([])
@@ -107,6 +107,10 @@ export default function MultiViewPlayer() {
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [totalAccumulatedMinutes, setTotalAccumulatedMinutes] = useState(0)
   const [showSafetyGuide, setShowSafetyGuide] = useState(false)
+
+  // Auto-reload countdown
+  const [nextReloadIn, setNextReloadIn] = useState(0) // seconds until next reload
+  const autoReloadRef = useRef(null)
 
   // Parse on URL change
   useEffect(() => {
@@ -118,14 +122,13 @@ export default function MultiViewPlayer() {
     setParsedData(parsed)
   }, [inputUrl])
 
-  // Live timer odometer
+  // Live timer odometer + sleep timer
   useEffect(() => {
     let interval = null
     if (isPlaying && activeStreamsCount > 0) {
       interval = setInterval(() => {
         setElapsedSeconds((prev) => {
           const next = prev + 1
-          // Check sleep timer
           if (sleepTimerMinutes > 0 && next >= sleepTimerMinutes * 60) {
             handleStopAll()
           }
@@ -138,6 +141,37 @@ export default function MultiViewPlayer() {
     }
     return () => clearInterval(interval)
   }, [isPlaying, activeStreamsCount, sleepTimerMinutes])
+
+  // Auto-reload all iframes every autoReloadMinutes to prevent browser throttling
+  useEffect(() => {
+    if (autoReloadRef.current) clearInterval(autoReloadRef.current)
+    if (!isPlaying || autoReloadMinutes === 0) {
+      setNextReloadIn(0)
+      return
+    }
+    const reloadIntervalMs = autoReloadMinutes * 60 * 1000
+    setNextReloadIn(autoReloadMinutes * 60)
+
+    // Countdown ticker
+    const countdownInterval = setInterval(() => {
+      setNextReloadIn((prev) => {
+        if (prev <= 1) return autoReloadMinutes * 60 // reset
+        return prev - 1
+      })
+    }, 1000)
+
+    // Actual reload trigger
+    autoReloadRef.current = setInterval(() => {
+      setScreenStates((prev) =>
+        prev.map((item) => ({ ...item, reloadKey: Date.now() + Math.random() }))
+      )
+    }, reloadIntervalMs)
+
+    return () => {
+      clearInterval(countdownInterval)
+      clearInterval(autoReloadRef.current)
+    }
+  }, [isPlaying, autoReloadMinutes])
 
   // Start Multi-Screen Playback
   const handleStartPlayback = () => {
@@ -466,47 +500,70 @@ export default function MultiViewPlayer() {
               </button>
             </div>
 
-            {/* Audio Mute / Data Saver */}
+            {/* Audio Mute Toggle — UNMUTED by default for better view credit */}
             <div className="flex flex-col gap-1.5">
               <label className="text-[11px] font-mono text-white/50 uppercase tracking-wider flex items-center gap-1">
-                <VolumeX size={13} className="text-cyan-400" /> Audio & 144p Data Saver
+                <Volume2 size={13} className="text-emerald-400" /> Audio Mode
               </label>
               <button
                 type="button"
                 onClick={() => setIsMuted(!isMuted)}
                 className={`py-2 px-3 rounded-xl text-xs font-mono font-semibold flex items-center justify-between border transition-all ${
-                  isMuted
-                    ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-300'
-                    : 'bg-black/30 border-white/10 text-white/50'
+                  !isMuted
+                    ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300'
+                    : 'bg-rose-500/10 border-rose-500/30 text-rose-300'
                 }`}
               >
-                <span>Auto-Mute & Low RAM</span>
+                <span>{isMuted ? '🔇 Muted (low credit)' : '🔊 Unmuted (max credit)'}</span>
                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-white/10">
-                  {isMuted ? 'MUTED' : 'UNMUTED'}
+                  {isMuted ? 'MUTED' : 'ON'}
                 </span>
               </button>
             </div>
 
-            {/* Auto-Sleep Timer */}
+            {/* Auto-Reload Interval — prevents browser tab throttling */}
             <div className="flex flex-col gap-1.5">
               <label className="text-[11px] font-mono text-white/50 uppercase tracking-wider flex items-center gap-1">
-                <Clock size={13} className="text-pink-400" /> Auto-Sleep Timer
+                <RefreshCw size={13} className="text-amber-400" /> Auto-Reload Iframes
               </label>
               <select
-                value={sleepTimerMinutes}
-                onChange={(e) => setSleepTimerMinutes(parseInt(e.target.value))}
-                className="w-full py-2 px-3 rounded-xl bg-black/40 border border-white/10 text-xs font-mono text-white focus:outline-none focus:border-pink-500/40"
+                value={autoReloadMinutes}
+                onChange={(e) => setAutoReloadMinutes(parseInt(e.target.value))}
+                className="w-full py-2 px-3 rounded-xl bg-black/40 border border-amber-500/20 text-xs font-mono text-white focus:outline-none focus:border-amber-500/40"
               >
-                <option value={0}>♾️ Unlimited (No Sleep)</option>
-                <option value={60}>🌙 1 Hour (60m)</option>
-                <option value={120}>🌙 2 Hours (120m)</option>
-                <option value={360}>🛌 6 Hours (Overnight)</option>
-                <option value={480}>🛌 8 Hours (Full Night)</option>
+                <option value={0}>❌ No Auto-Reload</option>
+                <option value={30}>⚡ Every 30 min</option>
+                <option value={60}>🔄 Every 60 min</option>
+                <option value={80}>🔄 Every 80 min (Recommended)</option>
+                <option value={120}>🔄 Every 2 Hours</option>
               </select>
             </div>
 
           </div>
         </div>
+
+        {/* Auto-Reload Countdown + Reload All Button */}
+        {isPlaying && autoReloadMinutes > 0 && (
+          <div className="flex items-center justify-between px-5 py-3 rounded-2xl bg-amber-500/8 border border-amber-500/25 backdrop-blur-sm">
+            <div className="flex items-center gap-3">
+              <RefreshCw size={16} className="text-amber-400 animate-spin" style={{ animationDuration: '3s' }} />
+              <div>
+                <p className="text-xs font-bold text-amber-300">Auto-Reload Active</p>
+                <p className="text-[11px] font-mono text-white/50">
+                  Next reload in: <span className="text-amber-300 font-bold">
+                    {Math.floor(nextReloadIn / 60)}m {nextReloadIn % 60}s
+                  </span> — keeps iframes fresh & prevents throttling
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setScreenStates((prev) => prev.map((item) => ({ ...item, reloadKey: Date.now() + Math.random() })))}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold transition-all"
+            >
+              <RefreshCw size={12} /> Reload All Now
+            </button>
+          </div>
+        )}
 
         {/* Live Watch-Time Odometer & Health Metrics Bar */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
