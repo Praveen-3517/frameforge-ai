@@ -28,62 +28,67 @@ import {
 import StarField from '../components/StarField'
 
 /**
- * Parses YouTube URL to extract Video ID and/or Playlist ID
+ * Parses YouTube input to extract all Video IDs and/or Playlist ID
+ * Supports single link, playlist link, or multiple comma/newline separated video links
  */
-function parseYouTubeUrl(url) {
-  if (!url || typeof url !== 'string') return { videoId: '', playlistId: '', type: 'invalid' }
-  const cleanUrl = url.trim()
+function parseYouTubeUrl(input) {
+  if (!input || typeof input !== 'string') return { videoIds: [], playlistId: '', type: 'invalid' }
 
-  let videoId = ''
+  const tokens = input.split(/[\n,;]+/).map((t) => t.trim()).filter(Boolean)
+  const videoIds = []
   let playlistId = ''
 
-  try {
-    // Check for Playlist ID
-    if (cleanUrl.includes('list=')) {
-      const match = cleanUrl.match(/[?&]list=([^#&?]+)/)
-      if (match && match[1]) {
-        playlistId = match[1]
+  for (const rawToken of tokens) {
+    try {
+      // Check for Playlist ID
+      if (rawToken.includes('list=')) {
+        const match = rawToken.match(/[?&]list=([^#&?]+)/)
+        if (match && match[1] && !playlistId) {
+          playlistId = match[1]
+        }
       }
-    }
 
-    // Check for standard watch?v=
-    if (cleanUrl.includes('youtube.com/watch')) {
-      const match = cleanUrl.match(/[?&]v=([^#&?]+)/)
-      if (match && match[1]) videoId = match[1]
-    }
-    // Check for youtu.be/ short link
-    else if (cleanUrl.includes('youtu.be/')) {
-      const match = cleanUrl.match(/youtu\.be\/([^#&?]+)/)
-      if (match && match[1]) videoId = match[1]
-    }
-    // Check for youtube.com/shorts/
-    else if (cleanUrl.includes('youtube.com/shorts/')) {
-      const match = cleanUrl.match(/shorts\/([^#&?]+)/)
-      if (match && match[1]) videoId = match[1]
-    }
-    // Check for youtube.com/embed/
-    else if (cleanUrl.includes('youtube.com/embed/')) {
-      const match = cleanUrl.match(/embed\/([^#&?]+)/)
-      if (match && match[1]) videoId = match[1]
-    }
+      let vid = ''
+      if (rawToken.includes('youtube.com/watch')) {
+        const match = rawToken.match(/[?&]v=([^#&?]+)/)
+        if (match && match[1]) vid = match[1]
+      } else if (rawToken.includes('youtu.be/')) {
+        const match = rawToken.match(/youtu\.be\/([^#&?]+)/)
+        if (match && match[1]) vid = match[1]
+      } else if (rawToken.includes('youtube.com/shorts/')) {
+        const match = rawToken.match(/shorts\/([^#&?]+)/)
+        if (match && match[1]) vid = match[1]
+      } else if (rawToken.includes('youtube.com/embed/')) {
+        const match = rawToken.match(/embed\/([^#&?]+)/)
+        if (match && match[1]) vid = match[1]
+      } else if (/^[a-zA-Z0-9_-]{11}$/.test(rawToken)) {
+        vid = rawToken
+      }
 
-    if (playlistId && !videoId) {
-      return { videoId: '', playlistId, type: 'playlist' }
-    } else if (playlistId && videoId) {
-      return { videoId, playlistId, type: 'video_in_playlist' }
-    } else if (videoId) {
-      return { videoId, playlistId: '', type: 'video' }
+      if (vid && !videoIds.includes(vid)) {
+        videoIds.push(vid)
+      }
+    } catch (e) {
+      console.error('URL parse error:', e)
     }
-  } catch (e) {
-    console.error('URL parse error:', e)
   }
 
-  return { videoId: '', playlistId: '', type: 'invalid' }
+  if (videoIds.length > 1) {
+    return { videoIds, playlistId, type: 'multi_video' }
+  } else if (videoIds.length === 1 && playlistId) {
+    return { videoIds, playlistId, type: 'video_in_playlist' }
+  } else if (videoIds.length === 1) {
+    return { videoIds, playlistId: '', type: 'video' }
+  } else if (playlistId) {
+    return { videoIds: [], playlistId, type: 'playlist' }
+  }
+
+  return { videoIds: [], playlistId: '', type: 'invalid' }
 }
 
 export default function MultiViewPlayer() {
   const [inputUrl, setInputUrl] = useState('')
-  const [parsedData, setParsedData] = useState({ videoId: '', playlistId: '', type: 'invalid' })
+  const [parsedData, setParsedData] = useState({ videoIds: [], playlistId: '', type: 'invalid' })
   const [screenCount, setScreenCount] = useState(8) // Default 8x
   const [isPlaying, setIsPlaying] = useState(false)
   const [isMuted, setIsMuted] = useState(true)
@@ -106,7 +111,7 @@ export default function MultiViewPlayer() {
   // Parse on URL change
   useEffect(() => {
     if (!inputUrl) {
-      setParsedData({ videoId: '', playlistId: '', type: 'invalid' })
+      setParsedData({ videoIds: [], playlistId: '', type: 'invalid' })
       return
     }
     const parsed = parseYouTubeUrl(inputUrl)
@@ -136,7 +141,7 @@ export default function MultiViewPlayer() {
 
   // Start Multi-Screen Playback
   const handleStartPlayback = () => {
-    if (!parsedData.videoId && !parsedData.playlistId) return
+    if ((!parsedData.videoIds || parsedData.videoIds.length === 0) && !parsedData.playlistId) return
 
     setIsPlaying(true)
     const initialScreens = []
@@ -196,18 +201,15 @@ export default function MultiViewPlayer() {
 
   // Construct iframe embed URL
   const buildEmbedUrl = (screen) => {
-    const { videoId, playlistId, type } = parsedData
+    const { videoIds, playlistId, type } = parsedData
     const muteParam = isMuted ? '1' : '0'
 
-    let base = 'https://www.youtube.com/embed/'
-
-    if (type === 'playlist' && playlistId) {
-      const startIndex = screen?.id ? ((screen.id - 1) % 2) + 1 : 1
-      return `https://www.youtube.com/embed/videoseries?list=${playlistId}&index=${startIndex}&autoplay=1&mute=${muteParam}&loop=1&controls=1&enablejsapi=1&rel=0&origin=${window.location.origin}`
-    } else if (type === 'video_in_playlist' && videoId && playlistId) {
-      return `https://www.youtube.com/embed/${videoId}?list=${playlistId}&autoplay=1&mute=${muteParam}&loop=1&controls=1&enablejsapi=1&rel=0&origin=${window.location.origin}`
-    } else if (videoId) {
-      return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=${muteParam}&loop=1&playlist=${videoId}&controls=1&enablejsapi=1&rel=0&origin=${window.location.origin}`
+    if (videoIds && videoIds.length > 0) {
+      // Direct video assignment per screen (e.g. Screen 1 = Vid1, Screen 2 = Vid2)
+      const targetVid = videoIds[(screen.id - 1) % videoIds.length]
+      return `https://www.youtube.com/embed/${targetVid}?autoplay=1&mute=${muteParam}&loop=1&playlist=${targetVid}&controls=1&enablejsapi=1&rel=0&origin=${window.location.origin}`
+    } else if (type === 'playlist' && playlistId) {
+      return `https://www.youtube.com/embed/videoseries?list=${playlistId}&autoplay=1&mute=${muteParam}&loop=1&controls=1&enablejsapi=1&rel=0&origin=${window.location.origin}`
     }
     return ''
   }
@@ -333,7 +335,7 @@ export default function MultiViewPlayer() {
             {!isPlaying ? (
               <button
                 onClick={handleStartPlayback}
-                disabled={!parsedData.videoId && !parsedData.playlistId}
+                disabled={(!parsedData.videoIds || parsedData.videoIds.length === 0) && !parsedData.playlistId}
                 className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 font-display uppercase tracking-wider"
               >
                 <Play size={16} fill="black" /> Launch Multi-Stream
@@ -351,21 +353,25 @@ export default function MultiViewPlayer() {
           {/* Link Status Pill */}
           {inputUrl && (
             <div className="flex items-center gap-2 text-xs font-mono">
-              {parsedData.type === 'playlist' ? (
-                <span className="px-2.5 py-1 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 flex items-center gap-1.5">
-                  <CheckCircle2 size={13} /> Valid Channel Playlist Detected: <span className="font-bold text-white">{parsedData.playlistId}</span>
+              {parsedData.type === 'multi_video' ? (
+                <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center gap-1.5">
+                  <CheckCircle2 size={13} /> ✨ {parsedData.videoIds.length} Videos Distributed: {parsedData.videoIds.map((id, idx) => `[V${idx+1}: ${id}]`).join(' • ')}
                 </span>
               ) : parsedData.type === 'video_in_playlist' ? (
                 <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center gap-1.5">
-                  <CheckCircle2 size={13} /> Video in Playlist Loop: <span className="font-bold text-white">{parsedData.videoId}</span>
+                  <CheckCircle2 size={13} /> Video in Playlist Loop: <span className="font-bold text-white">{parsedData.videoIds[0]}</span>
                 </span>
               ) : parsedData.type === 'video' ? (
                 <span className="px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 flex items-center gap-1.5">
-                  <CheckCircle2 size={13} /> Single Video ID: <span className="font-bold text-white">{parsedData.videoId}</span>
+                  <CheckCircle2 size={13} /> 1 Video ID: <span className="font-bold text-white">{parsedData.videoIds[0]}</span>
+                </span>
+              ) : parsedData.type === 'playlist' ? (
+                <span className="px-2.5 py-1 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 flex items-center gap-1.5">
+                  <CheckCircle2 size={13} /> Channel Playlist: <span className="font-bold text-white">{parsedData.playlistId}</span>
                 </span>
               ) : (
                 <span className="px-2.5 py-1 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-300 flex items-center gap-1.5">
-                  <AlertTriangle size={13} /> Please paste a valid YouTube video or playlist URL
+                  <AlertTriangle size={13} /> Please paste valid YouTube video link(s) or playlist URL
                 </span>
               )}
             </div>
