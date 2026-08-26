@@ -118,27 +118,40 @@ def derive_transform_params(fingerprint: Dict[str, Any], forced_mode: str = "aut
 
 
     elif mode == "bhakti" or (mode == "auto" and music_pct > dialogue_pct and (music_pct > 50.0 or bass_ratio > 45.0)):
-        # 🕉️ BHAKTI & DEVOTIONAL NATURAL SHIELD (100% Original Natural Voice + 432Hz Sacred Tuning + Temple Reverb)
+        # 🕉️ BHAKTI & DEVOTIONAL ZERO-CLAIM SHIELD (+1.4st Melodic Key + 432Hz Sacred Resonance + 1.04x Speed + Temple Echo + Visual Mirror)
         audio_mode = "bhakti_filter"
-        pitch_shift_semitones = 0.0   # 0.0 = 100% Original Natural Adult Voice (NO child / squeaky voice!)
-        speed_multiplier = 1.0        # Stream-copy video mode (instant processing)
-        deep_visual = False           # Bypasses heavy frame re-encoding
-        zoom_pct = 0.0
-        flip_horizontal = False       # Keep visual natural
-        tuning_432hz = True           # Pure 432Hz harmonic tuning (soothing, zero chipmunk effect)
-        temple_reverb = True
-        om_drone_resonance = True
-        audio_mode_label = "🕉️ Bhakti Shield (100% Natural Voice + 432Hz Sacred Tuning + Temple Echo)"
+        pitch_shift_semitones = 1.4   # Sweet +1.4st Indian classical key shift merged with 432Hz (pure musical harmony, exceeds Content ID threshold)
+        speed_multiplier = 1.04       # 1.04x timeline speed shift to break temporal acoustic matching
+        deep_visual = True            # Enable visual transforms to eliminate "Audio visual" claims
+        zoom_pct = 3.5                # 3.5% zoom+crop
+        flip_horizontal = True        # Visual mirror breaks 2D neural layout matching
+        tuning_432hz = True           # 432Hz sacred harmonic tuning
+        temple_reverb = True          # Dual-tap Mandir temple echo
+        om_drone_resonance = True     # 108Hz Om resonance boost
+        brightness = 0.02
+        contrast = 1.05
+        saturation = 1.05
+        audio_mode_label = "🕉️ Bhakti Zero-Claim Shield (+1.4st Melodic Key + 432Hz Sacred + 1.04x Speed + Temple Echo + Visual Mirror)"
     elif mode == "song":
-        # 🎵 NATURAL SONG & BGM SHIELD (100% Original Voice + Phase Scrambler + Harmonic Notch)
+        # 🎵 SONGS & MUSIC ZERO-CLAIM SHIELD (+1.8st Key Shift + 1.04x Speed + Phase Scrambler + Harmonic Notch + Visual Mirror)
         audio_mode = "max_protection"
-        pitch_shift_semitones = 0.0   # 0.0 = Pure Natural Voice (No child pitch)
-        audio_mode_label = "🎵 Natural Song Shield (Original Voice + Phase Scrambler + Notch EQ)"
+        pitch_shift_semitones = 1.8   # Key transposition shifts melody away from database
+        speed_multiplier = 1.04       # 1.04x timeline sync
+        deep_visual = True
+        zoom_pct = 4.0
+        flip_horizontal = True
+        brightness = 0.02
+        contrast = 1.05
+        audio_mode_label = "🎵 Song Zero-Claim Shield (+1.8st Key Shift + 1.04x Speed + Stereo Decorrelate + Visual Mirror)"
     else:
-        # UNIVERSAL SAFEGUARD
+        # UNIVERSAL SAFEGUARD (+1.5st Shift + 1.04x Speed + Visual Mirror)
         audio_mode = "max_protection"
-        pitch_shift_semitones = 0.0
-        audio_mode_label = "🛡️ Universal Natural Protection (Original Voice + 432Hz/Watermark Strip)"
+        pitch_shift_semitones = 1.5
+        speed_multiplier = 1.04
+        deep_visual = True
+        zoom_pct = 3.5
+        flip_horizontal = True
+        audio_mode_label = "🛡️ Universal Zero-Claim Protection (+1.5st Key Shift + 1.04x Speed + Watermark Strip + Visual Mirror)"
 
     time_stretch_pct = 0.0
     audio_eq_filter = True
@@ -150,10 +163,11 @@ def derive_transform_params(fingerprint: Dict[str, Any], forced_mode: str = "aut
 
     transform_summary = [
         f"Shield Mode: {audio_mode_label}",
-        f"Audio Pitch: {'+3.2st Formant Shift' if audio_mode == 'cartoon_morph' else '432 Hz Tuning' if tuning_432hz else '+2.5st Shift'}",
-        f"Visual Mirror: {'Active (H-Flip)' if flip_horizontal else 'Off (Fast Stream-Copy)'}",
+        f"Audio Pitch: {'+3.2st Formant Shift' if audio_mode == 'cartoon_morph' else '+1.4st Melodic Key + 432Hz' if (tuning_432hz and pitch_shift_semitones != 0) else '432 Hz Tuning' if tuning_432hz else f'+{pitch_shift_semitones:.1f}st Shift'}",
+        f"Playback Speed: {speed_multiplier:.2f}x (Synchronized Audio + Video Timeline)",
+        f"Visual Defense: {'Active (H-Flip Mirror + ' + str(zoom_pct) + '% Crop)' if flip_horizontal else 'Stream-Copy'}",
         "Studio Watermark Strip: 75Hz–15.5kHz bandpass",
-        "Stereo Phase Decorrelation: extrastereo=0.35",
+        "Stereo Phase Decorrelation: extrastereo=0.40",
         "Audio Level Normalization: EBU R128 (-16 LUFS)",
         "Metadata: Stripped + New SHA-256 Digest",
     ]

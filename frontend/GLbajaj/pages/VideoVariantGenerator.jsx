@@ -704,8 +704,8 @@ export default function VideoVariantGenerator() {
                         },
                         {
                           id: 'bhakti_filter',
-                          title: '🕉️ Bhakti / Music',
-                          desc: 'Scrambles devotional melody & percussion harmonics',
+                          title: '🕉️ Bhakti Zero-Claim',
+                          desc: '+1.4st Melodic Key + 432Hz Sacred + Temple Echo + 1.04x Speed',
                           border: 'border-amber-500/40',
                           bg: 'from-amber-500/20 to-transparent',
                         },
@@ -725,7 +725,13 @@ export default function VideoVariantGenerator() {
                               ...options,
                               audio_mode: mode.id,
                               mute_audio: mode.id === 'mute',
-                              pitch_shift_semitones: mode.id === 'cartoon_morph' ? 3.2 : mode.id === 'bhakti_filter' ? 2.5 : mode.id === 'max_protection' ? 2.5 : options.pitch_shift_semitones,
+                              pitch_shift_semitones: mode.id === 'cartoon_morph' ? 3.2 : mode.id === 'bhakti_filter' ? 1.4 : mode.id === 'max_protection' ? 2.0 : options.pitch_shift_semitones,
+                              tuning_432hz: mode.id === 'bhakti_filter' ? true : options.tuning_432hz,
+                              temple_reverb: mode.id === 'bhakti_filter' ? true : options.temple_reverb,
+                              om_drone_resonance: mode.id === 'bhakti_filter' ? true : options.om_drone_resonance,
+                              speed_multiplier: mode.id === 'bhakti_filter' ? 1.04 : options.speed_multiplier,
+                              flip_horizontal: mode.id === 'bhakti_filter' ? true : options.flip_horizontal,
+                              zoom_pct: mode.id === 'bhakti_filter' ? 3.5 : options.zoom_pct,
                             })
                           }}
                           className={`p-2.5 rounded-xl text-left border transition-all ${

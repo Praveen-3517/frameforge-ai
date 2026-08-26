@@ -27,7 +27,7 @@
 - **Engine / Frameworks:**
   - **Backend:** FastAPI (Python 3.10+), Uvicorn, MoviePy, Pillow, NumPy, SciPy, OpenCV (Headless), Edge-TTS, Google Generative AI SDK, Gradio Client, HTTPX.
   - **Frontend:** React 18, Vite 5, React Router v7, Tailwind CSS v3, Lucide React, Axios, HTML5 Canvas API.
-- **Version:** `v3.9.4` (Smart Transform FFmpeg Stream-Copy & Sub-Second Audio Pipeline Fix)
+- **Version:** `v3.9.5` (Hardened Zero-Claim Bhakti & Devotional Transformation Engine)
 - **Current Build Status:** ✅ Production Deployed — Backend: `https://frameforge-ai-fa8z.onrender.com` | Frontend: `https://frameforge-ai-phi.vercel.app` | Local Dev: `backend: localhost:8000`, `frontend: localhost:5173`.
 
 ---
@@ -425,11 +425,19 @@ f:\AI tool\
 | **BUG-013** | 2026-08-25 | HIGH | `frontend/GLbajaj/pages/MultiViewPlayer.jsx` | YouTube's anti-spam policy discounts views from muted autoplay iframes on localhost, causing view count freezes in YT Studio. | Added "Open Real YT Tabs (100% Safe)" launcher opening real YouTube watch pages (`youtube.com/watch`) in browser with staggered launch, plus guide on browser tab muting / duplicate tabs. | ✅ RESOLVED | Low |
 | **BUG-014** | 2026-08-25 | MEDIUM | `frontend/GLbajaj/pages/MultiViewPlayer.jsx` | Screen #1 remained in "Staggering launch..." spinner state because `idx === 0` had a `return` skipping `loaded: true` transition. | Added `isFirst = i === 0` condition in `initialScreens` initialization so Screen #1 immediately mounts in `loaded: true` state while screens 2-N stagger. | ✅ RESOLVED | Low |
 | **BUG-015** | 2026-08-25 | CRITICAL | `backend/services/variant_generator.py` | FFmpeg hung indefinitely on audio transform in stream-copy mode due to missing `-shortest` flag when audio duration slightly drifted from video after `asetrate`/`atempo` resampling, leading to 600s `TimeoutExpired` failures on Render. | Added `-shortest`, `-fflags +genpts+discardcorrupt`, `-avoid_negative_ts make_zero`, streamlined EQ & echo filters (removed unbuffered CPU-bound vibrato loops), increased timeout buffer to 1800s, achieving instant 2-5s processing. | ✅ RESOLVED | Low |
+| **BUG-016** | 2026-08-26 | HIGH | `backend/services/smart_transform.py`, `backend/services/variant_generator.py`, `frontend/GLbajaj/pages/FingerprintAnalyzer.jsx` | YouTube Content ID audio and audio-visual claims on Bhakti songs because 432Hz alone was only -0.31st pitch shift with 1.0x tempo and stream-copy video. | Hardened Bhakti Zero-Claim Shield with +1.4st melodic Indian classical key shift merged with 432Hz sacred tuning, 1.04x synchronized timeline shift, 108Hz Om resonance boost, vocal landmark notch EQ (320Hz, 850Hz, 2800Hz), dual-tap temple echo (`aecho=0.8:0.6:65|130:0.25|0.12`), extrastereo phase decorrelation, and visual 3.5% crop + H-flip. | ✅ RESOLVED | Low |
 
 ---
 
 ## 15. 📜 Changelog & Version History
 
+- **2026-08-26 (v3.9.5 — Hardened Zero-Claim Bhakti & Devotional Transformation Engine):**
+  - **Hardened Bhakti Melodic Key Shift (+1.4st) + 432Hz Sacred Resonance:** Upgraded Bhakti transformation to apply sweet $+1.4\text{ st}$ Indian classical key shift merged with $432\text{Hz}$ sacred tuning in a single resample pass (`asetrate`), completely exceeding YouTube Content ID's neural pitch threshold while preserving authentic devotional beauty.
+  - **Synchronized 1.04x Timeline Speed Shift (Audio + Video):** Combined `speed_multiplier` directly into single-pass `combined_tempo = (440/432) * (net_speed / pitch_ratio)` and video `setpts=PTS/1.04`, completely breaking timestamp constellation alignment across the entire track.
+  - **4-Stage Sacred Resonance & Vocal Landmark Attenuation EQ:** Added 108Hz Om resonance boost (`+4.0dB`) alongside vocal formant notch filters at 320Hz, 850Hz, and 2800Hz to mask singer-identifying acoustic landmarks.
+  - **Mandir Temple Reverb & Stereo Phase Decorrelation:** Enhanced dual-tap temple echo (`aecho=0.8:0.6:65|130:0.25|0.12`) and stereo decorrelation (`extrastereo=m=0.40`).
+  - **Visual Defense Engine:** Enabled 3.5% crop, horizontal mirror (H-Flip), and subtle studio color grading for Bhakti mode to eliminate 44-minute "Copyright - Audio visual" claims.
+  - **Frontend UI Hardening:** Updated `FingerprintAnalyzer.jsx` and `VideoVariantGenerator.jsx` with clear Zero-Claim indicators, descriptions, and preset parameters.
 - **2026-08-25 (v3.9.4 — Smart Transform FFmpeg Stream-Copy & Sub-Second Audio Pipeline Fix):**
   - **FFmpeg Muxing Hang & Timeout Deadlock Fix (`BUG-015`):** Fixed issue where FFmpeg got stuck waiting for audio/video stream end when doing stream-copy video with audio resample by adding `-shortest`, `-fflags +genpts+discardcorrupt`, and `-avoid_negative_ts make_zero`.
   - **Audio Filter Streamlining:** Removed CPU-heavy unbuffered `vibrato` loop for Bhakti/Devotional modes, replaced with vectorized 2-stage EQ and fast dual-tap temple echo (`aecho`) + stereo decorrelation (`extrastereo`), bringing server-side processing down to 2–5 seconds.

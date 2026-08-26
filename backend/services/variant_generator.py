@@ -382,29 +382,46 @@ def generate_video_variant_sync(
         if watermark_cleaner:
             af_filters.append("highpass=f=75,lowpass=f=15500")
 
-        # B. 432Hz Tuning + Pitch Shift — SINGLE combined asetrate pass (avoids double resample)
+        # B. 432Hz Tuning + Pitch Shift + Speed Multiplier — SINGLE combined asetrate pass (avoids double resample)
         effective_pitch = pitch_shift_semitones
         if audio_mode == "cartoon_morph" and effective_pitch == 0.0:
             effective_pitch = 3.2
-        elif audio_mode == "bhakti_filter":
-            effective_pitch = pitch_shift_semitones  # Keep 0.0 for natural original voice
+        elif audio_mode == "bhakti_filter" and effective_pitch == 0.0:
+            effective_pitch = 1.4  # Sweet +1.4st melodic key shift for Bhakti
 
         use_432hz = tuning_432hz or audio_mode == "bhakti_filter"
+
+        # Calculate net speed factor from speed multiplier and time stretch
+        net_speed = speed_multiplier if (speed_multiplier != 1.0 and 0.5 <= speed_multiplier <= 2.0) else 1.0
+        if time_stretch_pct != 0.0:
+            net_speed *= max(0.5, min(2.0, 1.0 + time_stretch_pct / 100.0))
+
+        applied_speed_in_resample = False
 
         if use_432hz and effective_pitch != 0.0:
             pitch_ratio = 2 ** (effective_pitch / 12.0)
             combined_ratio = (432.0 / 440.0) * pitch_ratio
             combined_rate = int(audio_sample_rate * combined_ratio)
-            combined_tempo = (440.0 / 432.0) * (1.0 / pitch_ratio)
+            combined_tempo = (440.0 / 432.0) * (net_speed / pitch_ratio)
             combined_tempo = max(0.5, min(2.0, combined_tempo))
             af_filters.append(f"asetrate={combined_rate},atempo={combined_tempo:.6f},aresample={audio_sample_rate}")
+            applied_speed_in_resample = True
         elif use_432hz:
             hz432_rate = int(audio_sample_rate * (432.0 / 440.0))
-            af_filters.append(f"asetrate={hz432_rate},atempo={440.0 / 432.0:.6f},aresample={audio_sample_rate}")
+            combined_tempo = (440.0 / 432.0) * net_speed
+            combined_tempo = max(0.5, min(2.0, combined_tempo))
+            af_filters.append(f"asetrate={hz432_rate},atempo={combined_tempo:.6f},aresample={audio_sample_rate}")
+            applied_speed_in_resample = True
         elif effective_pitch != 0.0:
             pitch_ratio = 2 ** (effective_pitch / 12.0)
             new_rate = int(audio_sample_rate * pitch_ratio)
-            af_filters.append(f"asetrate={new_rate},atempo={1.0 / pitch_ratio:.6f},aresample={audio_sample_rate}")
+            combined_tempo = net_speed / pitch_ratio
+            combined_tempo = max(0.5, min(2.0, combined_tempo))
+            af_filters.append(f"asetrate={new_rate},atempo={combined_tempo:.6f},aresample={audio_sample_rate}")
+            applied_speed_in_resample = True
+        elif net_speed != 1.0:
+            af_filters.append(f"atempo={net_speed:.6f}")
+            applied_speed_in_resample = True
 
         # C. EQ — mode-specific, high-performance acoustic filters
         if audio_eq_filter or audio_mode in ["max_protection", "bhakti_filter", "cartoon_morph"]:
@@ -412,29 +429,24 @@ def generate_video_variant_sync(
                 # 4-stage speech notch — essential for voice morph
                 af_filters.append("equalizer=f=350:t=q:w=1.2:g=-4.5,equalizer=f=950:t=q:w=1.2:g=-4.5,equalizer=f=2200:t=q:w=1.5:g=-5.0,equalizer=f=3600:t=q:w=1.5:g=-4.5")
             elif audio_mode == "bhakti_filter" or om_drone_resonance:
-                # Fast 2-stage sacred resonance + landmark bypass (10x faster than deep vibrato)
-                af_filters.append("equalizer=f=108:t=q:w=2.0:g=+3.5,equalizer=f=850:t=q:w=2.0:g=-4.5")
+                # 4-stage sacred resonance + Content ID vocal formant notch filters
+                af_filters.append("equalizer=f=108:t=q:w=1.8:g=+4.0,equalizer=f=320:t=q:w=1.5:g=-3.5,equalizer=f=850:t=q:w=1.8:g=-4.5,equalizer=f=2800:t=q:w=1.5:g=-4.0")
             else:
                 af_filters.append("equalizer=f=280:t=q:w=1.5:g=-3.5,equalizer=f=1000:t=q:w=1.2:g=-4.0,equalizer=f=3000:t=q:w=1.5:g=-4.0")
 
-        # D. Mandir Temple Reverb (Bhakti only) — optimized fast echo
+        # D. Mandir Temple Reverb (Bhakti only) — optimized dual-tap echo
         if temple_reverb or audio_mode == "bhakti_filter":
-            af_filters.append("aecho=0.8:0.5:60|110:0.2|0.1")
+            af_filters.append("aecho=0.8:0.6:65|130:0.25|0.12")
 
         # E. Stereo Phase Decorrelation
         if stereo_decorrelate:
-            af_filters.append("extrastereo=m=0.35")
+            af_filters.append("extrastereo=m=0.40")
 
-        # F. Synchronized Audio Speed Shift (locked with video setpts)
-        if speed_multiplier != 1.0 and 0.5 <= speed_multiplier <= 2.0:
+        # F. Synchronized Audio Speed Shift (fallback if not already merged in resample)
+        if not applied_speed_in_resample and speed_multiplier != 1.0 and 0.5 <= speed_multiplier <= 2.0:
             af_filters.append(f"atempo={speed_multiplier:.6f}")
 
-        # G. Additional time stretch
-        if time_stretch_pct != 0.0:
-            stretch_factor = max(0.5, min(2.0, 1.0 + time_stretch_pct / 100.0))
-            af_filters.append(f"atempo={stretch_factor:.6f}")
-
-        # H. Fast volume normalize
+        # G. Fast volume normalize
         if normalize_audio:
             af_filters.append("volume=1.05")
 
