@@ -118,20 +118,31 @@ def derive_transform_params(fingerprint: Dict[str, Any], forced_mode: str = "aut
 
 
     elif mode == "bhakti" or (mode == "auto" and music_pct > dialogue_pct and (music_pct > 50.0 or bass_ratio > 45.0)):
-        # 🕉️ BHAKTI & DEVOTIONAL ZERO-CLAIM SHIELD (+1.4st Melodic Key + 432Hz Sacred Resonance + 1.04x Speed + Temple Echo + Visual Mirror)
+        # 🕉️ BHAKTI & DEVOTIONAL ZERO-CLAIM SHIELD (⚡ Turbo 2s Fast Encode + +1.4st Melodic Key + 432Hz + Temple Echo)
         audio_mode = "bhakti_filter"
-        pitch_shift_semitones = 1.4   # Sweet +1.4st Indian classical key shift merged with 432Hz (pure musical harmony, exceeds Content ID threshold)
-        speed_multiplier = 1.04       # 1.04x timeline speed shift to break temporal acoustic matching
-        deep_visual = True            # Enable visual transforms to eliminate "Audio visual" claims
-        zoom_pct = 3.5                # 3.5% zoom+crop
-        flip_horizontal = True        # Visual mirror breaks 2D neural layout matching
-        tuning_432hz = True           # 432Hz sacred harmonic tuning
+        pitch_shift_semitones = 1.4   # Sweet +1.4st Indian classical key shift merged with 432Hz (exceeds Content ID threshold)
+        speed_multiplier = 1.0        # Stream-copy video mode for instant 2-second processing
+        deep_visual = False           # Fast video stream-copy (instant 2-5s render even for 1-hour compilations!)
+        zoom_pct = 0.0
+        flip_horizontal = False
+        tuning_432hz = True           # 432Hz sacred harmonic resonance
         temple_reverb = True          # Dual-tap Mandir temple echo
         om_drone_resonance = True     # 108Hz Om resonance boost
+        audio_mode_label = "🕉️ Bhakti Zero-Claim Shield (⚡ Turbo 2s Mode — +1.4st Melodic Key + 432Hz Sacred + Temple Echo)"
+    elif mode == "bhakti_deep":
+        # 🕉️ BHAKTI DEEP A/V SHIELD (Full Video Re-encode + H-Flip + Crop + 1.04x Speed)
+        audio_mode = "bhakti_filter"
+        pitch_shift_semitones = 1.4
+        speed_multiplier = 1.04
+        deep_visual = True
+        zoom_pct = 3.5
+        flip_horizontal = True
+        tuning_432hz = True
+        temple_reverb = True
+        om_drone_resonance = True
         brightness = 0.02
         contrast = 1.05
-        saturation = 1.05
-        audio_mode_label = "🕉️ Bhakti Zero-Claim Shield (+1.4st Melodic Key + 432Hz Sacred + 1.04x Speed + Temple Echo + Visual Mirror)"
+        audio_mode_label = "🕉️ Bhakti Deep A/V Shield (Full Video Mirror H-Flip + 3.5% Crop + +1.4st Key + 432Hz)"
     elif mode == "song":
         # 🎵 SONGS & MUSIC ZERO-CLAIM SHIELD (+1.8st Key Shift + 1.04x Speed + Phase Scrambler + Harmonic Notch + Visual Mirror)
         audio_mode = "max_protection"

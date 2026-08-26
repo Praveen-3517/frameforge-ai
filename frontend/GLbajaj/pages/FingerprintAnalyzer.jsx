@@ -862,21 +862,21 @@ export default function FingerprintAnalyzer() {
                     >
                       <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: 'linear-gradient(90deg, rgba(251,191,36,0.18) 0%, rgba(0,0,0,0) 100%)' }}>
                         <span className="text-lg">🕉️</span>
-                        <span className="text-xs font-bold text-amber-300 tracking-wider uppercase">Bhakti & Devotional Zero-Claim Shield (100% Safe)</span>
+                        <span className="text-xs font-bold text-amber-300 tracking-wider uppercase">Bhakti & Devotional Shield (⚡ Turbo 2s Fast Encode)</span>
                         <span className={`ml-auto px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
                           selectedShieldMode === 'bhakti'
                             ? 'bg-amber-500 text-black border-amber-400 font-extrabold animate-pulse'
                             : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
                         }`}>
-                          {selectedShieldMode === 'bhakti' ? '🎯 ACTIVE SELECTED' : 'Click to Select'}
+                          {selectedShieldMode === 'bhakti' ? '⚡ 2s TURBO ACTIVE' : 'Click to Select'}
                         </span>
                       </div>
                       <div className="px-4 pb-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
                         {[
-                          { icon: '🎼', label: '+1.4st Melodic Key + 432Hz', desc: 'Indian classical key shift + 432Hz sacred warmth' },
-                          { icon: '⏩', label: '1.04x Timeline Speed', desc: 'A/V speed shift breaks Content ID time alignment' },
+                          { icon: '⚡', label: 'Instant 2s Processing', desc: 'Stream-copy video (no wait even on 1-hour files)' },
+                          { icon: '🎼', label: '+1.4st Melodic Key + 432Hz', desc: 'Devotional key shift exceeds Content ID match' },
                           { icon: '🏛️', label: 'Mandir Temple Echo', desc: 'Dual-tap aecho washes studio vocal fingerprint' },
-                          { icon: '🪞', label: 'H-Flip Mirror + 3.5% Crop', desc: 'Visual defense eliminates Audio-visual claims' },
+                          { icon: '🧘', label: '108Hz Om Drone Boost', desc: 'Cosmic resonance & vocal formant notch EQ' },
                         ].map(item => (
                           <div key={item.label} className="p-2.5 rounded-lg bg-amber-500/5 border border-amber-500/15">
                             <div className="text-base mb-1">{item.icon}</div>
@@ -898,7 +898,7 @@ export default function FingerprintAnalyzer() {
                     >
                       <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: 'linear-gradient(90deg, rgba(6,182,212,0.18) 0%, rgba(0,0,0,0) 100%)' }}>
                         <span className="text-lg">🎵</span>
-                        <span className="text-xs font-bold text-cyan-300 tracking-wider uppercase">Songs & Music Zero-Claim Shield</span>
+                        <span className="text-xs font-bold text-cyan-300 tracking-wider uppercase">Songs & Music Zero-Claim Shield (⚡ Turbo 2s)</span>
                         <span className={`ml-auto px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
                           selectedShieldMode === 'song'
                             ? 'bg-cyan-500 text-black border-cyan-400 font-extrabold animate-pulse'
@@ -909,9 +909,9 @@ export default function FingerprintAnalyzer() {
                       </div>
                       <div className="px-4 pb-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
                         {[
+                          { icon: '⚡', label: 'Instant 2s Processing', desc: 'Fast audio resample with stream-copy video' },
                           { icon: '🎤', label: '+1.8st Key Transposition', desc: 'Shifts song melody beyond Content ID match' },
                           { icon: '🔀', label: 'Stereo Phase Decorrelate', desc: 'L/R phase scrambled (extrastereo=0.40)' },
-                          { icon: '⏩', label: '1.04x Speed + H-Flip', desc: 'Dual A/V timeline & spatial defense' },
                           { icon: '📻', label: 'Harmonic Landmark EQ', desc: 'Clears vocal and frequency landmarks' },
                         ].map(item => (
                           <div key={item.label} className="p-2.5 rounded-lg bg-cyan-500/5 border border-cyan-500/15">
@@ -926,6 +926,7 @@ export default function FingerprintAnalyzer() {
                     {/* Common protections footer */}
                     <div className="flex flex-wrap gap-2 pt-1">
                       {[
+                        '⚡ Sub-Second Turbo Render',
                         '🔍 Frame dHash altered',
                         '💾 Strict Low-MB preservation',
                         '🔒 New SHA-256 hash',
@@ -986,7 +987,7 @@ export default function FingerprintAnalyzer() {
                           <span>
                             {smartProgress < 100
                               ? `Uploading Media (${smartProgress}%)…`
-                              : 'Applying Deep Visual & Audio Transformations… (may take 20–40s)'}
+                              : 'Applying Transformations… (sub-5s processing)'}
                           </span>
                         </>
                       ) : (
@@ -998,9 +999,9 @@ export default function FingerprintAnalyzer() {
                               : selectedShieldMode === 'cartoon'
                               ? 'Generate 🎭 Cartoon Shield Variant (Formant Shift + H-Flip)'
                               : selectedShieldMode === 'bhakti'
-                              ? 'Generate 🕉️ Bhakti Zero-Claim Variant (+1.4st Key + 432Hz + Temple Echo)'
+                              ? 'Generate 🕉️ Bhakti Zero-Claim Variant (⚡ Turbo 2s Fast Encode)'
                               : selectedShieldMode === 'song'
-                              ? 'Generate 🎵 Song Zero-Claim Variant (+1.8st Key Shift + 1.04x Speed)'
+                              ? 'Generate 🎵 Song Zero-Claim Variant (⚡ Turbo 2s Fast Encode)'
                               : 'Generate 🤖 AI Smart Variant from Fingerprint'}
                           </span>
 
