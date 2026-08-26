@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import axios from 'axios'
 import StarField from '../components/StarField'
+import { getApiUrl, getFullMediaUrl } from '../utils/apiUrl'
 
 export default function VideoVariantGenerator() {
   const [file, setFile] = useState(null)
@@ -135,7 +136,7 @@ export default function VideoVariantGenerator() {
     formData.append('loop_count', options.loop_count || 1)
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'https://frameforge-ai-fa8z.onrender.com'
+      const API_URL = getApiUrl()
       const res = await axios.post(`${API_URL}/api/variants/create`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 15 * 60 * 1000, // 15 minutes timeout
@@ -981,7 +982,7 @@ export default function VideoVariantGenerator() {
 
                 <div className="flex items-center gap-2">
                   <a
-                    href={result.download_url}
+                    href={getFullMediaUrl(result.download_url)}
                     download={result.output_filename}
                     className="btn-primary px-4 py-2 text-xs no-underline flex items-center gap-1.5"
                   >
@@ -1042,7 +1043,7 @@ export default function VideoVariantGenerator() {
                     </span>
                   </div>
                   <div className="rounded-xl overflow-hidden bg-black aspect-video border border-violet-500/30">
-                    <video src={result.variant_url} controls className="w-full h-full object-contain" />
+                    <video src={getFullMediaUrl(result.variant_url)} controls className="w-full h-full object-contain" />
                   </div>
                   <div className="text-xs text-white/40 font-mono space-y-1 pt-1">
                     <div className="flex justify-between">

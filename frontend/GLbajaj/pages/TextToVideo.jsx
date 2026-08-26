@@ -8,6 +8,7 @@ import PipelineSteps from '../components/PipelineSteps'
 import VideoPlayer from '../components/VideoPlayer'
 import ErrorBanner from '../components/ErrorBanner'
 import { Github, Zap } from 'lucide-react'
+import { getApiUrl } from '../utils/apiUrl'
 
 /* ─── Pipeline step timing simulation ───────────────────────────
    Because the backend processes everything server-side, we advance
@@ -80,7 +81,7 @@ export default function App() {
 
     try {
       // Post to the backend (uses live Render URL if deployed, otherwise localhost)
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+      const API_URL = getApiUrl()
       const response = await axios.post(
         `${API_URL}/generate-video`,
         { 

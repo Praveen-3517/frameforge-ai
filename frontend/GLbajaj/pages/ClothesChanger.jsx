@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { ArrowLeft, Upload, Shirt, Image as ImageIcon, Download } from 'lucide-react'
 import axios from 'axios'
 import StarField from '../components/StarField'
+import { getApiUrl } from '../utils/apiUrl'
 
 export default function ClothesChanger() {
   const [image, setImage] = useState(null)
@@ -32,7 +33,7 @@ export default function ClothesChanger() {
     formData.append('prompt', prompt)
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+      const API_URL = getApiUrl()
       const res = await axios.post(`${API_URL}/change-clothes`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
