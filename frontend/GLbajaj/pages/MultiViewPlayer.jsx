@@ -114,7 +114,7 @@ export default function MultiViewPlayer() {
 
   // 4,000 Hours Goal Tracker State
   const [initialHours, setInitialHours] = useState(() => {
-    const saved = localStorage.getItem('frameforge_initial_hours')
+    const saved = localStorage.getItem('bittu_initial_hours') || localStorage.getItem('frameforge_initial_hours')
     return saved ? parseFloat(saved) : 0
   })
   const [editingInitialHours, setEditingInitialHours] = useState(false)
@@ -169,7 +169,7 @@ export default function MultiViewPlayer() {
 
   // Save initial hours in localStorage
   useEffect(() => {
-    localStorage.setItem('frameforge_initial_hours', initialHours.toString())
+    localStorage.setItem('bittu_initial_hours', initialHours.toString())
   }, [initialHours])
 
   // ── 3. Screen Wake Lock (Prevent Computer Sleep Overnight) ───
@@ -547,7 +547,7 @@ export default function MultiViewPlayer() {
       : 'https://www.youtube.com'
 
     const batContent = `@echo off
-title FrameForge AI - 24/7 Multi-Profile YouTube Watch Engine
+title Bittu AI - 24/7 Multi-Profile YouTube Watch Engine
 echo ======================================================================
 echo   Launching 24/7 Isolated YouTube Watch Engine (20-Video Loop)
 echo   Mode: Isolated Chrome Guest Profiles (No Cookies, Unique Sessions)

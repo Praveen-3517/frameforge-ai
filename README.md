@@ -1,4 +1,4 @@
-# 🎬 FrameForge AI — One-Click AI Tools & Media Forensics Suite
+# 🎬 Bittu AI — One-Click AI Tools, DSA Platform & Media Forensics Suite
 
 > Multi-modal AI media engine featuring Text-to-Video synthesis, AI Virtual Try-On, Video Variant Generator & Perceptual Forensic Fingerprint Suite. 100% Free-Tier Architecture.
 

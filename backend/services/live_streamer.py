@@ -1,5 +1,5 @@
 """
-FrameForge AI — 24/7 Multi-Track YouTube Live Stream Engine
+Bittu AI — 24/7 Multi-Track YouTube Live Stream Engine
 Streams continuous playlist of MP4 videos & MP3 audio tracks in an infinite 24/7 loop to YouTube Live:
   - 100% Free, Native FFmpeg RTMP Engine
   - Auto-scans 'bhajans/' folder for all audio & video tracks
@@ -192,7 +192,7 @@ def stream_single_track(track_path: Path, rtmp_url: str, bg_path: Path, track_id
 def run_247_live_stream():
     """Main 24/7 infinite streaming orchestrator."""
     print("=" * 70)
-    print("      🕉️  FRAMEFORGE AI — 24/7 YOUTUBE LIVE STREAMING ENGINE")
+    print("      🕉️  BITTU AI — 24/7 YOUTUBE LIVE STREAMING ENGINE")
     print("=" * 70)
 
     # 1. Get / Load YouTube Stream Key

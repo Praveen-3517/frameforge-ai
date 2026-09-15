@@ -710,7 +710,7 @@ def generate_video_variant_sync(
         cmd.extend([
             "-map_metadata", "-1",
             "-metadata", "title=Transformed Video Variant",
-            "-metadata", "comment=FrameForge AI transformed media",
+            "-metadata", "comment=Bittu AI transformed media",
         ])
 
     log.info("⚡ Mode: %s | Audio filters: %d | VF: %s",

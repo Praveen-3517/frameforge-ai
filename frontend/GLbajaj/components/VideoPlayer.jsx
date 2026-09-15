@@ -166,7 +166,7 @@ export default function VideoPlayer({ videoUrl, jobId, onReset }) {
         <a
           id="btn-download-video"
           href={videoUrl}
-          download={`frameforge_${jobId}.mp4`}
+          download={`bittu_${jobId}.mp4`}
           className="btn-primary flex-1 text-center no-underline"
         >
           <Download size={18} className="relative z-10" />

@@ -1,12 +1,12 @@
-# 🧠 FrameForge AI & One-Click AI Tools — Project Memory (brain.md)
+# 🧠 Bittu AI & One-Click AI Tools — Project Memory (brain.md)
 *The Single Source of Truth for Architecture, Pipeline, Development State, and Technical Memory.*
 
 ---
 
 ## 1. 📌 Project Identity
 
-- **Project / Game Title:** FrameForge AI — One-Click AI Tools Suite
-- **Internal Codename:** `frameforge-ai` / `one-click-ai-hub`
+- **Project / Game Title:** Bittu AI — One-Click AI Tools Suite
+- **Internal Codename:** `bittu-ai` / `one-click-ai-hub`
 - **Primary Genre / Category:** Generative AI Media Suite + DSA Learning Platform (Multi-Character AI Dialogue Studio, Kids 3D Shorts Generator, Text-to-Video Engine, AI Virtual Try-On, Video Variant Generator, Audio/Video Forensics Fingerprint Suite, **DSA Python Practice Platform**)
 - **Theme:** Futuristic, Cyberpunk-Cosmic, Hyper-Automated Media Synthesis & Signal Forensics
 - **Core Vision:** Democratize AI multimedia production, forensics, and organic audience growth by providing 100% free-tier, fast, zero-friction generative pipelines for automated cinematic storytelling, multi-character dialogue podcasts, kids 3D phonics animations, virtual fashion try-on, legitimate media transformation, deep acoustic/visual perceptual fingerprinting, and safe 4,000-hour multi-view stream boosting without mandatory paid API subscriptions.

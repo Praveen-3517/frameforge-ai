@@ -103,7 +103,7 @@ class GenerateRequest(BaseModel):
 # ─────────────────────────────────────────────────────────────
 
 app = FastAPI(
-    title="Text-to-Video API (Free Stack)",
+    title="Bittu AI - Text-to-Video API (Free Stack)",
     description="Convert any text into a narrated cinematic video. 100% Free.",
     version="3.0.0",
     docs_url="/docs",
@@ -384,7 +384,7 @@ async def generate_video(payload: GenerateRequest) -> FileResponse:
         return FileResponse(
             path=str(final_path),
             media_type="video/mp4",
-            filename=f"frameforge_{job_id}.mp4",
+            filename=f"bittu_{job_id}.mp4",
             headers={"X-Job-Id": job_id, "X-Processing-Time": f"{elapsed:.1f}s"},
         )
 
@@ -404,12 +404,12 @@ async def generate_video(payload: GenerateRequest) -> FileResponse:
 @app.get("/", tags=["System"])
 async def root() -> dict:
     return {
-        "name": "FrameForge AI Backend API",
+        "name": "Bittu AI Backend API",
         "status": "online",
         "version": "3.0.0",
         "docs_url": "/docs",
         "health_check": "/health",
-        "message": "Welcome to FrameForge AI API. Visit /docs to test and explore all endpoints."
+        "message": "Welcome to Bittu AI API. Visit /docs to test and explore all endpoints."
     }
 
 

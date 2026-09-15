@@ -134,7 +134,7 @@ export default function Dashboard() {
             <Zap size={16} className="text-white" />
           </div>
           <span className={`font-bold text-base tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
-            One-Click <span className="bg-gradient-to-r from-violet-500 to-cyan-500 bg-clip-text text-transparent">AI Tools</span>
+            Bittu <span className="bg-gradient-to-r from-violet-500 to-cyan-500 bg-clip-text text-transparent">AI Tools</span>
           </span>
           <span className={`hidden sm:inline-block px-2 py-0.5 rounded-full border text-[10px] font-mono ${
             isLight ? 'bg-slate-200/80 border-slate-300 text-slate-600' : 'bg-white/5 border-white/10 text-white/40'

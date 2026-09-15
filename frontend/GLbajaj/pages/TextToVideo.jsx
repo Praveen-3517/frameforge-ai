@@ -255,7 +255,7 @@ export default function App() {
 
       {/* ── Footer ── */}
       <footer className="relative z-10 text-center py-6 px-4 text-white/20 text-xs font-mono">
-        FrameForge AI · Built with FastAPI · OpenAI · Replicate · MoviePy
+        Bittu AI · Built with FastAPI · OpenAI · Replicate · MoviePy
       </footer>
     </div>
   )

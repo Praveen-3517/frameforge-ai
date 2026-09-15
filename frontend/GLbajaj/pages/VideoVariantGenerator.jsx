@@ -944,7 +944,7 @@ export default function VideoVariantGenerator() {
                       disabled={isLoading}
                       className="rounded accent-violet-500 w-3.5 h-3.5"
                     />
-                    <span>Clean container metadata & embed legitimate FrameForge AI variant identifier tag</span>
+                    <span>Clean container metadata & embed legitimate Bittu AI variant identifier tag</span>
                   </label>
                 </div>
 
