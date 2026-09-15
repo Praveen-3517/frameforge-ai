@@ -397,8 +397,20 @@ async def generate_video(payload: GenerateRequest) -> FileResponse:
 
 
 # ─────────────────────────────────────────────────────────────
-# 10.  Health Check
+# 10.  Root & Health Check
 # ─────────────────────────────────────────────────────────────
+
+
+@app.get("/", tags=["System"])
+async def root() -> dict:
+    return {
+        "name": "FrameForge AI Backend API",
+        "status": "online",
+        "version": "3.0.0",
+        "docs_url": "/docs",
+        "health_check": "/health",
+        "message": "Welcome to FrameForge AI API. Visit /docs to test and explore all endpoints."
+    }
 
 
 @app.get("/health", tags=["System"])
