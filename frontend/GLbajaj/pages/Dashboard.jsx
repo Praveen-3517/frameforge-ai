@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import StarField from '../components/StarField'
 import { getApiUrl } from '../utils/apiUrl'
+import UserNav from '../components/auth/UserNav'
 
 const PREMIUM_TOOLS = [
   {
@@ -143,7 +144,10 @@ export default function Dashboard() {
           </span>
         </div>
 
-        <nav className="flex items-center gap-4">
+        <nav className="flex items-center gap-3">
+          {/* User Sign In / Profile Nav */}
+          <UserNav isLight={isLight} />
+
           {/* Quick Header Theme Switcher */}
           <div className={`flex items-center p-0.5 rounded-lg border text-xs font-medium ${
             isLight ? 'bg-slate-200 border-slate-300' : 'bg-white/5 border-white/10'

@@ -11,6 +11,9 @@ import StatsPanel from '../components/dsa/StatsPanel'
 import { dsaProblems, filterProblems } from '../data/dsaProblems'
 import StarField from '../components/StarField'
 import { getLevel, getStreak, updateStreak, LEVELS } from '../utils/dsaStats'
+import UserNav from '../components/auth/UserNav'
+import { useAuth } from '../context/AuthContext'
+import { syncProgressOnLogin, saveProgressToCloud } from '../utils/dsaSync'
 
 const TOPICS = [
   'All', 'Arrays', 'Strings', 'Linked List', 'Stack',
@@ -22,6 +25,7 @@ const DIFFICULTIES = ['All', 'Easy', 'Medium', 'Hard']
 const PHASES = ['All', 'Basic', 'Intermediate', 'Advanced']
 
 function useDSAStorage() {
+  const { user } = useAuth()
   const [solved, setSolved] = useState(() => {
     try { return JSON.parse(localStorage.getItem('dsa_solved') || '[]') } catch { return [] }
   })
@@ -29,16 +33,30 @@ function useDSAStorage() {
     try { return JSON.parse(localStorage.getItem('dsa_bookmarks') || '[]') } catch { return [] }
   })
 
+  // Sync with cloud on login
+  useEffect(() => {
+    if (user?.id) {
+      syncProgressOnLogin(user.id).then(res => {
+        if (res) {
+          setSolved(res.solved)
+          setBookmarks(res.bookmarks)
+        }
+      })
+    }
+  }, [user?.id])
+
   const markSolved = (id) => {
     const next = solved.includes(id) ? solved.filter(x => x !== id) : [...solved, id]
     setSolved(next)
     localStorage.setItem('dsa_solved', JSON.stringify(next))
+    if (user?.id) saveProgressToCloud(user.id, next, bookmarks)
   }
 
   const toggleBookmark = (id) => {
     const next = bookmarks.includes(id) ? bookmarks.filter(x => x !== id) : [...bookmarks, id]
     setBookmarks(next)
     localStorage.setItem('dsa_bookmarks', JSON.stringify(next))
+    if (user?.id) saveProgressToCloud(user.id, solved, next)
   }
 
   return { solved, bookmarks, markSolved, toggleBookmark }
@@ -145,6 +163,9 @@ export default function DSAHub() {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* User Profile / Auth Nav */}
+            <UserNav isLight={isLight} />
+
             {/* Theme Toggle Feature */}
             <div className={`flex items-center p-0.5 rounded-lg border text-xs font-medium ${
               isLight ? 'bg-slate-200 border-slate-300' : 'bg-white/5 border-white/10'
