@@ -1,4 +1,4 @@
-"""
+r"""
 Quick diagnostic — run this to check what API key is actually loaded.
 Usage: .venv\Scripts\python.exe test_key.py
 """

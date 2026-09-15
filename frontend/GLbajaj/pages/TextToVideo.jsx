@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import axios from 'axios'
 import StarField from '../components/StarField'
 import Hero from '../components/Hero'
@@ -7,7 +8,7 @@ import SettingsPanel from '../components/SettingsPanel'
 import PipelineSteps from '../components/PipelineSteps'
 import VideoPlayer from '../components/VideoPlayer'
 import ErrorBanner from '../components/ErrorBanner'
-import { Github, Zap } from 'lucide-react'
+import { Github, Zap, ArrowLeft } from 'lucide-react'
 import { getApiUrl } from '../utils/apiUrl'
 
 /* ─── Pipeline step timing simulation ───────────────────────────
@@ -166,7 +167,10 @@ export default function App() {
 
       {/* ── Header ── */}
       <header className="relative z-10 flex items-center justify-between px-6 py-5 max-w-6xl mx-auto w-full">
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-3">
+          <Link to="/" className="flex items-center gap-1.5 text-white/50 hover:text-white transition-colors text-sm font-medium mr-2">
+            <ArrowLeft size={16} /> Dashboard
+          </Link>
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-cyan-500
                           flex items-center justify-center shadow-lg shadow-violet-500/30">
             <Zap size={16} className="text-white" />
@@ -182,7 +186,7 @@ export default function App() {
 
         <nav className="flex items-center gap-4">
           <a
-            href="http://localhost:8000/docs"
+            href={`${getApiUrl()}/docs`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-white/40 hover:text-white/70 text-sm font-medium transition-colors"

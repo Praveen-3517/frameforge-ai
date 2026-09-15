@@ -142,6 +142,49 @@ export default function FingerprintAnalyzer() {
     }
   }
 
+  // ⚡ 1-Click Fast Direct Transform Handler (Bypasses slow full-file forensic analysis)
+  const handleFastDirectTransform = async (mode) => {
+    if (!singleFile) return
+    setSelectedShieldMode(mode)
+    setSmartLoading(true)
+    setSmartProgress(0)
+    setSmartError('')
+    setSmartResult(null)
+
+    const API_URL = getApiUrl()
+    const formData = new FormData()
+    formData.append('file', singleFile)
+    formData.append('mode', mode)
+
+    try {
+      const res = await axios.post(`${API_URL}/api/fingerprints/smart-transform`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 25 * 60 * 1000,
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const pct = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+            setSmartProgress(pct)
+          }
+        },
+      })
+      setSmartResult(res.data)
+      setTimeout(() => {
+        const el = document.getElementById('smart-result-card')
+        if (el) el.scrollIntoView({ behavior: 'smooth' })
+      }, 200)
+    } catch (err) {
+      if (!err.response) {
+        setSmartError(
+          'Transform upload interrupted. Please check that backend server is running on http://localhost:8000.'
+        )
+      } else {
+        setSmartError(err.response?.data?.detail || 'Smart transform failed. Please try again.')
+      }
+    } finally {
+      setSmartLoading(false)
+    }
+  }
+
   // Smart Auto-Transform Handler (uses current singleFile + cached fingerprint)
   const handleSmartTransform = async () => {
     if (!singleFile && !singleResult?.job_id) return
@@ -408,28 +451,110 @@ export default function FingerprintAnalyzer() {
                         </div>
                       )}
 
-                      <div className="flex gap-3">
+                      {/* ⚡ 1-Click Fast Anti-Claim Protection Bar */}
+                      <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/15 via-purple-500/15 to-sky-500/15 border border-amber-400/40 space-y-3 shadow-lg shadow-amber-500/5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xl">⚡</span>
+                            <div>
+                              <h4 className="text-sm font-bold text-amber-200 uppercase tracking-wider">
+                                ⚡ 1-Click Fast Anti-Claim Shield
+                              </h4>
+                              <p className="text-[11px] text-white/50">
+                                Skip slow forensic scanning — directly re-encode &amp; download safe video in seconds!
+                              </p>
+                            </div>
+                          </div>
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 animate-pulse">
+                            ⚡ FASTEST
+                          </span>
+                        </div>
+
+                        {/* Progress Bar when Fast Transform is running */}
+                        {smartLoading && (
+                          <div className="space-y-1.5 p-3 rounded-xl bg-black/50 border border-amber-400/30">
+                            <div className="flex justify-between text-xs font-mono">
+                              <span className="text-amber-200 font-semibold">
+                                {smartProgress < 100
+                                  ? `Uploading Media (${smartProgress}%)…`
+                                  : '⚡ Applying Zero-Claim Shield (sub-5s processing)…'}
+                              </span>
+                              <span className="text-amber-300 font-bold">{smartProgress}%</span>
+                            </div>
+                            <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
+                              <div
+                                className="bg-gradient-to-r from-amber-500 to-yellow-400 h-full transition-all duration-300 rounded-full"
+                                style={{ width: `${smartProgress}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                          {/* 🕉️ Bhakti Ultra-Armor (A/V Full Shield) */}
+                          <button
+                            type="button"
+                            onClick={() => handleFastDirectTransform('bhakti_deep')}
+                            disabled={smartLoading || singleLoading}
+                            className="p-3.5 rounded-xl border border-amber-400/60 bg-amber-500/20 hover:bg-amber-500/30 text-left transition-all group disabled:opacity-50 hover:scale-[1.01] active:scale-[0.99]"
+                          >
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                                <span>🕉️ 🛡️</span> Bhakti Ultra-Armor (Nuclear A/V)
+                              </span>
+                              <span className="text-[10px] font-mono text-amber-200 bg-amber-500/30 px-1.5 py-0.5 rounded border border-amber-400/30 font-bold">
+                                🛡️ 100% Zero-Claim
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-white/70 leading-relaxed">
+                              Gambhir Natural Voice (-0.85st, 0% Chipmunk) + 1.042x Speed (14:23 Duration) + 432Hz + 10-Stage EQ + H-Flip
+                            </p>
+                          </button>
+
+                          {/* ⚡ Bhakti Audio-Shield (3s Turbo) */}
+                          <button
+                            type="button"
+                            onClick={() => handleFastDirectTransform('bhakti')}
+                            disabled={smartLoading || singleLoading}
+                            className="p-3.5 rounded-xl border border-yellow-400/60 bg-yellow-500/15 hover:bg-yellow-500/25 text-left transition-all group disabled:opacity-50 hover:scale-[1.01] active:scale-[0.99]"
+                          >
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-xs font-bold text-yellow-300 flex items-center gap-1.5">
+                                <span>⚡ 🕉️</span> Bhakti Audio-Shield (3s Turbo)
+                              </span>
+                              <span className="text-[10px] font-mono text-yellow-200 bg-yellow-500/30 px-1.5 py-0.5 rounded border border-yellow-400/30 font-bold">
+                                ⚡ 3-5s Instant
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-white/70 leading-relaxed">
+                              Instant 3s Copy Video + Gambhir Voice (-0.85st) + 1.042x Speed + 432Hz Sacred Tuning + 10-Stage Notch EQ
+                            </p>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3 pt-1">
                         <button
                           onClick={handleSingleAnalyze}
-                          disabled={singleLoading}
-                          className="btn-primary flex-1 py-3.5 text-sm"
+                          disabled={singleLoading || smartLoading}
+                          className="flex-1 py-3 px-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-xs font-semibold text-white/70 hover:text-white transition-all flex items-center justify-center gap-2"
                         >
                           {singleLoading ? (
                             <div className="flex items-center justify-center gap-2">
-                              <svg className="animate-spin w-5 h-5 text-white" fill="none" viewBox="0 0 24 24">
+                              <svg className="animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24">
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                               </svg>
                               <span>
                                 {singleProgress < 100
                                   ? `Uploading Media (${singleProgress}%)…`
-                                  : 'Extracting Acoustic & Visual Fingerprints…'}
+                                  : 'Extracting Acoustic &amp; Visual Fingerprints…'}
                               </span>
                             </div>
                           ) : (
                             <div className="flex items-center justify-center gap-2">
-                              <Fingerprint size={18} />
-                              <span>Execute Deep Forensic Fingerprint</span>
+                              <Fingerprint size={15} />
+                              <span>Or Run Deep Forensic Analysis (Waveforms &amp; Graphs)</span>
                             </div>
                           )}
                         </button>
@@ -437,8 +562,10 @@ export default function FingerprintAnalyzer() {
                           onClick={() => {
                             setSingleFile(null)
                             setSinglePreview(null)
+                            setSingleResult(null)
+                            setSmartResult(null)
                           }}
-                          className="px-4 py-3.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-white/70"
+                          className="px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-white/70"
                         >
                           Reset
                         </button>
@@ -661,8 +788,8 @@ export default function FingerprintAnalyzer() {
               {/* ───────────────────────────────────────── */}
               {/* SMART AUTO-TRANSFORM CARD                              */}
               {/* ───────────────────────────────────────── */}
-              {singleResult && (
-                <div className="glass-card p-6 space-y-6" style={{ border: '1px solid rgba(139,92,246,0.35)', background: 'linear-gradient(135deg, rgba(139,92,246,0.08) 0%, rgba(6,182,212,0.06) 100%)' }}>
+              {(singleResult || smartResult) && (
+                <div id="smart-result-card" className="glass-card p-6 space-y-6" style={{ border: '1px solid rgba(139,92,246,0.35)', background: 'linear-gradient(135deg, rgba(139,92,246,0.08) 0%, rgba(6,182,212,0.06) 100%)' }}>
                   {/* Header */}
                   <div className="flex items-start justify-between gap-4">
                     <div>
@@ -670,7 +797,7 @@ export default function FingerprintAnalyzer() {
                         <div className="w-8 h-8 rounded-xl bg-violet-500/20 border border-violet-500/30 flex items-center justify-center">
                           <Wand2 size={15} className="text-violet-400" />
                         </div>
-                        <h3 className="text-base font-bold text-white">Smart Auto-Transform & Deep Forensic Re-encoder</h3>
+                        <h3 className="text-base font-bold text-white">Smart Auto-Transform &amp; Deep Forensic Re-encoder</h3>
                         <span className="px-2 py-0.5 rounded-full bg-violet-500/15 border border-violet-500/25 text-[10px] font-mono text-violet-300 font-semibold">AI-DERIVED</span>
                       </div>
                       <p className="text-xs text-white/50 ml-10">
@@ -680,66 +807,68 @@ export default function FingerprintAnalyzer() {
                   </div>
 
                   {/* Auto-Derived Parameters Preview Grid (Standard + Anti-Detection Transforms) */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                    {[
-                      {
-                        label: 'Horizontal Mirror',
-                        value: '🪞 Active (H-Flip)',
-                        color: 'text-violet-400',
-                        badge: 'Spatial Flip'
-                      },
-                      {
-                        label: 'Sync Playback Speed',
-                        value: '⏩ 1.04x Speed Shift',
-                        color: 'text-cyan-400',
-                        badge: 'Timeline Shift'
-                      },
-                      {
-                        label: 'Visual Zoom & Crop',
-                        value: `${(singleResult.video_fingerprint?.average_motion_pct > 20 ? 5.0 : 4.0).toFixed(1)}% Zoom+Crop`,
-                        color: 'text-amber-400',
-                        badge: 'dHash Shift'
-                      },
-                      {
-                        label: 'Hue Rotation',
-                        value: `${((singleResult.audio_fingerprint?.frequency_bands?.['Bass (60-250 Hz)'] || 0) > (singleResult.audio_fingerprint?.frequency_bands?.['Treble (4k-8k Hz)'] || 0)) ? '+8.0° (Warm)' : '-8.0° (Cool)'}`,
-                        color: 'text-pink-400',
-                        badge: 'Color Delta'
-                      },
-                      {
-                        label: 'Corner Vignette',
-                        value: '🎭 Soft Edge Vignette',
-                        color: 'text-emerald-400',
-                        badge: 'Luminance Shift'
-                      },
-                      {
-                        label: 'Audio Pitch Shift',
-                        value: `${((singleResult.audio_fingerprint?.frequency_bands?.['Bass (60-250 Hz)'] || 0) > 50) ? '+2.5' : ((singleResult.audio_fingerprint?.frequency_bands?.['Treble (4k-8k Hz)'] || 0) > 50) ? '-2.5' : '+2.0'} Semitones`,
-                        color: 'text-sky-400',
-                        badge: 'Acoustic Shift'
-                      },
-                      {
-                        label: 'Formant EQ Notch',
-                        value: '🎚️ Harmonic Band Filter',
-                        color: 'text-indigo-400',
-                        badge: 'Landmark Cut'
-                      },
-                      {
-                        label: 'Audio Normalization',
-                        value: 'EBU R128 (-16 LUFS)',
-                        color: 'text-teal-400',
-                        badge: 'Broadcast std'
-                      },
-                    ].map((item) => (
-                      <div key={item.label} className="p-3 rounded-xl bg-black/30 border border-white/10 space-y-1">
-                        <div className="flex items-center justify-between">
-                          <span className={`text-[10px] font-mono font-semibold ${item.color} uppercase tracking-wider`}>{item.label}</span>
-                          <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-white/5 text-white/50">{item.badge}</span>
+                  {singleResult && (
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                      {[
+                        {
+                          label: 'Horizontal Mirror',
+                          value: '🪞 Active (H-Flip)',
+                          color: 'text-violet-400',
+                          badge: 'Spatial Flip'
+                        },
+                        {
+                          label: 'Sync Playback Speed',
+                          value: '⏩ 1.04x Speed Shift',
+                          color: 'text-cyan-400',
+                          badge: 'Timeline Shift'
+                        },
+                        {
+                          label: 'Visual Zoom & Crop',
+                          value: `${(singleResult.video_fingerprint?.average_motion_pct > 20 ? 5.0 : 4.0).toFixed(1)}% Zoom+Crop`,
+                          color: 'text-amber-400',
+                          badge: 'dHash Shift'
+                        },
+                        {
+                          label: 'Hue Rotation',
+                          value: `${((singleResult.audio_fingerprint?.frequency_bands?.['Bass (60-250 Hz)'] || 0) > (singleResult.audio_fingerprint?.frequency_bands?.['Treble (4k-8k Hz)'] || 0)) ? '+8.0° (Warm)' : '-8.0° (Cool)'}`,
+                          color: 'text-pink-400',
+                          badge: 'Color Delta'
+                        },
+                        {
+                          label: 'Corner Vignette',
+                          value: '🎭 Soft Edge Vignette',
+                          color: 'text-emerald-400',
+                          badge: 'Luminance Shift'
+                        },
+                        {
+                          label: 'Audio Pitch Shift',
+                          value: `${((singleResult.audio_fingerprint?.frequency_bands?.['Bass (60-250 Hz)'] || 0) > 50) ? '+2.5' : ((singleResult.audio_fingerprint?.frequency_bands?.['Treble (4k-8k Hz)'] || 0) > 50) ? '-2.5' : '+2.0'} Semitones`,
+                          color: 'text-sky-400',
+                          badge: 'Acoustic Shift'
+                        },
+                        {
+                          label: 'Formant EQ Notch',
+                          value: '🎚️ Harmonic Band Filter',
+                          color: 'text-indigo-400',
+                          badge: 'Landmark Cut'
+                        },
+                        {
+                          label: 'Audio Normalization',
+                          value: 'EBU R128 (-16 LUFS)',
+                          color: 'text-teal-400',
+                          badge: 'Broadcast std'
+                        },
+                      ].map((item) => (
+                        <div key={item.label} className="p-3 rounded-xl bg-black/30 border border-white/10 space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className={`text-[10px] font-mono font-semibold ${item.color} uppercase tracking-wider`}>{item.label}</span>
+                            <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-white/5 text-white/50">{item.badge}</span>
+                          </div>
+                          <div className="text-xs text-white/90 font-semibold leading-tight">{item.value}</div>
                         </div>
-                        <div className="text-xs text-white/90 font-semibold leading-tight">{item.value}</div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
 
                   {/* ── Mode Selection Header ── */}
                   <div className="space-y-3">
@@ -753,13 +882,15 @@ export default function FingerprintAnalyzer() {
                     </div>
 
                     {/* Mode Selector Tabs */}
-                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-7 gap-2">
                       {[
-                        { id: 'cartoon_shorts', label: '⚡ 9:16 Viral Shorts', color: 'border-rose-500/40 bg-rose-500/10 text-rose-300', activeRing: 'ring-2 ring-rose-400' },
-                        { id: 'cartoon', label: '🎭 Cartoon & Anime', color: 'border-violet-500/40 bg-violet-500/10 text-violet-300', activeRing: 'ring-2 ring-violet-400' },
+                        { id: 'bollywood_song', label: '⚡ 🎵 Bollywood Turbo (3s)', color: 'border-sky-500/40 bg-sky-500/10 text-sky-300', activeRing: 'ring-2 ring-sky-400' },
+                        { id: 'bollywood_deep', label: '🛡️ Bollywood Full A/V', color: 'border-indigo-500/40 bg-indigo-500/10 text-indigo-300', activeRing: 'ring-2 ring-indigo-400' },
+                        { id: 'bollywood_lofi', label: '☕ Bollywood Lo-Fi', color: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300', activeRing: 'ring-2 ring-emerald-400' },
                         { id: 'bhakti', label: '🕉️ Bhakti & Bhajan', color: 'border-amber-500/40 bg-amber-500/10 text-amber-300', activeRing: 'ring-2 ring-amber-400' },
-                        { id: 'song', label: '🎵 Songs & Music', color: 'border-sky-500/40 bg-sky-500/10 text-sky-300', activeRing: 'ring-2 ring-sky-400' },
-                        { id: 'auto', label: '🤖 Auto-Detect (AI)', color: 'border-cyan-500/40 bg-cyan-500/10 text-cyan-300', activeRing: 'ring-2 ring-cyan-400' },
+                        { id: 'cartoon_shorts', label: '⚡ 9:16 Shorts', color: 'border-rose-500/40 bg-rose-500/10 text-rose-300', activeRing: 'ring-2 ring-rose-400' },
+                        { id: 'cartoon', label: '🎭 Cartoon Voice', color: 'border-violet-500/40 bg-violet-500/10 text-violet-300', activeRing: 'ring-2 ring-violet-400' },
+                        { id: 'auto', label: '🤖 Auto-Detect', color: 'border-cyan-500/40 bg-cyan-500/10 text-cyan-300', activeRing: 'ring-2 ring-cyan-400' },
                       ].map(m => (
                         <button
                           key={m.id}
@@ -851,32 +982,32 @@ export default function FingerprintAnalyzer() {
                       </div>
                     </div>
 
-                    {/* 🕉️ Bhakti / Devotional Shield */}
+                    {/* 🕉️ 🛡️ Bhakti Ultra-Armor (Full A/V Defense — 100% Zero-Claim Guaranteed) */}
                     <div
-                      onClick={() => setSelectedShieldMode('bhakti')}
+                      onClick={() => setSelectedShieldMode('bhakti_deep')}
                       className={`rounded-xl border transition-all cursor-pointer overflow-hidden ${
-                        selectedShieldMode === 'bhakti'
+                        selectedShieldMode === 'bhakti_deep'
                           ? 'border-amber-400 ring-2 ring-amber-500/50 bg-amber-500/10 shadow-lg shadow-amber-500/10'
                           : 'border-amber-500/30 hover:border-amber-500/60 bg-black/20'
                       }`}
                     >
-                      <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: 'linear-gradient(90deg, rgba(251,191,36,0.18) 0%, rgba(0,0,0,0) 100%)' }}>
-                        <span className="text-lg">🕉️</span>
-                        <span className="text-xs font-bold text-amber-300 tracking-wider uppercase">Bhakti & Devotional Shield (⚡ Turbo 2s Fast Encode)</span>
+                      <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: 'linear-gradient(90deg, rgba(251,191,36,0.22) 0%, rgba(0,0,0,0) 100%)' }}>
+                        <span className="text-lg">🕉️ 🛡️</span>
+                        <span className="text-xs font-bold text-amber-300 tracking-wider uppercase">Bhakti Ultra-Armor (A/V Full Shield — 100% Zero-Claim Guaranteed)</span>
                         <span className={`ml-auto px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
-                          selectedShieldMode === 'bhakti'
+                          selectedShieldMode === 'bhakti_deep'
                             ? 'bg-amber-500 text-black border-amber-400 font-extrabold animate-pulse'
                             : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
                         }`}>
-                          {selectedShieldMode === 'bhakti' ? '⚡ 2s TURBO ACTIVE' : 'Click to Select'}
+                          {selectedShieldMode === 'bhakti_deep' ? '🛡️ ZERO-CLAIM ACTIVE' : 'Click to Select'}
                         </span>
                       </div>
                       <div className="px-4 pb-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
                         {[
-                          { icon: '⚡', label: 'Instant 2s Processing', desc: 'Stream-copy video (no wait even on 1-hour files)' },
-                          { icon: '🎼', label: '+1.4st Melodic Key + 432Hz', desc: 'Devotional key shift exceeds Content ID match' },
-                          { icon: '🏛️', label: 'Mandir Temple Echo', desc: 'Dual-tap aecho washes studio vocal fingerprint' },
-                          { icon: '🧘', label: '108Hz Om Drone Boost', desc: 'Cosmic resonance & vocal formant notch EQ' },
+                          { icon: '🎼', label: 'Gambhir Voice (-0.85st)', desc: 'Natural mature singer voice (0% chipmunk/child voice) + 1.042x speed (14:23 duration)' },
+                          { icon: '🪞', label: 'H-Flip Mirror + 4.5% Crop', desc: 'Flips video & wipes out corner watermarks (Mannu Digital, etc.)' },
+                          { icon: '📻', label: '10-Stage Studio Notch EQ', desc: 'Cuts WMG, Somplex, Sony & Lokdhun studio acoustic peaks' },
+                          { icon: '🏛️', label: 'Pure Mandir Reverb', desc: 'Warm temple hall acoustics (0% wobble vibrato, 0% metallic flanger)' },
                         ].map(item => (
                           <div key={item.label} className="p-2.5 rounded-lg bg-amber-500/5 border border-amber-500/15">
                             <div className="text-base mb-1">{item.icon}</div>
@@ -887,36 +1018,144 @@ export default function FingerprintAnalyzer() {
                       </div>
                     </div>
 
-                    {/* 🎵 Song / Background Music Shield */}
+                    {/* ⚡ 🕉️ Bhakti Audio-Shield (Instant 3s Mode) */}
                     <div
-                      onClick={() => setSelectedShieldMode('song')}
+                      onClick={() => setSelectedShieldMode('bhakti')}
                       className={`rounded-xl border transition-all cursor-pointer overflow-hidden ${
-                        selectedShieldMode === 'song'
-                          ? 'border-cyan-400 ring-2 ring-cyan-500/50 bg-cyan-500/10 shadow-lg shadow-cyan-500/10'
-                          : 'border-cyan-500/30 hover:border-cyan-500/60 bg-black/20'
+                        selectedShieldMode === 'bhakti'
+                          ? 'border-yellow-400 ring-2 ring-yellow-500/50 bg-yellow-500/10 shadow-lg shadow-yellow-500/10'
+                          : 'border-yellow-500/30 hover:border-yellow-500/60 bg-black/20'
                       }`}
                     >
-                      <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: 'linear-gradient(90deg, rgba(6,182,212,0.18) 0%, rgba(0,0,0,0) 100%)' }}>
-                        <span className="text-lg">🎵</span>
-                        <span className="text-xs font-bold text-cyan-300 tracking-wider uppercase">Songs & Music Zero-Claim Shield (⚡ Turbo 2s)</span>
+                      <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: 'linear-gradient(90deg, rgba(234,179,8,0.18) 0%, rgba(0,0,0,0) 100%)' }}>
+                        <span className="text-lg">⚡ 🕉️</span>
+                        <span className="text-xs font-bold text-yellow-300 tracking-wider uppercase">Bhakti Audio-Shield (⚡ 3s Fast Mode for Audio/Static Wallpapers)</span>
                         <span className={`ml-auto px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
-                          selectedShieldMode === 'song'
-                            ? 'bg-cyan-500 text-black border-cyan-400 font-extrabold animate-pulse'
-                            : 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
+                          selectedShieldMode === 'bhakti'
+                            ? 'bg-yellow-500 text-black border-yellow-400 font-extrabold animate-pulse'
+                            : 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30'
                         }`}>
-                          {selectedShieldMode === 'song' ? '🎯 ACTIVE SELECTED' : 'Click to Select'}
+                          {selectedShieldMode === 'bhakti' ? '⚡ 3s TURBO ACTIVE' : 'Click to Select'}
                         </span>
                       </div>
                       <div className="px-4 pb-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
                         {[
-                          { icon: '⚡', label: 'Instant 2s Processing', desc: 'Fast audio resample with stream-copy video' },
-                          { icon: '🎤', label: '+1.8st Key Transposition', desc: 'Shifts song melody beyond Content ID match' },
-                          { icon: '🔀', label: 'Stereo Phase Decorrelate', desc: 'L/R phase scrambled (extrastereo=0.40)' },
-                          { icon: '📻', label: 'Harmonic Landmark EQ', desc: 'Clears vocal and frequency landmarks' },
+                          { icon: '⚡', label: 'Instant 3s Processing', desc: 'Stream-copy video for audio-only tracks or custom wallpapers' },
+                          { icon: '🎼', label: 'Natural 432Hz Tuning', desc: 'Mature adult human voice with 0% chipmunk or child artifacts' },
+                          { icon: '🏛️', label: 'Mandir Room Reverb', desc: 'Soft temple warmth washes dry studio recording' },
+                          { icon: '📻', label: '10-Stage Notch EQ + 1.025x', desc: '108Hz Om boost + 1.025x speed sync prevents Content ID' },
                         ].map(item => (
-                          <div key={item.label} className="p-2.5 rounded-lg bg-cyan-500/5 border border-cyan-500/15">
+                          <div key={item.label} className="p-2.5 rounded-lg bg-yellow-500/5 border border-yellow-500/15">
                             <div className="text-base mb-1">{item.icon}</div>
-                            <div className="text-[10px] font-bold text-cyan-200">{item.label}</div>
+                            <div className="text-[10px] font-bold text-yellow-200">{item.label}</div>
+                            <div className="text-[9px] text-white/45 mt-0.5 leading-tight">{item.desc}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* ⚡ 🎵 Bollywood Turbo Shield (Instant 3-5s Mode) */}
+                    <div
+                      onClick={() => setSelectedShieldMode('bollywood_song')}
+                      className={`rounded-xl border transition-all cursor-pointer overflow-hidden ${
+                        selectedShieldMode === 'bollywood_song' || selectedShieldMode === 'song'
+                          ? 'border-sky-400 ring-2 ring-sky-500/50 bg-sky-500/10 shadow-lg shadow-sky-500/10'
+                          : 'border-sky-500/30 hover:border-sky-500/60 bg-black/20'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: 'linear-gradient(90deg, rgba(14,165,233,0.22) 0%, rgba(0,0,0,0) 100%)' }}>
+                        <span className="text-lg">⚡ 🎵</span>
+                        <span className="text-xs font-bold text-sky-300 tracking-wider uppercase">Bollywood Turbo Shield (⚡ 3-5s Instant Mode)</span>
+                        <span className={`ml-auto px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
+                          selectedShieldMode === 'bollywood_song' || selectedShieldMode === 'song'
+                            ? 'bg-sky-500 text-white border-sky-400 font-extrabold animate-pulse'
+                            : 'bg-sky-500/20 text-sky-300 border-sky-500/30'
+                        }`}>
+                          {selectedShieldMode === 'bollywood_song' || selectedShieldMode === 'song' ? '⚡ 3s TURBO ACTIVE' : 'Click to Select'}
+                        </span>
+                      </div>
+                      <div className="px-4 pb-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {[
+                          { icon: '⚡', label: 'Instant 3-5s Render', desc: 'Fast stream-copy video (no 15-min wait on 5-min songs!)' },
+                          { icon: '🎤', label: 'Natural Baritone (-0.65st)', desc: '100% mature singer voice (ZERO kid/chipmunk voice)' },
+                          { icon: '📻', label: 'Landmark Notch EQ', desc: 'Dampens 280/1200/2800Hz studio master peaks + 80Hz bass' },
+                          { icon: '⏩', label: '1.035x Speed Sync', desc: 'Timeline shifted + Stereo Phase Decorrelator (breaks hash)' },
+                        ].map(item => (
+                          <div key={item.label} className="p-2.5 rounded-lg bg-sky-500/5 border border-sky-500/15">
+                            <div className="text-base mb-1">{item.icon}</div>
+                            <div className="text-[10px] font-bold text-sky-200">{item.label}</div>
+                            <div className="text-[9px] text-white/45 mt-0.5 leading-tight">{item.desc}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* 🛡️ Bollywood Deep A/V Shield (Full Video Mirror + Audio Armor) */}
+                    <div
+                      onClick={() => setSelectedShieldMode('bollywood_deep')}
+                      className={`rounded-xl border transition-all cursor-pointer overflow-hidden ${
+                        selectedShieldMode === 'bollywood_deep'
+                          ? 'border-indigo-400 ring-2 ring-indigo-500/50 bg-indigo-500/10 shadow-lg shadow-indigo-500/10'
+                          : 'border-indigo-500/30 hover:border-indigo-500/60 bg-black/20'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: 'linear-gradient(90deg, rgba(99,102,241,0.22) 0%, rgba(0,0,0,0) 100%)' }}>
+                        <span className="text-lg">🛡️</span>
+                        <span className="text-xs font-bold text-indigo-300 tracking-wider uppercase">Bollywood Deep A/V Shield (Full Video Mirror + Cinema Frame)</span>
+                        <span className={`ml-auto px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
+                          selectedShieldMode === 'bollywood_deep'
+                            ? 'bg-indigo-500 text-white border-indigo-400 font-extrabold animate-pulse'
+                            : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30'
+                        }`}>
+                          {selectedShieldMode === 'bollywood_deep' ? '🛡️ FULL A/V ACTIVE' : 'Click to Select'}
+                        </span>
+                      </div>
+                      <div className="px-4 pb-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {[
+                          { icon: '🪞', label: 'H-Flip Mirror', desc: 'Visual choreography flipped (defeats video Content ID)' },
+                          { icon: '🎬', label: 'Cinema Scope Frame', desc: '4.5% dynamic zoom crop + black letterbox bars' },
+                          { icon: '🎤', label: 'Natural Voice (-0.65st)', desc: '100% natural mature singer voice (no chipmunk)' },
+                          { icon: '🔒', label: 'Dual Zero-Claim', desc: 'Complete Audio + Video Content ID neutralization' },
+                        ].map(item => (
+                          <div key={item.label} className="p-2.5 rounded-lg bg-indigo-500/5 border border-indigo-500/15">
+                            <div className="text-base mb-1">{item.icon}</div>
+                            <div className="text-[10px] font-bold text-indigo-200">{item.label}</div>
+                            <div className="text-[9px] text-white/45 mt-0.5 leading-tight">{item.desc}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* ☕ Bollywood Lo-Fi & Slowed Shield */}
+                    <div
+                      onClick={() => setSelectedShieldMode('bollywood_lofi')}
+                      className={`rounded-xl border transition-all cursor-pointer overflow-hidden ${
+                        selectedShieldMode === 'bollywood_lofi'
+                          ? 'border-emerald-400 ring-2 ring-emerald-500/50 bg-emerald-500/10 shadow-lg shadow-emerald-500/10'
+                          : 'border-emerald-500/30 hover:border-emerald-500/60 bg-black/20'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: 'linear-gradient(90deg, rgba(16,185,129,0.20) 0%, rgba(0,0,0,0) 100%)' }}>
+                        <span className="text-lg">☕</span>
+                        <span className="text-xs font-bold text-emerald-300 tracking-wider uppercase">Bollywood Lo-Fi / Slowed Shield (⚡ 3s Turbo)</span>
+                        <span className={`ml-auto px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
+                          selectedShieldMode === 'bollywood_lofi'
+                            ? 'bg-emerald-500 text-black border-emerald-400 font-extrabold animate-pulse'
+                            : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                        }`}>
+                          {selectedShieldMode === 'bollywood_lofi' ? '☕ LO-FI SLOWED ACTIVE' : 'Click to Select'}
+                        </span>
+                      </div>
+                      <div className="px-4 pb-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {[
+                          { icon: '🎙️', label: 'Mature Baritone Voice', desc: '-0.95st pitch drop (deep soulful tone, no chipmunk)' },
+                          { icon: '🌧️', label: 'Slowed & Reverb (0.935x)', desc: 'Viral YouTube Lo-Fi tempo + gentle acoustic room echo' },
+                          { icon: '⚡', label: 'Instant 3-5s Render', desc: 'Fast stream-copy video mode for instant processing' },
+                          { icon: '🔒', label: '100% Zero-Claim Pass', desc: 'Acoustic landmarks washed away from Content ID index' },
+                        ].map(item => (
+                          <div key={item.label} className="p-2.5 rounded-lg bg-emerald-500/5 border border-emerald-500/15">
+                            <div className="text-base mb-1">{item.icon}</div>
+                            <div className="text-[10px] font-bold text-emerald-200">{item.label}</div>
                             <div className="text-[9px] text-white/45 mt-0.5 leading-tight">{item.desc}</div>
                           </div>
                         ))}
@@ -998,10 +1237,14 @@ export default function FingerprintAnalyzer() {
                               ? '⚡ Generate 9:16 Viral Cartoon Short (15s Fast Encode)'
                               : selectedShieldMode === 'cartoon'
                               ? 'Generate 🎭 Cartoon Shield Variant (Formant Shift + H-Flip)'
+                              : selectedShieldMode === 'bhakti_deep'
+                              ? 'Generate 🕉️ Bhakti Ultra-Armor Variant (🛡️ 100% Zero-Claim Guaranteed)'
                               : selectedShieldMode === 'bhakti'
-                              ? 'Generate 🕉️ Bhakti Zero-Claim Variant (⚡ Turbo 2s Fast Encode)'
-                              : selectedShieldMode === 'song'
-                              ? 'Generate 🎵 Song Zero-Claim Variant (⚡ Turbo 2s Fast Encode)'
+                              ? 'Generate ⚡ Bhakti Audio-Shield Variant (3s Fast Mode)'
+                              : selectedShieldMode === 'bollywood_song' || selectedShieldMode === 'song'
+                              ? 'Generate ⚡ 🎵 Bollywood Turbo Variant (3s Fast Mode)'
+                              : selectedShieldMode === 'bollywood_deep'
+                              ? 'Generate 🛡️ Bollywood Full A/V Variant (H-Flip + Scope + Armor)'
                               : 'Generate 🤖 AI Smart Variant from Fingerprint'}
                           </span>
 

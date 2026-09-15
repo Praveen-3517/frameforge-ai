@@ -33,6 +33,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, BackgroundTasks, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
+from gradio_client import Client, handle_file
 from moviepy.editor import (
     AudioFileClip,
     ImageClip,
@@ -108,6 +109,8 @@ app = FastAPI(
     docs_url="/docs",
 )
 
+from fastapi.staticfiles import StaticFiles
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -115,6 +118,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
 
 
 # ─────────────────────────────────────────────────────────────
@@ -422,21 +427,26 @@ async def change_clothes(
         with open(user_img_path, "wb") as f:
             f.write(await image.read())
 
-        # 0. Optimize the prompt using Gemini for hyper-realism
-        log.info("   Optimizing prompt using Gemini...")
-        model = genai.GenerativeModel("gemini-flash-latest")
-        gemini_prompt = f"""
-        You are a professional fashion AI prompt engineer.
-        The user wants to generate a picture of clothing based on this input: "{prompt}"
-        
-        Extract ONLY the description of the clothing itself. Remove any references to people (e.g. "for this person", "wear a").
-        Format your response as a single, highly detailed, photorealistic prompt for an isolated piece of clothing.
-        Keep it under 15 words.
-        Example output: A stylish black winter coat, high-end designer, detailed texture
-        """
-        gemini_response = model.generate_content(gemini_prompt)
-        optimized_prompt = gemini_response.text.strip().replace('\n', ' ')
-        log.info("   Optimized Garment Prompt: %s", optimized_prompt)
+        # 0. Optimize the prompt using Gemini for hyper-realism (with safe fallback)
+        optimized_prompt = prompt.strip()
+        try:
+            log.info("   Optimizing prompt using Gemini...")
+            model = genai.GenerativeModel("gemini-1.5-flash")
+            gemini_prompt = f"""
+            You are a professional fashion AI prompt engineer.
+            The user wants to generate a picture of clothing based on this input: "{prompt}"
+            
+            Extract ONLY the description of the clothing itself. Remove any references to people (e.g. "for this person", "wear a").
+            Format your response as a single, highly detailed, photorealistic prompt for an isolated piece of clothing.
+            Keep it under 15 words.
+            Example output: A stylish black winter coat, high-end designer, detailed texture
+            """
+            gemini_response = model.generate_content(gemini_prompt)
+            if gemini_response and gemini_response.text:
+                optimized_prompt = gemini_response.text.strip().replace('\n', ' ')
+            log.info("   Optimized Garment Prompt: %s", optimized_prompt)
+        except Exception as gemini_err:
+            log.warning("   ⚠️ Gemini prompt optimization fallback to original prompt: %s", gemini_err)
 
         # 1. Generate the Garment Image using Pollinations.ai based on optimized text prompt
         log.info("   Generating garment image...")
@@ -542,6 +552,8 @@ async def create_video_variant(
     temple_reverb: bool = Form(False),
     om_drone_resonance: bool = Form(False),
     loop_count: int = Form(1),
+    preserve_formants: bool = Form(False),
+    sacred_bed_layer: bool = Form(False),
 ):
     job_id = uuid.uuid4().hex[:12]
     ext = Path(file.filename or "video.mp4").suffix or ".mp4"
@@ -595,6 +607,8 @@ async def create_video_variant(
                 temple_reverb=temple_reverb,
                 om_drone_resonance=om_drone_resonance,
                 loop_count=loop_count,
+                preserve_formants=preserve_formants,
+                sacred_bed_layer=sacred_bed_layer,
             )
         )
 
@@ -768,14 +782,16 @@ async def smart_fingerprint_transform(
             except Exception as e:
                 log.warning("Could not parse cached fingerprint: %s", e)
 
-        if not meta or not isinstance(meta, dict):
-            meta = await loop.run_in_executor(None, lambda: probe_media_metadata(input_path))
+        # When mode is explicitly specified (e.g. bhakti_deep, bhakti, bollywood), skip slow full-file fingerprint analysis
+        if mode == "auto":
+            if not audio_fp or not isinstance(audio_fp, dict):
+                audio_fp = await loop.run_in_executor(None, lambda: analyze_audio_fingerprint(input_path))
 
-        if not audio_fp or not isinstance(audio_fp, dict):
-            audio_fp = await loop.run_in_executor(None, lambda: analyze_audio_fingerprint(input_path))
-
-        if not video_fp or not isinstance(video_fp, dict):
-            video_fp = await loop.run_in_executor(None, lambda: analyze_video_fingerprint(input_path))
+            if not video_fp or not isinstance(video_fp, dict):
+                video_fp = await loop.run_in_executor(None, lambda: analyze_video_fingerprint(input_path))
+        else:
+            audio_fp = audio_fp or {}
+            video_fp = video_fp or {}
 
         fingerprint_payload = {
             "metadata": meta,
@@ -842,6 +858,8 @@ async def smart_fingerprint_transform(
                 is_shorts=params.get("is_shorts", False),
                 clip_duration_sec=params.get("clip_duration_sec", 0.0),
                 custom_audio_file=custom_audio_path,
+                preserve_formants=params.get("preserve_formants", False),
+                sacred_bed_layer=params.get("sacred_bed_layer", False),
             )
         )
 
@@ -904,6 +922,204 @@ async def serve_media_file(filename: str):
 
 
 # ─────────────────────────────────────────────────────────────
+# 16.  Kids 3D Shorts & Phonics Generator Endpoints
+# ─────────────────────────────────────────────────────────────
+
+from services.kids_generator import (
+    KidsShortRequest,
+    build_kids_short_video_task,
+    generate_ai_kids_ideas,
+    KIDS_JOBS,
+    THEME_PROMPTS,
+    CHARACTER_PROMPTS,
+    LETTER_STYLE_PROMPTS,
+    VOICE_MAP,
+)
+
+class KidsGenerateApiRequest(BaseModel):
+    variety: str = Field(default="spelling_rush")
+    word: str = Field(default="CHUM")
+    category: str = Field(default="custom")
+    character_key: str = Field(default="anime_boy_explorer")
+    theme_key: str = Field(default="green_hills")
+    letter_style: str = Field(default="donut_sprinkles")
+    voice_key: str = Field(default="hindi_cute_girl")
+    speech_rate: str = Field(default="+5%")
+    aspect_ratio: str = Field(default="9:16")
+    quiz_options: Optional[List[str]] = None
+    story_script: Optional[str] = None
+    channel_watermark: Optional[str] = None
+
+class KidsIdeasApiRequest(BaseModel):
+    category: str = Field(default="animals")
+    language: str = Field(default="hindi")
+
+@app.get("/api/kids/presets", tags=["Kids 3D Shorts"])
+async def get_kids_presets():
+    """Returns all available styles, themes, characters, voices and sample words for Kids generator."""
+    return JSONResponse(content={
+        "status": "success",
+        "themes": [
+            {"id": "green_hills", "name": "🏞️ Sunny Green Hills", "desc": "Windows XP Bliss Style, bright blue skies & flowers"},
+            {"id": "candy_land", "name": "🍭 Candy Wonderland", "desc": "Giant lollipops, cupcakes & sugar rivers"},
+            {"id": "magic_forest", "name": "🌲 Magic Fairy Forest", "desc": "Glowing mushrooms & sparkling fireflies"},
+            {"id": "space_galaxy", "name": "🌌 Space Galaxy Planet", "desc": "Colorful nebula & floating candy stars"},
+            {"id": "toy_castle", "name": "🏰 Giant Toy Castle", "desc": "Pastel toy kingdom & balloons"},
+        ],
+        "characters": [
+            {"id": "anime_boy_explorer", "name": "👦 3D Boy Explorer", "desc": "Spiky hair, goggles & jacket (Krishna VFX style)"},
+            {"id": "chibi_panda", "name": "🐼 Cute Baby Panda", "desc": "Chubby panda with tiny superhero cape"},
+            {"id": "superhero_kid", "name": "🦸 Little Superhero", "desc": "Shining red cape & star emblem"},
+            {"id": "baby_dino", "name": "🦖 Baby Dinosaur", "desc": "Friendly green dinosaur with tiny wings"},
+            {"id": "cute_kitty", "name": "🐱 Fluffy Kitty", "desc": "White kitten with cute pink bow tie"},
+        ],
+        "letter_styles": [
+            {"id": "donut_sprinkles", "name": "🍩 Donut & Sprinkles Glaze", "desc": "Strawberry frosting & rainbow sprinkles"},
+            {"id": "glossy_balloon", "name": "🎈 Shiny Inflatable Balloons", "desc": "Glossy reflective metallic vinyl"},
+            {"id": "gummy_jelly", "name": "🍬 Gummy Fruit Jelly", "desc": "Translucent glowing fruity gelatin"},
+            {"id": "gold_sparkle", "name": "⭐ 3D Gold & Diamond", "desc": "Gleaming pirate treasure with star sparkles"},
+            {"id": "clay_plasticine", "name": "🎨 Colorful 3D Clay", "desc": "Plasticine toy clay animation look"},
+        ],
+        "voices": [
+            {"id": "hindi_cute_girl", "name": "👧 Hindi Cute Voice (Swara)", "desc": "Sweet & energetic Hindi girl phonics"},
+            {"id": "hindi_energetic_boy", "name": "👦 Hindi Energetic Boy (Madhur)", "desc": "Enthusiastic cartoon kid voice"},
+            {"id": "english_kid_girl", "name": "🇬🇧 English Kid Phonics (Ana)", "desc": "Clear English phonics pronounciation"},
+            {"id": "english_kid_boy", "name": "🇺🇸 English Energetic Kid (Christopher)", "desc": "Upbeat American kid voice"},
+            {"id": "english_nursery_female", "name": "🎶 Nursery Rhyme (Sonia)", "desc": "Melodic British nursery storytelling"},
+        ],
+        "varieties": [
+            {"id": "spelling_rush", "name": "🍩 3D Candy Spelling Rush", "desc": "Character jumps across stacked donut letters to spell words"},
+            {"id": "missing_quiz", "name": "❓ Kids Phonics Quiz Challenge", "desc": "Interactive missing letter quiz with celebration chime"},
+            {"id": "animal_morph", "name": "🦁 3D Animal & Object Guess", "desc": "Mystery box reveal with animal sound & phonics"},
+            {"id": "number_hop", "name": "🔢 Color & Number Hop", "desc": "Stepping stone jelly blocks with counting notes"},
+            {"id": "which_slide", "name": "🚪 Which Slide / Which Door?", "desc": "Pick-one slide adventure with funny animations"},
+            {"id": "moral_story", "name": "📖 3D Mini Moral Story", "desc": "Narrated 3D fairy tale with cute scene animation"},
+        ],
+        "trending_words": [
+            {"word": "CHUM", "category": "custom", "variety": "spelling_rush"},
+            {"word": "LION", "category": "animals", "variety": "spelling_rush"},
+            {"word": "APPLE", "category": "fruits", "variety": "spelling_rush"},
+            {"word": "ROBOT", "category": "toys", "variety": "spelling_rush"},
+            {"word": "PANDA", "category": "animals", "variety": "spelling_rush"},
+            {"word": "TIGER", "category": "animals", "variety": "missing_quiz"},
+            {"word": "MANGO", "category": "fruits", "variety": "spelling_rush"},
+            {"word": "ZEBRA", "category": "animals", "variety": "spelling_rush"},
+            {"word": "MAGIC", "category": "custom", "variety": "spelling_rush"},
+        ]
+    })
+
+@app.post("/api/kids/ai-ideas", tags=["Kids 3D Shorts"])
+async def get_ai_kids_ideas_endpoint(req: KidsIdeasApiRequest):
+    """Generates 5 viral kids concepts using Gemini AI or fallback presets."""
+    ideas = await generate_ai_kids_ideas(category=req.category, language=req.language)
+    return JSONResponse(content={"status": "success", "ideas": ideas})
+
+@app.post("/api/kids/generate", tags=["Kids 3D Shorts"])
+async def generate_kids_short_endpoint(req: KidsGenerateApiRequest):
+    """Launches non-blocking async Kids 3D animation generation job."""
+    job_id = uuid.uuid4().hex[:8]
+    log.info("👶 [Job %s] Enqueued Kids 3D Short: %s (%s)", job_id, req.word, req.variety)
+    
+    short_req = KidsShortRequest(
+        variety=req.variety,
+        word=req.word,
+        category=req.category,
+        character_key=req.character_key,
+        theme_key=req.theme_key,
+        letter_style=req.letter_style,
+        voice_key=req.voice_key,
+        speech_rate=req.speech_rate,
+        aspect_ratio=req.aspect_ratio,
+        quiz_options=req.quiz_options,
+        story_script=req.story_script,
+        channel_watermark=req.channel_watermark,
+    )
+    
+    # Run async background task immediately
+    asyncio.create_task(build_kids_short_video_task(job_id, short_req))
+    
+    return JSONResponse(content={
+        "status": "queued",
+        "job_id": job_id,
+        "message": "Kids 3D video generation queued successfully",
+    })
+
+@app.get("/api/kids/status/{job_id}", tags=["Kids 3D Shorts"])
+async def get_kids_job_status(job_id: str):
+    """Polls real-time generation progress of a Kids 3D short job."""
+    job = KIDS_JOBS.get(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return JSONResponse(content={"job_id": job_id, **job})
+
+
+# ─────────────────────────────────────────────────────────────
+# 17.  Multi-Character AI Dialogue Video Studio Endpoints
+# ─────────────────────────────────────────────────────────────
+
+from services.dialogue_generator import (
+    DialogueVideoRequest,
+    build_dialogue_video_task,
+    generate_ai_dialogue_script,
+    DIALOGUE_JOBS,
+    PRESET_VOICES,
+    PRESET_AVATARS,
+    PRESET_THEMES,
+    EMOTION_BADGES,
+)
+
+class AiDialogueScriptRequest(BaseModel):
+    topic: str = Field(default="Chai vs Coffee Debate")
+    language: str = Field(default="hinglish")
+    genre: str = Field(default="comedy")
+    char_count: int = Field(default=2)
+
+@app.get("/api/dialogue/presets", tags=["AI Dialogue Studio"])
+async def get_dialogue_presets():
+    """Returns presets for voices, avatars, themes, and emotion badges."""
+    return JSONResponse(content={
+        "status": "success",
+        "voices": PRESET_VOICES,
+        "avatars": PRESET_AVATARS,
+        "themes": PRESET_THEMES,
+        "emotions": EMOTION_BADGES,
+    })
+
+@app.post("/api/dialogue/ai-script", tags=["AI Dialogue Studio"])
+async def generate_dialogue_script_endpoint(req: AiDialogueScriptRequest):
+    """Generates engaging multi-character dialogue script using Gemini AI."""
+    script = await generate_ai_dialogue_script(
+        topic=req.topic,
+        language=req.language,
+        genre=req.genre,
+        char_count=req.char_count,
+    )
+    return JSONResponse(content={"status": "success", "script": script})
+
+@app.post("/api/dialogue/generate", tags=["AI Dialogue Studio"])
+async def generate_dialogue_video_endpoint(req: DialogueVideoRequest):
+    """Launches non-blocking async multi-character dialogue video generation job."""
+    job_id = uuid.uuid4().hex[:8]
+    log.info("🎙️ [Job %s] Enqueued Dialogue Studio Video: %s (%d lines)", job_id, req.title, len(req.dialogues))
+    
+    asyncio.create_task(build_dialogue_video_task(job_id, req))
+    
+    return JSONResponse(content={
+        "status": "queued",
+        "job_id": job_id,
+        "message": "Dialogue video generation queued successfully",
+    })
+
+@app.get("/api/dialogue/status/{job_id}", tags=["AI Dialogue Studio"])
+async def get_dialogue_job_status(job_id: str):
+    """Polls real-time generation progress of a dialogue video job."""
+    job = DIALOGUE_JOBS.get(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return JSONResponse(content={"job_id": job_id, **job})
+
+
+# ─────────────────────────────────────────────────────────────
 # 12.  Dev Runner
 # ─────────────────────────────────────────────────────────────
 
@@ -916,3 +1132,5 @@ if __name__ == "__main__":
         reload=False,
         log_level="info",
     )
+
+

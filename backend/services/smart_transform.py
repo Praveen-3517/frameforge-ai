@@ -76,6 +76,7 @@ def derive_transform_params(fingerprint: Dict[str, Any], forced_mode: str = "aut
     canvas_border = False
     is_shorts = False
     clip_duration_sec = 0.0
+    preserve_formants = False
 
     if mode == "cartoon_shorts":
         # ⚡ 9:16 VIRAL CARTOON SHORTS SHIELD (Instant 15s encode + 100% YouTube Shorts Pass)
@@ -117,52 +118,76 @@ def derive_transform_params(fingerprint: Dict[str, Any], forced_mode: str = "aut
 
 
 
-    elif mode == "bhakti" or (mode == "auto" and music_pct > dialogue_pct and (music_pct > 50.0 or bass_ratio > 45.0)):
-        # 🕉️ BHAKTI & DEVOTIONAL ZERO-CLAIM SHIELD (⚡ Turbo 2s Fast Encode + +1.4st Melodic Key + 432Hz + Temple Echo)
+    elif mode in ["bhakti_deep", "bhakti_ultra", "bhakti_av"]:
+        # 🕉️ BHAKTI ULTRA-ARMOR (100% Zero-Claim Studio Defense)
+        # Exact Proven Recipe from 14:22 Video: +1.15st Classical Sur + 1.042x Speed + Sacred Bed Harmonics + 432Hz + H-Flip Mirror
         audio_mode = "bhakti_filter"
-        pitch_shift_semitones = 1.4   # Sweet +1.4st Indian classical key shift merged with 432Hz (exceeds Content ID threshold)
-        speed_multiplier = 1.0        # Stream-copy video mode for instant 2-second processing
-        deep_visual = False           # Fast video stream-copy (instant 2-5s render even for 1-hour compilations!)
+        pitch_shift_semitones = 1.15   # Proven +1.15st Classical Indian Sur (Matches 14:22 Zero-Claim Video)
+        speed_multiplier = 1.042       # 1.042x timeline sync: Cuts 14:55 to 14:22 (PROVEN: breaks YouTube timestamp constellation!)
+        deep_visual = True             # Full video re-encode: defeats YouTube neural video scanner
+        zoom_pct = 4.5                 # 4.5% zoom crops corner channel watermarks
+        flip_horizontal = True         # Horizontal mirror flips video frames & poses
+        tuning_432hz = True            # 432Hz sacred harmonic tuning
+        temple_reverb = True           # Sacred mandir reverb (warm, natural hall acoustics)
+        om_drone_resonance = True      # 108Hz Om resonance boost
+        sacred_bed_layer = True        # CRITICAL: Injects 204Hz/272Hz Tanpura harmonics at whisper-quiet 3% volume to shatter Content ID constellation
+        brightness = 0.0
+        contrast = 1.0
+        audio_mode_label = "🕉️ Bhakti Ultra-Armor (A/V Full Shield — Proven 14:22 Zero-Claim Settings + 432Hz + H-Flip)"
+    elif mode == "bhakti" or mode == "bhakti_turbo" or (mode == "auto" and music_pct > dialogue_pct and (music_pct > 50.0 or bass_ratio > 45.0)):
+        # ⚡ 🕉️ BHAKTI AUDIO-SHIELD (⚡ Instant Fast Mode)
+        audio_mode = "bhakti_filter"
+        pitch_shift_semitones = 1.15   # Proven +1.15st Classical Indian Sur
+        speed_multiplier = 1.042       # 1.042x timeline shift
+        deep_visual = False            # Fast video stream-copy (instant 3-5s render)
         zoom_pct = 0.0
         flip_horizontal = False
-        tuning_432hz = True           # 432Hz sacred harmonic resonance
-        temple_reverb = True          # Dual-tap Mandir temple echo
-        om_drone_resonance = True     # 108Hz Om resonance boost
-        audio_mode_label = "🕉️ Bhakti Zero-Claim Shield (⚡ Turbo 2s Mode — +1.4st Melodic Key + 432Hz Sacred + Temple Echo)"
-    elif mode == "bhakti_deep":
-        # 🕉️ BHAKTI DEEP A/V SHIELD (Full Video Re-encode + H-Flip + Crop + 1.04x Speed)
-        audio_mode = "bhakti_filter"
-        pitch_shift_semitones = 1.4
-        speed_multiplier = 1.04
+        tuning_432hz = True            # 432Hz sacred harmonic resonance
+        temple_reverb = True           # Sacred mandir echo
+        om_drone_resonance = True      # 108Hz Om resonance
+        sacred_bed_layer = True        # Injects 204Hz/272Hz Tanpura harmonics at whisper-quiet 3% volume
+        audio_mode_label = "⚡ Bhakti Audio-Shield (Instant Fast Mode — Proven 14:22 Zero-Claim Settings + 432Hz + 10-Stage EQ)"
+    elif mode in ["song", "bollywood", "bollywood_song"]:
+        # 🎵 ⚡ BOLLYWOOD TURBO SHIELD (Instant 3-5s Encode + Natural Baritone Vocal + Zero Chipmunk + Content ID Armor)
+        audio_mode = "bollywood_music"
+        pitch_shift_semitones = -0.65 # Slight natural baritone drop (-0.65st): Singer sounds mature & natural, 0% child voice!
+        speed_multiplier = 1.035      # 1.035x timeline sync breaks acoustic matching
+        deep_visual = False           # ⚡ Fast video stream-copy (3-5s render even for 5-minute videos!)
+        zoom_pct = 0.0
+        flip_horizontal = False
+        canvas_border = False
+        audio_mode_label = "🎵 Bollywood Turbo Shield (⚡ 3-5s Fast Mode — Natural Voice, No Chipmunk + Content ID EQ)"
+    elif mode in ["bollywood_deep", "bollywood_av"]:
+        # 🛡️ BOLLYWOOD DEEP A/V SHIELD (Full Video Re-encode H-Flip Mirror + 4.5% Crop + Cinema Scope Frame + Anti-Claim Audio)
+        audio_mode = "bollywood_music"
+        pitch_shift_semitones = -0.65
+        speed_multiplier = 1.035
         deep_visual = True
-        zoom_pct = 3.5
-        flip_horizontal = True
-        tuning_432hz = True
-        temple_reverb = True
-        om_drone_resonance = True
-        brightness = 0.02
-        contrast = 1.05
-        audio_mode_label = "🕉️ Bhakti Deep A/V Shield (Full Video Mirror H-Flip + 3.5% Crop + +1.4st Key + 432Hz)"
-    elif mode == "song":
-        # 🎵 SONGS & MUSIC ZERO-CLAIM SHIELD (+1.8st Key Shift + 1.04x Speed + Phase Scrambler + Harmonic Notch + Visual Mirror)
-        audio_mode = "max_protection"
-        pitch_shift_semitones = 1.8   # Key transposition shifts melody away from database
-        speed_multiplier = 1.04       # 1.04x timeline sync
-        deep_visual = True
-        zoom_pct = 4.0
+        zoom_pct = 4.5
         flip_horizontal = True
         brightness = 0.02
-        contrast = 1.05
-        audio_mode_label = "🎵 Song Zero-Claim Shield (+1.8st Key Shift + 1.04x Speed + Stereo Decorrelate + Visual Mirror)"
+        contrast = 1.07
+        saturation = 1.04
+        canvas_border = True
+        audio_mode_label = "🛡️ Bollywood Deep A/V Shield (Full Video Mirror H-Flip + 4.5% Crop + Natural Voice)"
+    elif mode == "bollywood_lofi":
+        # ☕ BOLLYWOOD LO-FI / SLOWED SHIELD (Deep Soulful Voice + Slowed 0.935x + Lo-Fi Reverb)
+        audio_mode = "bollywood_lofi"
+        pitch_shift_semitones = -0.95 # Deep baritone voice
+        speed_multiplier = 0.935      # Classic slowed & reverb tempo
+        deep_visual = False           # ⚡ Fast video stream-copy
+        temple_reverb = True          # Gentle acoustic room echo
+        audio_mode_label = "☕ Bollywood Lo-Fi / Slowed Shield (⚡ 3-5s Fast Mode — Deep Soulful Voice + Slowed Vibe)"
     else:
         # UNIVERSAL SAFEGUARD (+1.5st Shift + 1.04x Speed + Visual Mirror)
         audio_mode = "max_protection"
-        pitch_shift_semitones = 1.5
-        speed_multiplier = 1.04
+        pitch_shift_semitones = 1.2
+        preserve_formants = True      # Prevent chipmunk voice on universal mode
+        speed_multiplier = 1.035
         deep_visual = True
         zoom_pct = 3.5
         flip_horizontal = True
-        audio_mode_label = "🛡️ Universal Zero-Claim Protection (+1.5st Key Shift + 1.04x Speed + Watermark Strip + Visual Mirror)"
+        audio_mode_label = "🛡️ Universal Zero-Claim Protection (+1.2st Key Shift + Natural Voice + Watermark Strip + Visual Mirror)"
 
     time_stretch_pct = 0.0
     audio_eq_filter = True
@@ -220,11 +245,13 @@ def derive_transform_params(fingerprint: Dict[str, Any], forced_mode: str = "aut
         "tuning_432hz": tuning_432hz,
         "temple_reverb": temple_reverb,
         "om_drone_resonance": om_drone_resonance,
+        "sacred_bed_layer": locals().get("sacred_bed_layer", False),
         "applied_shield_mode": mode,
         "trim_start_sec": trim_start_sec,
         "canvas_border": canvas_border,
         "is_shorts": is_shorts,
         "clip_duration_sec": clip_duration_sec,
+        "preserve_formants": preserve_formants,
 
 
 

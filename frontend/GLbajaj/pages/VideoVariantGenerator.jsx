@@ -68,6 +68,7 @@ export default function VideoVariantGenerator() {
     temple_reverb: false,
     om_drone_resonance: false,
     loop_count: 1,
+    preserve_formants: false,
   })
 
   const fileInputRef = useRef(null)
@@ -134,6 +135,7 @@ export default function VideoVariantGenerator() {
     formData.append('temple_reverb', options.temple_reverb || options.audio_mode === 'bhakti_filter')
     formData.append('om_drone_resonance', options.om_drone_resonance || options.audio_mode === 'bhakti_filter')
     formData.append('loop_count', options.loop_count || 1)
+    formData.append('preserve_formants', options.preserve_formants || options.audio_mode === 'bollywood_music')
 
     try {
       const API_URL = getApiUrl()
@@ -333,6 +335,35 @@ export default function VideoVariantGenerator() {
                       }`}
                     >
                       🌸 🕉️ Bhakti Shield Mode
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setOptions({
+                        ...options,
+                        deep_visual: true,
+                        flip_horizontal: true,
+                        zoom_pct: 4.5,
+                        speed_multiplier: 1.035,
+                        contrast: 1.07,
+                        saturation: 1.04,
+                        brightness: 0.02,
+                        audio_mode: 'bollywood_music',
+                        preserve_formants: true,
+                        pitch_shift_semitones: 1.05,
+                        audio_eq_filter: true,
+                        stereo_decorrelate: true,
+                        mute_audio: false,
+                        tuning_432hz: false,
+                        temple_reverb: false,
+                      })}
+                      className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm ${
+                        options.audio_mode === 'bollywood_music'
+                          ? 'bg-gradient-to-r from-sky-500/30 to-cyan-500/30 border-sky-500/50 text-sky-300 ring-1 ring-sky-500/30'
+                          : 'bg-white/5 border-white/10 text-sky-200/70 hover:bg-white/10'
+                      }`}
+                    >
+                      🎵 Bollywood Song Shield (Natural Voice)
                     </button>
 
                     <button
@@ -686,13 +717,20 @@ export default function VideoVariantGenerator() {
                       <span className="px-2 py-0.5 rounded-full bg-cyan-500/20 text-[9px] font-mono text-cyan-300 font-semibold">ACOUSTIC SHIELD</span>
                     </div>
 
-                    {/* 4 Preset Audio Defense Modes */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                    {/* 5 Preset Audio Defense Modes */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
                       {[
+                        {
+                          id: 'bollywood_music',
+                          title: '🎵 Bollywood Shield',
+                          desc: '100% Natural Voice (Formants Preserved - No Chipmunk) + Landmark EQ',
+                          border: 'border-sky-500/40',
+                          bg: 'from-sky-500/20 to-transparent',
+                        },
                         {
                           id: 'max_protection',
                           title: '🛡️ Universal Max',
-                          desc: 'Formant EQ Notch + +2.5st Pitch + Watermark Cleaner',
+                          desc: 'Formant EQ Notch + +2.0st Pitch + Watermark Cleaner',
                           border: 'border-violet-500/40',
                           bg: 'from-violet-500/20 to-transparent',
                         },
@@ -705,8 +743,8 @@ export default function VideoVariantGenerator() {
                         },
                         {
                           id: 'bhakti_filter',
-                          title: '🕉️ Bhakti Zero-Claim',
-                          desc: '+1.4st Melodic Key + 432Hz Sacred + Temple Echo + 1.04x Speed',
+                          title: '🕉️ Bhakti Ultra-Armor',
+                          desc: 'Sweet +1.15st 432Hz Key + Mandir Echo + 1.042x Speed + H-Flip Mirror',
                           border: 'border-amber-500/40',
                           bg: 'from-amber-500/20 to-transparent',
                         },
@@ -726,13 +764,15 @@ export default function VideoVariantGenerator() {
                               ...options,
                               audio_mode: mode.id,
                               mute_audio: mode.id === 'mute',
-                              pitch_shift_semitones: mode.id === 'cartoon_morph' ? 3.2 : mode.id === 'bhakti_filter' ? 1.4 : mode.id === 'max_protection' ? 2.0 : options.pitch_shift_semitones,
+                              preserve_formants: mode.id === 'bollywood_music',
+                              pitch_shift_semitones: mode.id === 'cartoon_morph' ? 3.2 : mode.id === 'bhakti_filter' ? 1.15 : mode.id === 'bollywood_music' ? 1.05 : mode.id === 'max_protection' ? 2.0 : options.pitch_shift_semitones,
                               tuning_432hz: mode.id === 'bhakti_filter' ? true : options.tuning_432hz,
                               temple_reverb: mode.id === 'bhakti_filter' ? true : options.temple_reverb,
                               om_drone_resonance: mode.id === 'bhakti_filter' ? true : options.om_drone_resonance,
-                              speed_multiplier: mode.id === 'bhakti_filter' ? 1.04 : options.speed_multiplier,
-                              flip_horizontal: mode.id === 'bhakti_filter' ? true : options.flip_horizontal,
-                              zoom_pct: mode.id === 'bhakti_filter' ? 3.5 : options.zoom_pct,
+                              speed_multiplier: mode.id === 'bhakti_filter' ? 1.042 : mode.id === 'bollywood_music' ? 1.035 : options.speed_multiplier,
+                              flip_horizontal: mode.id === 'bhakti_filter' || mode.id === 'bollywood_music' ? true : options.flip_horizontal,
+                              zoom_pct: mode.id === 'bhakti_filter' ? 4.0 : mode.id === 'bollywood_music' ? 4.5 : options.zoom_pct,
+                              deep_visual: mode.id === 'bhakti_filter' || mode.id === 'bollywood_music' ? true : options.deep_visual,
                             })
                           }}
                           className={`p-2.5 rounded-xl text-left border transition-all ${

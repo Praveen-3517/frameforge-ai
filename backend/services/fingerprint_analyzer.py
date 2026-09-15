@@ -39,9 +39,9 @@ def extract_pcm_audio(media_path: Path, sample_rate: int = 16000) -> Tuple[np.nd
     cmd = [
         FFMPEG_EXE,
         "-threads", "0",
+        "-t", "45",               # 45s sample before input for instant seek on long files
         "-i", str(media_path),
         "-vn",
-        "-t", "45",               # 45s sample is enough for accurate analysis (was 90s)
         "-ac", "1",
         "-ar", str(sample_rate),
         "-f", "f32le",

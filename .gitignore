@@ -7,6 +7,9 @@ backend/outputs/
 backend/temp/
 backend/.venv/
 backend/venv/
+backend/temp_thumb.jpg
+outputs/
+temp/
 .pytest_cache/
 
 # ─── Frontend ──────────────────────────────────────
