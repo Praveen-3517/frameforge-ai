@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom'
 import {
   Video, Shirt, Layers, Fingerprint, Tv,
   MessageSquare, Sparkles, Code2, Zap, Github,
-  ChevronRight, BrainCircuit, Crown, Sun, Moon
+  ChevronRight, BrainCircuit, Crown, Sun, Moon,
+  Trophy, ArrowRightLeft, Timer, Flame, CheckCircle2,
+  Terminal, BookOpen, ArrowRight
 } from 'lucide-react'
 import StarField from '../components/StarField'
 import { getApiUrl } from '../utils/apiUrl'
@@ -213,97 +215,192 @@ export default function Dashboard() {
           </p>
         </div>
 
-        {/* ── DSA Platform — Featured Card with Light/Dark Mode Selector ── */}
-        <div className={`w-full mb-6 rounded-2xl border transition-all duration-300 backdrop-blur-sm ${
+        {/* ── DSA Platform — Comprehensive Featured Showcase Card ── */}
+        <div className={`w-full mb-6 rounded-2xl border transition-all duration-300 backdrop-blur-sm overflow-hidden ${
           isLight
-            ? 'bg-gradient-to-r from-violet-100/90 via-white to-cyan-100/90 border-violet-300/80 shadow-xl shadow-violet-200/40'
-            : 'bg-gradient-to-r from-violet-600/15 via-[#0f0a22] to-cyan-600/15 border-violet-500/30 hover:border-violet-400/60 shadow-xl shadow-violet-500/10'
+            ? 'bg-gradient-to-br from-violet-100/90 via-white to-cyan-100/90 border-violet-300/80 shadow-xl shadow-violet-200/40'
+            : 'bg-gradient-to-br from-violet-950/40 via-[#0d0722] to-cyan-950/30 border-violet-500/30 hover:border-violet-400/60 shadow-xl shadow-violet-500/10'
         }`}>
-          <div className="p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <Link to="/dsa" className="flex items-center gap-4 flex-1 group">
+          {/* Top Header Bar */}
+          <div className={`p-5 sm:p-6 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b ${
+            isLight ? 'border-violet-200/80' : 'border-white/8'
+          }`}>
+            <Link to="/dsa" className="flex items-start sm:items-center gap-3.5 group flex-1">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-600 to-cyan-600 flex items-center justify-center shadow-lg shadow-violet-500/30 group-hover:scale-110 transition-transform shrink-0">
-                <Code2 size={22} className="text-white" />
+                <Code2 size={24} className="text-white" />
               </div>
               <div>
                 <div className="flex flex-wrap items-center gap-2 mb-1">
-                  <h2 className={`text-base font-bold transition-colors ${
-                    isLight ? 'text-slate-900 group-hover:text-violet-600' : 'text-white group-hover:text-violet-300'
+                  <h2 className={`text-lg font-bold tracking-tight transition-colors ${
+                    isLight ? 'text-slate-950 group-hover:text-violet-600' : 'text-white group-hover:text-violet-300'
                   }`}>
-                    DSA Practice Platform
+                    DSA Practice & Competitive Platform
                   </h2>
-                  <span className={`px-2 py-0.5 rounded-full border text-[10px] font-mono font-bold flex items-center gap-1 ${
+                  <span className={`px-2.5 py-0.5 rounded-full border text-[11px] font-mono font-bold flex items-center gap-1 ${
                     isLight
-                      ? 'bg-violet-100 border-violet-300 text-violet-700'
+                      ? 'bg-emerald-100 border-emerald-300 text-emerald-800'
+                      : 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
+                  }`}>
+                    🔥 1,800 Problems
+                  </span>
+                  <span className={`px-2 py-0.5 rounded-full border text-[10px] font-mono font-bold ${
+                    isLight
+                      ? 'bg-violet-100 border-violet-300 text-violet-800'
                       : 'bg-violet-500/20 border-violet-500/30 text-violet-300'
                   }`}>
-                    <BrainCircuit size={10} /> Python · Pyodide
+                    15 Topics · Easy to Hard
                   </span>
-                  <span className={`hidden sm:inline-block px-2 py-0.5 rounded-full border text-[10px] font-mono font-bold ${
+                  <span className={`hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-mono font-bold ${
                     isLight
-                      ? 'bg-emerald-100 border-emerald-300 text-emerald-700'
-                      : 'bg-emerald-500/15 border-emerald-500/25 text-emerald-300'
+                      ? 'bg-amber-100 border-amber-300 text-amber-800'
+                      : 'bg-amber-500/15 border-amber-500/30 text-amber-300'
                   }`}>
-                    🔥 126 Problems
+                    English & हिंदी
                   </span>
                 </div>
-                <p className={`text-sm leading-relaxed ${isLight ? 'text-slate-600' : 'text-white/50'}`}>
-                  Solve DSA problems with real Python, Monaco editor, timer, XP & streaks — all in browser
+                <p className={`text-xs sm:text-sm leading-relaxed ${isLight ? 'text-slate-600 font-medium' : 'text-white/60'}`}>
+                  Full in-browser algorithmic practice and FAANG technical interview prep suite with real Python 3.11 WASM.
                 </p>
               </div>
             </Link>
 
-            {/* Light / Dark Mode Toggle Feature inside DSA Box */}
-            <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+            {/* Actions: Theme Toggle & Launch Button */}
+            <div className="flex items-center gap-2.5 shrink-0 self-end md:self-center">
               <div className={`flex items-center p-1 rounded-xl border shadow-sm ${
-                isLight
-                  ? 'bg-white/90 border-violet-200'
-                  : 'bg-black/50 border-violet-500/30'
+                isLight ? 'bg-white border-slate-300' : 'bg-black/50 border-white/10'
               }`}>
                 <button
                   type="button"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    setTheme('light')
-                  }}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  onClick={() => setTheme('light')}
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
                     isLight
-                      ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-md shadow-amber-400/30 scale-105'
-                      : 'text-white/60 hover:text-white'
+                      ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-sm'
+                      : 'text-white/50 hover:text-white'
                   }`}
-                  title="Enable Light Mode"
+                  title="Light Mode"
                 >
-                  <Sun size={13} className={isLight ? 'animate-spin-slow' : ''} />
+                  <Sun size={12} />
                   <span>Light</span>
                 </button>
                 <button
                   type="button"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    setTheme('dark')
-                  }}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  onClick={() => setTheme('dark')}
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
                     !isLight
-                      ? 'bg-gradient-to-r from-violet-600 to-cyan-600 text-white shadow-md shadow-violet-600/30 scale-105'
+                      ? 'bg-violet-600 text-white shadow-sm'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
-                  title="Enable Dark Mode"
+                  title="Dark Mode"
                 >
-                  <Moon size={13} />
+                  <Moon size={12} />
                   <span>Dark</span>
                 </button>
               </div>
 
               <Link
                 to="/dsa"
-                className={`p-2 rounded-xl transition-all ${
-                  isLight ? 'text-slate-400 hover:text-violet-600' : 'text-white/30 hover:text-violet-400'
-                }`}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-violet-600 to-cyan-600 text-white shadow-md shadow-violet-500/25 hover:opacity-95 transition-all active:scale-95"
               >
-                <ChevronRight size={20} />
+                <span>Launch Hub</span>
+                <ArrowRight size={14} />
               </Link>
             </div>
+          </div>
+
+          {/* Feature Highlights Grid (4 Pillars) */}
+          <div className="p-5 sm:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+            {/* Feature 1 */}
+            <div className={`p-3.5 rounded-xl border transition-all ${
+              isLight
+                ? 'bg-white/80 border-violet-200/80 shadow-sm text-slate-800'
+                : 'bg-white/[0.02] border-white/8 text-white'
+            }`}>
+              <div className="flex items-center gap-2 mb-1.5">
+                <div className={`p-1.5 rounded-lg ${isLight ? 'bg-cyan-100 text-cyan-800' : 'bg-cyan-500/15 text-cyan-300'}`}>
+                  <Terminal size={14} />
+                </div>
+                <h3 className={`text-xs font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                  Python 3.11 WASM Engine
+                </h3>
+              </div>
+              <p className={`text-[11px] leading-relaxed ${isLight ? 'text-slate-600' : 'text-white/50'}`}>
+                Zero install. Real Python executes directly in your browser with automated test validation and output console.
+              </p>
+            </div>
+
+            {/* Feature 2 */}
+            <div className={`p-3.5 rounded-xl border transition-all ${
+              isLight
+                ? 'bg-white/80 border-violet-200/80 shadow-sm text-slate-800'
+                : 'bg-white/[0.02] border-white/8 text-white'
+            }`}>
+              <div className="flex items-center gap-2 mb-1.5">
+                <div className={`p-1.5 rounded-lg ${isLight ? 'bg-violet-100 text-violet-800' : 'bg-violet-500/15 text-violet-300'}`}>
+                  <ArrowRightLeft size={14} />
+                </div>
+                <h3 className={`text-xs font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                  Visual Code Diff Viewer
+                </h3>
+              </div>
+              <p className={`text-[11px] leading-relaxed ${isLight ? 'text-slate-600' : 'text-white/50'}`}>
+                Compare your workspace code side-by-side against FAANG optimal solutions with delta counts and 1-click load to editor.
+              </p>
+            </div>
+
+            {/* Feature 3 */}
+            <div className={`p-3.5 rounded-xl border transition-all ${
+              isLight
+                ? 'bg-white/80 border-violet-200/80 shadow-sm text-slate-800'
+                : 'bg-white/[0.02] border-white/8 text-white'
+            }`}>
+              <div className="flex items-center gap-2 mb-1.5">
+                <div className={`p-1.5 rounded-lg ${isLight ? 'bg-amber-100 text-amber-800' : 'bg-amber-500/15 text-amber-300'}`}>
+                  <Trophy size={14} />
+                </div>
+                <h3 className={`text-xs font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                  Leaderboard & Contests
+                </h3>
+              </div>
+              <p className={`text-[11px] leading-relaxed ${isLight ? 'text-slate-600' : 'text-white/50'}`}>
+                Compete with 24,000+ coders across India, climb tiers from Contender to Grandmaster, and simulate Weekly Algorithmic Clashes.
+              </p>
+            </div>
+
+            {/* Feature 4 */}
+            <div className={`p-3.5 rounded-xl border transition-all ${
+              isLight
+                ? 'bg-white/80 border-violet-200/80 shadow-sm text-slate-800'
+                : 'bg-white/[0.02] border-white/8 text-white'
+            }`}>
+              <div className="flex items-center gap-2 mb-1.5">
+                <div className={`p-1.5 rounded-lg ${isLight ? 'bg-rose-100 text-rose-800' : 'bg-rose-500/15 text-rose-300'}`}>
+                  <Timer size={14} />
+                </div>
+                <h3 className={`text-xs font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                  FAANG Mock Interview Mode
+                </h3>
+              </div>
+              <p className={`text-[11px] leading-relaxed ${isLight ? 'text-slate-600' : 'text-white/50'}`}>
+                Simulate real technical rounds with countdown timers, locked external hints, company tags, and bilingual (English & हिंदी) questions.
+              </p>
+            </div>
+          </div>
+
+          {/* Curriculum & Topics Footer Strip */}
+          <div className={`px-5 sm:px-6 py-3 border-t flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono ${
+            isLight ? 'bg-slate-50/80 border-violet-200/60 text-slate-700' : 'bg-black/30 border-white/5 text-white/40'
+          }`}>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className={`font-bold uppercase tracking-wider ${isLight ? 'text-violet-800' : 'text-violet-300'}`}>
+                Curriculum:
+              </span>
+              <span>
+                1,800 Curated Problems · 15 Topics (Arrays, Strings, Linked Lists, Stack, Hashing, Binary Search, Trees, Graphs, Heap, DP, Bit Manipulation, Sorting, Greedy, Recursion)
+              </span>
+            </div>
+            <span className={`font-bold shrink-0 ${isLight ? 'text-emerald-700' : 'text-emerald-400'}`}>
+              ✓ 100% Free · In-Browser Execution
+            </span>
           </div>
         </div>
 
