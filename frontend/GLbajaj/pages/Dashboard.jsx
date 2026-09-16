@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Video, Shirt, Layers, Fingerprint, Tv,
-  MessageSquare, Sparkles, Code2, Zap, Github,
+  MessageSquare, MessageSquarePlus, Sparkles, Code2, Zap, Github,
   ChevronRight, BrainCircuit, Crown, Sun, Moon,
   Trophy, ArrowRightLeft, Timer, Flame, CheckCircle2,
   Terminal, BookOpen, ArrowRight, Coffee, Clock
@@ -180,6 +180,20 @@ export default function Dashboard() {
             </button>
           </div>
 
+          {/* Feedback Trigger Button */}
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent('open-feedback'))}
+            className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-xl border transition-all ${
+              isLight
+                ? 'bg-white border-slate-200 text-slate-700 hover:text-violet-700 shadow-sm'
+                : 'bg-white/5 border-white/10 text-white/70 hover:text-white hover:bg-white/10'
+            }`}
+            title="Give feedback"
+          >
+            <MessageSquarePlus size={13} className={isLight ? 'text-violet-600' : 'text-violet-400'} />
+            <span className="hidden sm:inline">Feedback</span>
+          </button>
+
           <a
             href={`${getApiUrl()}/docs`}
             target="_blank"
@@ -204,7 +218,7 @@ export default function Dashboard() {
       <main className="relative z-10 flex-1 flex flex-col items-center px-4 py-6 max-w-5xl mx-auto w-full">
 
         {/* Hero */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
           <h1 className={`text-3xl sm:text-4xl font-bold tracking-tight mb-2 ${
             isLight ? 'text-slate-900' : 'text-white'
           }`}>
@@ -214,6 +228,43 @@ export default function Dashboard() {
             Powerful tools — media creation, forensics, DSA practice & premium features
           </p>
         </div>
+
+        {/* ── Early Bird Promo Banner ── */}
+        <button
+          onClick={() => window.dispatchEvent(new CustomEvent('open-early-bird'))}
+          className={`w-full mb-6 p-3 sm:p-3.5 rounded-2xl border transition-all hover:scale-[1.01] active:scale-[0.99] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left group shadow-lg ${
+            isLight
+              ? 'bg-gradient-to-r from-amber-100 via-orange-50 to-amber-100 border-amber-300 text-amber-950 shadow-amber-200/40'
+              : 'bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-violet-500/15 border-amber-500/30 text-white shadow-amber-500/5'
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <span className="w-9 h-9 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-base shadow-md shrink-0">
+              🎁
+            </span>
+            <div>
+              <div className="flex flex-wrap items-center gap-2 mb-0.5">
+                <span className="font-black text-xs sm:text-sm">
+                  Special Offer: पहले 100 लोगों के लिए 100% Free Lifetime DSA Access!
+                </span>
+                <span className={`px-2 py-0.2 rounded-full border text-[10px] font-mono font-bold ${
+                  isLight ? 'bg-amber-200 border-amber-400 text-amber-900' : 'bg-amber-400/20 border-amber-400/40 text-amber-300'
+                }`}>
+                  🔥 13 Passes Left
+                </span>
+              </div>
+              <p className={`text-[11px] ${isLight ? 'text-amber-900/80 font-medium' : 'text-white/60'}`}>
+                1,800 Problems, Python WASM, Visual Diff & Weekly Contests. Click to claim your free pass now!
+              </p>
+            </div>
+          </div>
+
+          <span className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 self-end sm:self-center ${
+            isLight ? 'bg-amber-500 text-slate-950 shadow-sm group-hover:bg-amber-400' : 'bg-white/10 group-hover:bg-amber-500 group-hover:text-slate-950 text-amber-300'
+          }`}>
+            Claim Free Pass →
+          </span>
+        </button>
 
         {/* ── DSA Platform — Comprehensive Featured Showcase Card ── */}
         <div className={`w-full mb-6 rounded-2xl border transition-all duration-300 backdrop-blur-sm overflow-hidden ${

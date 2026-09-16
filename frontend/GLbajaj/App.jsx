@@ -2,6 +2,8 @@ import React from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import AuthModal from './components/auth/AuthModal'
+import EarlyBirdModal from './components/EarlyBirdModal'
+import FeedbackModal from './components/FeedbackModal'
 import Dashboard from './pages/Dashboard'
 import TextToVideo from './pages/TextToVideo'
 import ClothesChanger from './pages/ClothesChanger'
@@ -18,6 +20,8 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <AuthModal />
+        <EarlyBirdModal />
+        <FeedbackModal />
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/dialogue" element={<DialogueVideoGenerator />} />
