@@ -765,3 +765,91 @@ User clicks "Run Code"
 - [x] Share solution link (one-click URL sharing with clipboard feedback)
 - [x] Leaderboard / competitive mode (global standings, user rank, weekly mock contest)
 - [x] Timer for interview simulation mode (countdown timer + FAANG lock mode)
+
+---
+
+## 21. 🌐 Domain, Deployment & SEO Status
+
+### 21.1 Live Deployment URLs
+
+| Service | URL | Platform | Status |
+|---------|-----|----------|--------|
+| **Custom Domain (Frontend)** | https://bittuai.online | Vercel | ✅ LIVE |
+| **Frontend (Default)** | https://frameforge-ai.vercel.app | Vercel | ✅ LIVE |
+| **Backend API** | https://frameforge-ai-fa8z.onrender.com | Render | ✅ LIVE |
+| **Health Check** | https://frameforge-ai-fa8z.onrender.com/health | Render | ✅ OK |
+
+- **Domain registered:** `bittuai.online` (Added: 2026-09-16)
+- **SSL Certificate:** ✅ Active (HTTPS working)
+- **Vercel rewrite rules:** `/api/*` → Render backend, `/*` → `/index.html` (SPA)
+
+---
+
+### 21.2 SEO Implementation (Completed: 2026-09-16)
+
+#### Files Modified:
+- **`frontend/index.html`** — Full SEO overhaul:
+  - ✅ Optimized `<title>` with India + Hindi keywords
+  - ✅ Long-form `<meta name="description">` (bilingual)
+  - ✅ Expanded `<meta name="keywords">` (10 targeted keywords)
+  - ✅ `<meta name="robots" content="index, follow, ...">` with snippet controls
+  - ✅ `<link rel="canonical" href="https://bittuai.online/" />`
+  - ✅ Full **Open Graph** tags (og:title, og:description, og:image, og:url, og:locale=en_IN)
+  - ✅ **Twitter Card** tags (summary_large_image)
+  - ✅ **Schema.org JSON-LD** (3 schemas):
+    - `WebSite` with `SearchAction` (Google Sitelinks Searchbox eligible)
+    - `Organization` with logo
+    - `SoftwareApplication` with free pricing + AggregateRating
+  - ✅ **Google Search Console** verification meta tag added
+
+- **`frontend/public/sitemap.xml`** — [NEW] XML sitemap with 6 pages:
+  - `/` (priority 1.0, weekly)
+  - `/video-generator` (priority 0.9)
+  - `/dsa` (priority 0.9, daily)
+  - `/clothes-changer` (priority 0.8)
+  - `/dashboard` (priority 0.7)
+  - `/live` (priority 0.8, daily)
+
+- **`frontend/public/robots.txt`** — [NEW]:
+  - `User-agent: *` Allow all crawlers
+  - `Sitemap: https://bittuai.online/sitemap.xml`
+  - `Disallow: /api/` (block backend proxy paths)
+
+---
+
+### 21.3 Google Search Console Setup
+
+- **Property:** `https://www.bittuai.online/`
+- **Verification Method:** HTML meta tag
+- **Verification Tag:** `kEkWlws-iHK_T7IpQrw5-sbumWgQzNulmzvb6bEbfYA`
+- **Sitemap Submitted:** `sitemap.xml` (submit: `sitemap.xml` in the GSC input box — NOT the full URL)
+- **Status:** ⏳ Pending Google crawl (can take 1–7 days)
+
+---
+
+### 21.4 Google Ranking Strategy
+
+#### Quick Wins (1–7 days):
+- Target **long-tail keywords** with low competition:
+  - `"free AI video generator in Hindi"`
+  - `"DSA problems practice free India"`
+  - `"AI kapde badlne wala app"`
+- Create **YouTube demo video** → link to bittuai.online (fastest organic traffic source)
+- Submit to **ProductHunt** for backlinks + initial traffic spike
+- Post on **Reddit** (r/IndianDev, r/artificial) + **Quora** answers
+
+#### Medium Term (1–3 months):
+- Add `/blog/` content pages targeting AI keywords
+- Build backlinks via Dev.to articles, LinkedIn posts
+- Monitor GSC for impressions, clicks, average position
+
+#### Realistic Timeline:
+| Time | Expected Outcome |
+|------|-----------------|
+| 1–7 days | Google crawls & indexes pages, appears in GSC |
+| 2–4 weeks | Long-tail keywords start ranking (page 2–3) |
+| 1–3 months | Competitive keywords reach page 1–2 |
+| 3–6 months | Top 3–5 positions possible for niche terms |
+
+> **Note:** Brand name search "Bittu AI" should rank immediately (unique brand name).
+> Generic "free AI tools" terms require sustained content + backlink building.
