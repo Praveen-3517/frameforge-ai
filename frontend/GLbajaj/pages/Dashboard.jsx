@@ -5,7 +5,7 @@ import {
   MessageSquare, Sparkles, Code2, Zap, Github,
   ChevronRight, BrainCircuit, Crown, Sun, Moon,
   Trophy, ArrowRightLeft, Timer, Flame, CheckCircle2,
-  Terminal, BookOpen, ArrowRight
+  Terminal, BookOpen, ArrowRight, Coffee, Clock
 } from 'lucide-react'
 import StarField from '../components/StarField'
 import { getApiUrl } from '../utils/apiUrl'
@@ -401,6 +401,66 @@ export default function Dashboard() {
             <span className={`font-bold shrink-0 ${isLight ? 'text-emerald-700' : 'text-emerald-400'}`}>
               ✓ 100% Free · In-Browser Execution
             </span>
+          </div>
+        </div>
+
+        {/* ── DSA With Java — Coming Soon Box (Placeholder / Under Development) ── */}
+        <div className={`w-full mb-6 rounded-2xl border transition-all duration-300 backdrop-blur-sm relative overflow-hidden ${
+          isLight
+            ? 'bg-gradient-to-r from-amber-50/70 via-white to-orange-50/60 border-amber-200/90 shadow-lg shadow-amber-100/40'
+            : 'bg-gradient-to-r from-orange-950/25 via-[#0e0918] to-amber-950/20 border-orange-500/20 shadow-md shadow-orange-950/10'
+        }`}>
+          {/* Top subtle highlight line */}
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-amber-500 to-transparent opacity-70" />
+
+          <div className="p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-start sm:items-center gap-4 flex-1">
+              {/* Java Coffee Cup Icon Badge */}
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 via-orange-600 to-red-600 flex items-center justify-center shadow-lg shadow-orange-500/25 text-white shrink-0">
+                <Coffee size={24} />
+              </div>
+
+              <div>
+                <div className="flex flex-wrap items-center gap-2 mb-1">
+                  <h2 className={`text-base sm:text-lg font-bold tracking-tight ${
+                    isLight ? 'text-slate-950' : 'text-white'
+                  }`}>
+                    DSA with Java
+                  </h2>
+                  <span className={`px-2.5 py-0.5 rounded-full border text-[10px] font-mono font-bold tracking-wider flex items-center gap-1.5 ${
+                    isLight
+                      ? 'bg-amber-100 border-amber-300 text-amber-900 shadow-sm'
+                      : 'bg-amber-400/15 border-amber-400/30 text-amber-300'
+                  }`}>
+                    <Clock size={11} />
+                    COMING SOON
+                  </span>
+                  <span className={`hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-mono ${
+                    isLight
+                      ? 'bg-orange-100 border-orange-200 text-orange-800'
+                      : 'bg-orange-500/10 border-orange-500/20 text-orange-300/80'
+                  }`}>
+                    Java 21 · Collections Framework · LeetCode
+                  </span>
+                </div>
+
+                <p className={`text-xs sm:text-sm leading-relaxed ${isLight ? 'text-slate-600 font-medium' : 'text-white/50'}`}>
+                  DSA in Java is currently in active development. Stay tuned for LeetCode Java solutions, Collections Framework, and OOP design patterns.
+                </p>
+              </div>
+            </div>
+
+            {/* In Development Badge */}
+            <div className="shrink-0 self-start sm:self-center">
+              <span className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl border text-xs font-semibold ${
+                isLight
+                  ? 'bg-amber-50 border-amber-200 text-amber-900 shadow-sm'
+                  : 'bg-white/5 border-white/10 text-white/40'
+              }`}>
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                Under Development
+              </span>
+            </div>
           </div>
         </div>
 
