@@ -9,9 +9,10 @@ export default function CodeDiffViewer({
   original = '',
   modified = '',
   isLight = false,
-  onLoadCodeIntoEditor
 }) {
-  const [sideBySide, setSideBySide] = useState(true)
+  const [sideBySide, setSideBySide] = useState(() => {
+    return typeof window !== 'undefined' ? window.innerWidth >= 768 : true
+  })
   const [copied, setCopied] = useState(false)
   const [loaded, setLoaded] = useState(false)
   const diffEditorRef = useRef(null)

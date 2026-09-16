@@ -113,6 +113,7 @@ export default function DSASolver() {
   const { code, updateCode, solved, markSolved, bookmarks, toggleBookmark, hintsRevealed, revealHint, resetCode } = useProblemStorage(id)
 
   const [activeTab, setActiveTab]       = useState('description')
+  const [mobileTab, setMobileTab]       = useState('problem') // 'problem' | 'editor'
   const [questionLang, setQuestionLang] = useState('en') // 'en' | 'hi'
   const [editorHeight, setEditorHeight] = useState(60)
   const [justSolved, setJustSolved]     = useState(false)
@@ -170,6 +171,9 @@ export default function DSASolver() {
     updateCode(solCode)
     setSolutionToast(true)
     setTimeout(() => setSolutionToast(false), 3000)
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setMobileTab('editor')
+    }
   }, [updateCode])
 
   if (!problem) {
@@ -190,45 +194,49 @@ export default function DSASolver() {
     }`}>
 
       {/* ── Top Bar ── */}
-      <div className={`flex items-center gap-3 px-4 py-2.5 border-b shrink-0 ${
+      <div className={`flex items-center justify-between gap-2 px-3 sm:px-4 py-2 sm:py-2.5 border-b shrink-0 ${
         isLight ? 'border-slate-200 bg-white/80' : 'border-white/8 bg-white/[0.02]'
       }`}>
-        <Link to="/dsa" className={`flex items-center gap-1.5 transition-colors text-sm ${
-          isLight ? 'text-slate-500 hover:text-slate-900' : 'text-white/40 hover:text-white/80'
-        }`}>
-          <ArrowLeft size={15} />
-          <span className="hidden sm:inline">Problems</span>
-        </Link>
-
-        <span className={isLight ? 'text-slate-300' : 'text-white/15'}>|</span>
-
-        {/* Problem title & difficulty */}
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          <span className={`text-sm font-mono shrink-0 ${isLight ? 'text-slate-400' : 'text-white/40'}`}>#{problem.id}</span>
-          <h1 className={`text-sm font-semibold truncate ${isLight ? 'text-slate-900' : 'text-white/90'}`}>{problem.title}</h1>
-          <span className={`hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${diff.bg} ${diff.border} ${diff.color} shrink-0`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${diff.dot}`} />
-            {problem.difficulty}
-          </span>
-          <span className={`hidden md:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] border shrink-0 ${
-            isLight ? 'bg-slate-100 border-slate-200 text-slate-500' : 'bg-white/4 border-white/8 text-white/35'
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <Link to="/dsa" className={`flex items-center gap-1 sm:gap-1.5 transition-colors text-xs sm:text-sm shrink-0 ${
+            isLight ? 'text-slate-500 hover:text-slate-900' : 'text-white/40 hover:text-white/80'
           }`}>
-            <Tag size={9} />
-            {problem.pattern}
-          </span>
+            <ArrowLeft size={15} />
+            <span className="hidden sm:inline">Problems</span>
+          </Link>
+
+          <span className={`hidden sm:inline ${isLight ? 'text-slate-300' : 'text-white/15'}`}>|</span>
+
+          {/* Problem title & difficulty */}
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+            <span className={`text-xs sm:text-sm font-mono shrink-0 ${isLight ? 'text-slate-400' : 'text-white/40'}`}>#{problem.id}</span>
+            <h1 className={`text-xs sm:text-sm font-semibold truncate max-w-[100px] xs:max-w-[150px] sm:max-w-xs md:max-w-none ${isLight ? 'text-slate-900' : 'text-white/90'}`}>
+              {problem.title}
+            </h1>
+            <span className={`hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${diff.bg} ${diff.border} ${diff.color} shrink-0`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${diff.dot}`} />
+              {problem.difficulty}
+            </span>
+            <span className={`hidden md:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] border shrink-0 ${
+              isLight ? 'bg-slate-100 border-slate-200 text-slate-500' : 'bg-white/4 border-white/8 text-white/35'
+            }`}>
+              <Tag size={9} />
+              {problem.pattern}
+            </span>
+          </div>
         </div>
 
         {/* ── Actions ── */}
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 overflow-x-auto scrollbar-none py-0.5">
 
           {/* Theme Selector */}
-          <div className={`flex items-center p-0.5 rounded-lg border text-xs font-medium mr-1 ${
+          <div className={`flex items-center p-0.5 rounded-lg border text-xs font-medium mr-0.5 sm:mr-1 ${
             isLight ? 'bg-slate-200 border-slate-300' : 'bg-white/5 border-white/10'
           }`}>
             <button
               onClick={() => setTheme('light')}
               title="Light Mode"
-              className={`flex items-center gap-1 px-2 py-1 rounded-md transition-all ${
+              className={`flex items-center gap-1 px-1.5 sm:px-2 py-1 rounded-md transition-all ${
                 isLight ? 'bg-white text-amber-600 font-bold shadow-sm' : 'text-white/40 hover:text-white'
               }`}
             >
@@ -238,7 +246,7 @@ export default function DSASolver() {
             <button
               onClick={() => setTheme('dark')}
               title="Dark Mode"
-              className={`flex items-center gap-1 px-2 py-1 rounded-md transition-all ${
+              className={`flex items-center gap-1 px-1.5 sm:px-2 py-1 rounded-md transition-all ${
                 !isLight ? 'bg-violet-600 text-white font-bold shadow-sm' : 'text-slate-500 hover:text-slate-800'
               }`}
             >
@@ -254,7 +262,7 @@ export default function DSASolver() {
           <button
             onClick={() => setInterviewMode(m => !m)}
             title={interviewMode ? "Exit Interview Simulation" : "Start FAANG Interview Simulation"}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+            className={`flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
               interviewMode
                 ? 'bg-amber-500/20 border-amber-500/40 text-amber-400 shadow-sm'
                 : isLight
@@ -270,7 +278,7 @@ export default function DSASolver() {
           <button
             onClick={() => markSolved(problemId)}
             title={isSolved ? 'Mark as unsolved' : 'Mark as solved'}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all ${
+            className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all ${
               isSolved
                 ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25'
                 : isLight ? 'bg-white border-slate-200 text-slate-500 hover:text-emerald-600' : 'bg-white/4 border-white/10 text-white/40 hover:border-emerald-500/30 hover:text-emerald-400/70'
@@ -296,6 +304,7 @@ export default function DSASolver() {
           {/* Bookmark */}
           <button
             onClick={() => toggleBookmark(problemId)}
+            title={isBookmarked ? "Remove Bookmark" : "Save Problem"}
             className={`p-1.5 rounded-lg border transition-all ${
               isBookmarked
                 ? 'bg-violet-500/15 border-violet-500/30 text-violet-400'
@@ -323,6 +332,7 @@ export default function DSASolver() {
             <button
               onClick={() => prevProblem && navigate(`/dsa/${prevProblem.id}`)}
               disabled={!prevProblem}
+              title="Previous Problem"
               className={`p-1.5 border-r transition-all disabled:opacity-20 disabled:cursor-not-allowed ${
                 isLight ? 'text-slate-500 hover:text-slate-900 border-slate-200' : 'text-white/30 hover:text-white/60 hover:bg-white/5 border-white/8'
               }`}
@@ -332,6 +342,7 @@ export default function DSASolver() {
             <button
               onClick={() => nextProblem && navigate(`/dsa/${nextProblem.id}`)}
               disabled={!nextProblem}
+              title="Next Problem"
               className={`p-1.5 transition-all disabled:opacity-20 disabled:cursor-not-allowed ${
                 isLight ? 'text-slate-500 hover:text-slate-900' : 'text-white/30 hover:text-white/60 hover:bg-white/5'
               }`}
@@ -376,18 +387,61 @@ export default function DSASolver() {
         </div>
       )}
 
+      {/* ── Mobile View Switcher (Visible on < lg screens) ── */}
+      <div className={`lg:hidden flex border-b shrink-0 ${
+        isLight ? 'bg-slate-100 border-slate-200' : 'bg-[#080214] border-white/8'
+      }`}>
+        <button
+          onClick={() => setMobileTab('problem')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold border-b-2 transition-all ${
+            mobileTab === 'problem'
+              ? isLight
+                ? 'border-violet-600 text-violet-700 bg-white shadow-sm'
+                : 'border-violet-500 text-violet-300 bg-violet-500/10'
+              : isLight
+              ? 'border-transparent text-slate-500 hover:text-slate-800'
+              : 'border-transparent text-white/40 hover:text-white'
+          }`}
+        >
+          <BookOpen size={14} />
+          <span>Problem & Solution</span>
+          {isSolved && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />}
+        </button>
+
+        <button
+          onClick={() => setMobileTab('editor')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold border-b-2 transition-all ${
+            mobileTab === 'editor'
+              ? isLight
+                ? 'border-cyan-600 text-cyan-700 bg-white shadow-sm'
+                : 'border-cyan-500 text-cyan-300 bg-cyan-500/10'
+              : isLight
+              ? 'border-transparent text-slate-500 hover:text-slate-800'
+              : 'border-transparent text-white/40 hover:text-white'
+          }`}
+        >
+          <Code2 size={14} />
+          <span>Code & Console</span>
+          <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-violet-500/20 text-violet-300">
+            Python
+          </span>
+        </button>
+      </div>
+
       {/* ── Main Split Layout ── */}
-      <div className="flex flex-1 min-h-0">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
 
         {/* LEFT: Problem Description & Solutions */}
-        <div className={`w-full lg:w-[45%] xl:w-[42%] flex flex-col border-r min-h-0 overflow-hidden ${
+        <div className={`${
+          mobileTab === 'problem' ? 'flex' : 'hidden'
+        } lg:flex w-full lg:w-[45%] xl:w-[42%] flex-col border-r min-h-0 overflow-hidden ${
           isLight ? 'border-slate-200 bg-white' : 'border-white/8 bg-[#020008]'
         }`}>
           {/* Tabs */}
-          <div className={`flex border-b shrink-0 items-center justify-between px-2 ${
+          <div className={`flex border-b shrink-0 items-center justify-between px-2 overflow-x-auto scrollbar-none ${
             isLight ? 'border-slate-200 bg-slate-50' : 'border-white/8 bg-white/[0.015]'
           }`}>
-            <div className="flex items-center">
+            <div className="flex items-center shrink-0">
               {[
                 { id: 'description', icon: <BookOpen size={12} />, label: 'Problem / प्रश्न' },
                 { id: 'hints',       icon: <Lightbulb size={12} />, label: `Hints (${problem.hints?.length || 0})` },
@@ -397,7 +451,7 @@ export default function DSASolver() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-semibold border-b-2 transition-all ${
+                  className={`flex items-center gap-1.5 px-3 sm:px-3.5 py-2.5 text-xs font-semibold border-b-2 whitespace-nowrap transition-all ${
                     activeTab === tab.id
                       ? isLight
                         ? 'border-violet-600 text-violet-700 bg-white shadow-sm'
@@ -602,6 +656,18 @@ export default function DSASolver() {
                     +{XP_MAP[problem.difficulty] || 10} XP
                   </span>
                 </div>
+
+                {/* Mobile Quick Action to Switch to Editor */}
+                <div className="lg:hidden pt-3 pb-1">
+                  <button
+                    onClick={() => setMobileTab('editor')}
+                    className="w-full py-2.5 px-4 rounded-xl font-bold text-xs bg-gradient-to-r from-violet-600 to-cyan-600 text-white shadow-lg shadow-violet-500/25 flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
+                  >
+                    <Code2 size={15} />
+                    <span>Open Code Editor & Run Tests</span>
+                    <ChevronRight size={15} />
+                  </button>
+                </div>
               </div>
             )}
 
@@ -687,7 +753,9 @@ export default function DSASolver() {
         </div>
 
         {/* RIGHT: Editor + Console */}
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <div className={`${
+          mobileTab === 'editor' ? 'flex' : 'hidden'
+        } lg:flex flex-1 flex-col min-h-0 overflow-hidden`}>
           {/* Editor header */}
           <div className="flex items-center justify-between px-4 py-2 border-b border-white/8 bg-white/[0.015] shrink-0">
             <div className="flex items-center gap-2">

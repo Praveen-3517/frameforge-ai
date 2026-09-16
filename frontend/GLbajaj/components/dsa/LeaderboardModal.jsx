@@ -146,7 +146,7 @@ export default function LeaderboardModal({
 
           {/* Leaderboard Filters */}
           {activeTab === 'leaderboard' && (
-            <div className={`hidden sm:flex items-center p-0.5 rounded-lg border text-[11px] font-medium my-2 ${
+            <div className={`flex items-center p-0.5 rounded-lg border text-[11px] font-medium my-2 overflow-x-auto scrollbar-none shrink-0 ${
               isLight ? 'bg-white border-slate-200' : 'bg-white/5 border-white/10'
             }`}>
               {[
