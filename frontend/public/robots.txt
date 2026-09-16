@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://bittuai.online/sitemap.xml
+
+# Block unnecessary paths
+Disallow: /api/
+Disallow: *.env
