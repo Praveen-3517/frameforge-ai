@@ -7,6 +7,9 @@ export default function UserNav({ isLight = false }) {
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef(null)
 
+  // Detect current active theme dynamically
+  const activeIsLight = isLight || (typeof document !== 'undefined' && document.documentElement.classList.contains('light')) || (typeof localStorage !== 'undefined' && localStorage.getItem('dsa_theme') === 'light')
+
   // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -20,7 +23,7 @@ export default function UserNav({ isLight = false }) {
 
   if (loading) {
     return (
-      <div className={`w-8 h-8 rounded-lg animate-pulse ${isLight ? 'bg-slate-200' : 'bg-white/10'}`} />
+      <div className={`w-8 h-8 rounded-lg animate-pulse ${activeIsLight ? 'bg-slate-200' : 'bg-white/10'}`} />
     )
   }
 
@@ -28,8 +31,9 @@ export default function UserNav({ isLight = false }) {
   if (!user) {
     return (
       <button
+        type="button"
         onClick={() => openAuthModal('signin')}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-violet-600 to-cyan-600 text-white shadow-md shadow-violet-600/20 hover:scale-105 active:scale-95 transition-all"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-violet-600 to-cyan-600 text-white shadow-md shadow-violet-600/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
       >
         <User size={13} />
         <span>Sign In</span>
@@ -44,9 +48,10 @@ export default function UserNav({ isLight = false }) {
   return (
     <div className="relative" ref={dropdownRef}>
       <button
-        onClick={() => setDropdownOpen(!dropdownOpen)}
-        className={`flex items-center gap-2 p-1 pl-2 rounded-xl border transition-all ${
-          isLight
+        type="button"
+        onClick={() => setDropdownOpen(prev => !prev)}
+        className={`flex items-center gap-2 p-1 pl-2 rounded-xl border transition-all cursor-pointer ${
+          activeIsLight
             ? 'bg-white border-slate-200 text-slate-800 hover:bg-slate-50 shadow-sm'
             : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
         }`}
@@ -57,22 +62,22 @@ export default function UserNav({ isLight = false }) {
         <span className="text-xs font-semibold max-w-[100px] truncate hidden sm:inline">
           {displayName}
         </span>
-        <ChevronDown size={13} className={`${isLight ? 'text-slate-400' : 'text-white/40'}`} />
+        <ChevronDown size={13} className={`${activeIsLight ? 'text-slate-400' : 'text-white/40'}`} />
       </button>
 
       {/* Dropdown Menu */}
       {dropdownOpen && (
         <div
           className={`absolute right-0 mt-2 w-56 rounded-2xl border p-2 shadow-2xl z-50 animate-fadeIn ${
-            isLight
+            activeIsLight
               ? 'bg-white border-slate-200 text-slate-900 shadow-slate-300/60'
               : 'bg-[#0f0a1c]/95 border-violet-500/20 text-white shadow-violet-950/40 backdrop-blur-xl'
           }`}
         >
           {/* User Info Header */}
-          <div className={`p-2.5 border-b mb-1.5 ${isLight ? 'border-slate-100' : 'border-white/8'}`}>
+          <div className={`p-2.5 border-b mb-1.5 ${activeIsLight ? 'border-slate-100' : 'border-white/8'}`}>
             <p className="text-xs font-bold truncate">{displayName}</p>
-            <p className={`text-[11px] truncate ${isLight ? 'text-slate-500' : 'text-white/40'}`}>
+            <p className={`text-[11px] truncate ${activeIsLight ? 'text-slate-500' : 'text-white/40'}`}>
               {user.email}
             </p>
             <div className="mt-2 flex items-center gap-1 text-[10px] text-emerald-500 font-semibold">
@@ -83,12 +88,15 @@ export default function UserNav({ isLight = false }) {
 
           {/* Sign Out Button */}
           <button
-            onClick={() => {
+            type="button"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
               signOut()
               setDropdownOpen(false)
             }}
-            className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-red-400 transition-colors ${
-              isLight ? 'hover:bg-red-50' : 'hover:bg-red-500/10'
+            className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-red-400 transition-colors cursor-pointer ${
+              activeIsLight ? 'hover:bg-red-50' : 'hover:bg-red-500/10'
             }`}
           >
             <LogOut size={13} />

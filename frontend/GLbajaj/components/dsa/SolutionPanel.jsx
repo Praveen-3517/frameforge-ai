@@ -2,18 +2,23 @@ import React, { useState } from 'react'
 import {
   Lock, Unlock, Copy, Check, Play, BookOpen,
   Code2, Clock, Database, Sparkles, CheckCircle2,
-  HelpCircle, ChevronRight, Languages
+  HelpCircle, ChevronRight, Languages, ArrowRightLeft, Eye
 } from 'lucide-react'
+import { useAuth } from '../../context/AuthContext'
+import CodeDiffViewer from './CodeDiffViewer'
 
 export default function SolutionPanel({
   problem,
   interviewData,
   isLight = false,
-  onLoadCodeIntoEditor
+  onLoadCodeIntoEditor,
+  userCode = ''
 }) {
+  const { user, openAuthModal } = useAuth()
   const [unlocked, setUnlocked] = useState(false)
   const [solutionLang, setSolutionLang] = useState('en') // 'en' | 'hi'
   const [copied, setCopied] = useState(false)
+  const [showDiff, setShowDiff] = useState(false)
 
   const solution = interviewData?.solution
   const isHindi = solutionLang === 'hi'
@@ -58,7 +63,13 @@ export default function SolutionPanel({
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
           <button
-            onClick={() => setUnlocked(true)}
+            onClick={() => {
+              if (!user) {
+                openAuthModal('signup')
+                return
+              }
+              setUnlocked(true)
+            }}
             className="w-full sm:w-auto px-6 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 bg-gradient-to-r from-violet-600 to-cyan-600 text-white shadow-lg shadow-violet-600/30 hover:scale-105 active:scale-95 transition-all"
           >
             <Unlock size={14} />
@@ -166,49 +177,84 @@ export default function SolutionPanel({
         </div>
       )}
 
-      {/* 3. Optimal Python Code */}
-      <div className={`rounded-xl border overflow-hidden ${
-        isLight ? 'border-slate-200 shadow-sm bg-white' : 'border-white/10 bg-[#070312]'
-      }`}>
-        <div className={`flex items-center justify-between px-4 py-2 border-b text-xs font-mono ${
-          isLight ? 'bg-slate-100 border-slate-200 text-slate-700' : 'bg-white/5 border-white/8 text-white/60'
-        }`}>
-          <div className="flex items-center gap-2">
-            <Code2 size={13} className="text-emerald-500" />
-            <span className="font-semibold">solution.py (Optimal Python 3)</span>
-          </div>
+      {/* 3. Optimal Python Code & Diff Comparison */}
+      <div className="space-y-2">
+        {/* Toggle between Code and Diff */}
+        <div className="flex items-center justify-between">
+          <span className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 ${
+            isLight ? 'text-emerald-700' : 'text-emerald-400'
+          }`}>
+            <Code2 size={13} />
+            {showDiff ? 'Code Diff (Your Solution vs Optimal)' : 'Optimal Python Solution'}
+          </span>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleCopy}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded border text-[11px] font-sans font-medium transition-all ${
-                copied
-                  ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-600'
-                  : isLight ? 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50' : 'bg-white/5 border-white/10 text-white/70 hover:text-white'
-              }`}
-            >
-              {copied ? <Check size={12} /> : <Copy size={12} />}
-              <span>{copied ? 'Copied!' : 'Copy Code'}</span>
-            </button>
-
-            {onLoadCodeIntoEditor && (
-              <button
-                onClick={() => onLoadCodeIntoEditor(solution.code)}
-                className="flex items-center gap-1 px-2.5 py-1 rounded bg-gradient-to-r from-violet-600 to-cyan-600 text-white font-sans text-[11px] font-semibold hover:opacity-95 active:scale-95 transition-all shadow-sm"
-                title="Copy code directly into Monaco editor on the right"
-              >
-                <Play size={11} />
-                <span>{isHindi ? 'एडिटर में लोड करें' : 'Load into Editor'}</span>
-              </button>
-            )}
-          </div>
+          <button
+            onClick={() => setShowDiff(d => !d)}
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg border text-xs font-semibold transition-all ${
+              showDiff
+                ? 'bg-violet-600 text-white border-violet-500 shadow-md shadow-violet-600/30'
+                : isLight
+                ? 'bg-white border-violet-200 text-violet-700 hover:bg-violet-50'
+                : 'bg-violet-500/10 border-violet-500/25 text-violet-300 hover:bg-violet-500/20'
+            }`}
+          >
+            {showDiff ? <Eye size={12} /> : <ArrowRightLeft size={12} />}
+            <span>{showDiff ? 'Standard Code View' : 'Compare Code Diff'}</span>
+          </button>
         </div>
 
-        <pre className={`p-4 text-xs font-mono overflow-x-auto leading-relaxed ${
-          isLight ? 'bg-slate-900 text-slate-100' : 'bg-[#0a0218] text-slate-200'
-        }`}>
-          <code>{solution?.code}</code>
-        </pre>
+        {showDiff ? (
+          <CodeDiffViewer
+            original={userCode}
+            modified={solution?.code || ''}
+            isLight={isLight}
+            onLoadCodeIntoEditor={onLoadCodeIntoEditor}
+          />
+        ) : (
+          <div className={`rounded-xl border overflow-hidden ${
+            isLight ? 'border-slate-200 shadow-sm bg-white' : 'border-white/10 bg-[#070312]'
+          }`}>
+            <div className={`flex items-center justify-between px-4 py-2 border-b text-xs font-mono ${
+              isLight ? 'bg-slate-100 border-slate-200 text-slate-700' : 'bg-white/5 border-white/8 text-white/60'
+            }`}>
+              <div className="flex items-center gap-2">
+                <Code2 size={13} className="text-emerald-500" />
+                <span className="font-semibold">solution.py (Optimal Python 3)</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleCopy}
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded border text-[11px] font-sans font-medium transition-all ${
+                    copied
+                      ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-600'
+                      : isLight ? 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50' : 'bg-white/5 border-white/10 text-white/70 hover:text-white'
+                  }`}
+                >
+                  {copied ? <Check size={12} /> : <Copy size={12} />}
+                  <span>{copied ? 'Copied!' : 'Copy Code'}</span>
+                </button>
+
+                {onLoadCodeIntoEditor && (
+                  <button
+                    onClick={() => onLoadCodeIntoEditor(solution.code)}
+                    className="flex items-center gap-1 px-2.5 py-1 rounded bg-gradient-to-r from-violet-600 to-cyan-600 text-white font-sans text-[11px] font-semibold hover:opacity-95 active:scale-95 transition-all shadow-sm"
+                    title="Copy code directly into Monaco editor on the right"
+                  >
+                    <Play size={11} />
+                    <span>{isHindi ? 'एडिटर में लोड करें' : 'Load into Editor'}</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <pre className={`p-4 text-xs font-mono overflow-x-auto leading-relaxed ${
+              isLight ? 'bg-slate-900 text-slate-100' : 'bg-[#0a0218] text-slate-200'
+            }`}>
+              <code>{solution?.code}</code>
+            </pre>
+          </div>
+        )}
       </div>
 
       {/* 4. Complexity Analysis */}

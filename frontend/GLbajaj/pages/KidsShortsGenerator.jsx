@@ -25,8 +25,11 @@ import {
 } from 'lucide-react'
 import StarField from '../components/StarField'
 import { getApiUrl, getFullMediaUrl } from '../utils/apiUrl'
+import { useAuth } from '../context/AuthContext'
+import UserNav from '../components/auth/UserNav'
 
 export default function KidsShortsGenerator() {
+  const { user, openAuthModal } = useAuth()
   const [variety, setVariety] = useState('spelling_rush')
   const [word, setWord] = useState('CHUM')
   const [category, setCategory] = useState('custom')
@@ -102,6 +105,11 @@ export default function KidsShortsGenerator() {
 
   // Handle Generate
   const handleGenerate = async () => {
+    if (!user) {
+      openAuthModal('signup')
+      return
+    }
+
     if (!word.trim()) {
       setError('Please enter a word or phrase!')
       return
@@ -284,6 +292,7 @@ export default function KidsShortsGenerator() {
           <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono">
             <ShieldCheck size={14} /> YouTube Kids Ready
           </div>
+          <UserNav />
         </div>
       </header>
 

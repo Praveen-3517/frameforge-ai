@@ -4,12 +4,14 @@ import {
   ArrowLeft, ChevronLeft, ChevronRight, Code2, BookOpen,
   Lightbulb, CheckCircle2, Circle, Bookmark, BookmarkCheck,
   RotateCcw, Tag, Clock, Play, Trophy, Zap, Share2, Check,
-  Sun, Moon, Unlock, Building2, Sparkles, HelpCircle, Languages
+  Sun, Moon, Unlock, Building2, Sparkles, HelpCircle, Languages,
+  ArrowRightLeft
 } from 'lucide-react'
 import CodeEditor from '../components/dsa/CodeEditor'
 import TestRunner from '../components/dsa/TestRunner'
 import HintPanel from '../components/dsa/HintPanel'
 import SolutionPanel from '../components/dsa/SolutionPanel'
+import CodeDiffViewer from '../components/dsa/CodeDiffViewer'
 import InterviewTimer from '../components/dsa/InterviewTimer'
 import { dsaProblems } from '../data/dsaProblems'
 import { onProblemSolved, XP_MAP } from '../utils/dsaStats'
@@ -118,6 +120,7 @@ export default function DSASolver() {
   const [copied, setCopied]             = useState(false)
   const [solutionToast, setSolutionToast] = useState(false)
   const [theme, setTheme]               = useState(() => localStorage.getItem('dsa_theme') || 'dark')
+  const [interviewMode, setInterviewMode] = useState(false)
 
   const interviewData = useMemo(() => getProblemInterviewData(problem), [problem])
 
@@ -247,6 +250,22 @@ export default function DSASolver() {
           {/* Interview Timer */}
           <InterviewTimer difficulty={problem.difficulty} />
 
+          {/* Interview Mode Toggle */}
+          <button
+            onClick={() => setInterviewMode(m => !m)}
+            title={interviewMode ? "Exit Interview Simulation" : "Start FAANG Interview Simulation"}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+              interviewMode
+                ? 'bg-amber-500/20 border-amber-500/40 text-amber-400 shadow-sm'
+                : isLight
+                ? 'bg-white border-slate-200 text-slate-600 hover:text-slate-900'
+                : 'bg-white/4 border-white/10 text-white/50 hover:border-amber-500/30 hover:text-amber-300'
+            }`}
+          >
+            <Building2 size={13} />
+            <span className="hidden md:inline">{interviewMode ? 'Interview Mode' : 'Mock Mode'}</span>
+          </button>
+
           {/* Mark Solved */}
           <button
             onClick={() => markSolved(problemId)}
@@ -373,6 +392,7 @@ export default function DSASolver() {
                 { id: 'description', icon: <BookOpen size={12} />, label: 'Problem / प्रश्न' },
                 { id: 'hints',       icon: <Lightbulb size={12} />, label: `Hints (${problem.hints?.length || 0})` },
                 { id: 'solution',    icon: <Unlock size={12} />, label: 'Solution / समाधान' },
+                { id: 'diff',        icon: <ArrowRightLeft size={12} />, label: 'Code Diff / तुलना' },
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -585,21 +605,83 @@ export default function DSASolver() {
               </div>
             )}
 
-            {activeTab === 'hints' && (
-              <HintPanel
-                problem={problem}
-                hintsRevealed={hintsRevealed}
-                onRevealHint={revealHint}
-              />
-            )}
+            {interviewMode && activeTab !== 'description' ? (
+              <div className={`p-8 rounded-2xl border text-center transition-all ${
+                isLight ? 'bg-amber-50/70 border-amber-200 text-slate-800' : 'bg-amber-500/5 border-amber-500/20 text-white'
+              }`}>
+                <div className={`w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center border shadow-lg ${
+                  isLight ? 'bg-amber-100 border-amber-300 text-amber-600' : 'bg-amber-500/20 border-amber-500/30 text-amber-400'
+                }`}>
+                  <Building2 size={26} />
+                </div>
+                <h3 className="text-base font-bold mb-2">
+                  Technical Interview Simulation Active
+                </h3>
+                <p className={`text-xs leading-relaxed max-w-md mx-auto mb-6 ${
+                  isLight ? 'text-slate-600' : 'text-white/60'
+                }`}>
+                  In a real technical interview round at Google / Amazon / Microsoft, external hints, solutions, and diff tools are strictly unavailable. Rely on your algorithmic reasoning, write code, and run test cases on the right!
+                </p>
+                <button
+                  onClick={() => setInterviewMode(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-amber-500 text-slate-950 hover:bg-amber-400 transition-all shadow-md shadow-amber-500/20"
+                >
+                  Exit Interview Simulation Mode
+                </button>
+              </div>
+            ) : (
+              <>
+                {activeTab === 'hints' && (
+                  <HintPanel
+                    problem={problem}
+                    hintsRevealed={hintsRevealed}
+                    onRevealHint={revealHint}
+                  />
+                )}
 
-            {activeTab === 'solution' && (
-              <SolutionPanel
-                problem={problem}
-                interviewData={interviewData}
-                isLight={isLight}
-                onLoadCodeIntoEditor={handleLoadCode}
-              />
+                {activeTab === 'solution' && (
+                  <SolutionPanel
+                    problem={problem}
+                    interviewData={interviewData}
+                    isLight={isLight}
+                    onLoadCodeIntoEditor={handleLoadCode}
+                    userCode={code}
+                  />
+                )}
+
+                {activeTab === 'diff' && (
+                  <div className="space-y-4">
+                    <div className={`p-3.5 rounded-xl border flex items-center justify-between ${
+                      isLight
+                        ? 'bg-gradient-to-r from-violet-50 to-cyan-50 border-violet-200 shadow-sm'
+                        : 'bg-gradient-to-r from-violet-500/10 to-cyan-500/10 border-violet-500/20'
+                    }`}>
+                      <div className="flex items-center gap-2.5">
+                        <div className={`p-2 rounded-lg ${
+                          isLight ? 'bg-violet-100 text-violet-800' : 'bg-violet-500/20 text-violet-300'
+                        }`}>
+                          <ArrowRightLeft size={16} />
+                        </div>
+                        <div>
+                          <h4 className={`text-xs font-bold ${isLight ? 'text-violet-950' : 'text-violet-200'}`}>
+                            Visual Code Diff Viewer (अंतर तुलना)
+                          </h4>
+                          <p className={`text-[11px] ${isLight ? 'text-violet-700' : 'text-violet-300/70'}`}>
+                            Comparing your workspace code against the optimal {problem.pattern} solution
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <CodeDiffViewer
+                      original={code}
+                      modified={interviewData?.solution?.code || problem.starterCode}
+                      isLight={isLight}
+                      onLoadCodeIntoEditor={handleLoadCode}
+                    />
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

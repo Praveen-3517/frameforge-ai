@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import ProblemCard from '../components/dsa/ProblemCard'
 import StatsPanel from '../components/dsa/StatsPanel'
+import LeaderboardModal from '../components/dsa/LeaderboardModal'
 import { dsaProblems, filterProblems } from '../data/dsaProblems'
 import StarField from '../components/StarField'
 import { getLevel, getStreak, updateStreak, LEVELS } from '../utils/dsaStats'
@@ -78,6 +79,7 @@ export default function DSAHub() {
   const [phase, setPhase] = useState('All')
   const [showBookmarks, setShowBookmarks] = useState(false)
   const [showStats, setShowStats] = useState(false)
+  const [showLeaderboard, setShowLeaderboard] = useState(false)
   const [theme, setTheme] = useState(() => localStorage.getItem('dsa_theme') || 'dark')
   const [currentPage, setCurrentPage] = useState(1)
   const PAGE_SIZE = 30
@@ -191,6 +193,20 @@ export default function DSAHub() {
                 <span className="hidden sm:inline text-[10px]">Dark</span>
               </button>
             </div>
+
+            <button
+              onClick={() => setShowLeaderboard(true)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+                showLeaderboard
+                  ? 'bg-amber-500/20 border-amber-500/40 text-amber-300 shadow-sm'
+                  : isLight
+                  ? 'bg-white border-amber-200 text-amber-700 hover:bg-amber-50'
+                  : 'bg-amber-500/10 border-amber-500/25 text-amber-300 hover:bg-amber-500/20 hover:border-amber-500/40'
+              }`}
+            >
+              <Trophy size={13} className="text-amber-400" />
+              <span>Leaderboard</span>
+            </button>
 
             <button
               onClick={() => setShowBookmarks(b => !b)}
@@ -599,6 +615,21 @@ export default function DSAHub() {
           )}
         </div>
       </div>
+
+      {/* ── Leaderboard & Contest Modal ── */}
+      <LeaderboardModal
+        isOpen={showLeaderboard}
+        onClose={() => setShowLeaderboard(false)}
+        userStats={{
+          xp,
+          streak,
+          solvedCount,
+          easySolved,
+          medSolved,
+          hardSolved
+        }}
+        isLight={isLight}
+      />
     </div>
   )
 }

@@ -10,6 +10,8 @@ import VideoPlayer from '../components/VideoPlayer'
 import ErrorBanner from '../components/ErrorBanner'
 import { Github, Zap, ArrowLeft } from 'lucide-react'
 import { getApiUrl } from '../utils/apiUrl'
+import { useAuth } from '../context/AuthContext'
+import UserNav from '../components/auth/UserNav'
 
 /* ─── Pipeline step timing simulation ───────────────────────────
    Because the backend processes everything server-side, we advance
@@ -70,8 +72,15 @@ export default function App() {
     stepTimers.current = []
   }
 
+  const { user, openAuthModal } = useAuth()
+
   /* ── Main generate handler ── */
   const handleGenerate = async () => {
+    if (!user) {
+      openAuthModal('signup')
+      return
+    }
+
     if (!text.trim() || text.length < 10) return
 
     setAppState(STATE.LOADING)
@@ -176,7 +185,7 @@ export default function App() {
             <Zap size={16} className="text-white" />
           </div>
           <span className="font-display font-bold text-white text-lg tracking-tight">
-            Frame<span className="gradient-text">Forge</span>
+            Bittu <span className="gradient-text">AI</span>
           </span>
           <span className="hidden sm:block px-2 py-0.5 rounded-full bg-violet-500/10
                            border border-violet-500/20 text-violet-300 text-xs font-medium">
@@ -185,6 +194,7 @@ export default function App() {
         </div>
 
         <nav className="flex items-center gap-4">
+          <UserNav />
           <a
             href={`${getApiUrl()}/docs`}
             target="_blank"

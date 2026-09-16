@@ -35,6 +35,7 @@ import {
   MonitorSmartphone,
 } from 'lucide-react'
 import StarField from '../components/StarField'
+import UserNav from '../components/auth/UserNav'
 
 /**
  * Enhanced YouTube URL Parser:
@@ -636,6 +637,7 @@ pause
           >
             <HelpCircle size={14} /> 4,000h Strategy Guide
           </button>
+          <UserNav />
         </div>
       </header>
 

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Play, RotateCcw, CheckCircle2, XCircle, Loader2, Terminal, AlertTriangle } from 'lucide-react'
+import { useAuth } from '../../context/AuthContext'
 
 let pyodideInstance = null
 let pyodideLoading = false
@@ -29,6 +30,7 @@ async function getPyodide() {
 }
 
 export default function TestRunner({ problem, code, onSuccess }) {
+  const { user, openAuthModal } = useAuth()
   const [status, setStatus] = useState('idle') // idle | loading-pyodide | running | passed | failed | error
   const [output, setOutput] = useState('')
   const [testResults, setTestResults] = useState([])
@@ -73,6 +75,11 @@ export default function TestRunner({ problem, code, onSuccess }) {
   }, [output])
 
   const runCode = async () => {
+    if (!user) {
+      openAuthModal('signup')
+      return
+    }
+
     if (!pyodideReady) {
       setStatus('loading-pyodide')
       setOutput('⏳ Loading Python engine (Pyodide)...\nThis may take a moment on first load.')

@@ -24,8 +24,11 @@ import {
 import axios from 'axios'
 import StarField from '../components/StarField'
 import { getApiUrl, getFullMediaUrl } from '../utils/apiUrl'
+import { useAuth } from '../context/AuthContext'
+import UserNav from '../components/auth/UserNav'
 
 export default function VideoVariantGenerator() {
+  const { user, openAuthModal } = useAuth()
   const [file, setFile] = useState(null)
   const [previewUrl, setPreviewUrl] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -94,6 +97,10 @@ export default function VideoVariantGenerator() {
   }
 
   const handleGenerate = async () => {
+    if (!user) {
+      openAuthModal('signup')
+      return
+    }
     if (!file) return
 
     setIsLoading(true)
@@ -192,6 +199,7 @@ export default function VideoVariantGenerator() {
           <span className="px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-300 text-xs font-mono font-medium">
             Media Transformer v3.0
           </span>
+          <UserNav />
         </div>
       </header>
 

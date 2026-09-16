@@ -31,6 +31,7 @@ import {
 import axios from 'axios'
 import StarField from '../components/StarField'
 import { getApiUrl, getFullMediaUrl } from '../utils/apiUrl'
+import UserNav from '../components/auth/UserNav'
 
 export default function FingerprintAnalyzer() {
   const [activeTab, setActiveTab] = useState('single') // 'single' | 'compare'
@@ -315,6 +316,7 @@ export default function FingerprintAnalyzer() {
           <span className="px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-xs font-mono font-medium flex items-center gap-1.5">
             <Fingerprint size={13} /> Forensic Engine v3.0
           </span>
+          <UserNav />
         </div>
       </header>
 

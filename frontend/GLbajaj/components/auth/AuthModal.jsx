@@ -18,6 +18,9 @@ export default function AuthModal({ isLight = false }) {
 
   if (!isAuthModalOpen) return null
 
+  // Detect current active theme dynamically from html class or localStorage
+  const activeIsLight = isLight || (typeof document !== 'undefined' && document.documentElement.classList.contains('light')) || (typeof localStorage !== 'undefined' && localStorage.getItem('dsa_theme') === 'light')
+
   const isSignUp = authMode === 'signup'
 
   const handleSubmit = async (e) => {
@@ -35,18 +38,23 @@ export default function AuthModal({ isLight = false }) {
           throw new Error('Password must be at least 6 characters')
         }
         await signUp(email, password, fullName.trim())
-        setSuccess('Account created successfully! Check your email to confirm your account or start browsing.')
+        setSuccess(`Account created! Welcome, ${fullName.trim()}!`)
         setTimeout(() => {
           closeAuthModal()
           setSuccess(null)
-        }, 2500)
+          setEmail('')
+          setPassword('')
+          setFullName('')
+        }, 1200)
       } else {
         await signIn(email, password)
         setSuccess('Welcome back! Successfully logged in.')
         setTimeout(() => {
           closeAuthModal()
           setSuccess(null)
-        }, 1200)
+          setEmail('')
+          setPassword('')
+        }, 1000)
       }
     } catch (err) {
       setError(err.message || 'Authentication failed. Please try again.')
@@ -66,7 +74,7 @@ export default function AuthModal({ isLight = false }) {
       {/* Modal Container */}
       <div
         className={`relative w-full max-w-md rounded-2xl border p-6 sm:p-8 shadow-2xl transition-all ${
-          isLight
+          activeIsLight
             ? 'bg-white border-slate-200 text-slate-900 shadow-slate-300/50'
             : 'bg-[#0f0a1c]/95 border-violet-500/30 text-white shadow-violet-900/20'
         }`}
@@ -75,7 +83,7 @@ export default function AuthModal({ isLight = false }) {
         <button
           onClick={closeAuthModal}
           className={`absolute top-4 right-4 p-1.5 rounded-lg transition-colors ${
-            isLight ? 'hover:bg-slate-100 text-slate-400 hover:text-slate-800' : 'hover:bg-white/10 text-white/40 hover:text-white'
+            activeIsLight ? 'hover:bg-slate-100 text-slate-400 hover:text-slate-800' : 'hover:bg-white/10 text-white/40 hover:text-white'
           }`}
         >
           <X size={18} />
@@ -89,7 +97,7 @@ export default function AuthModal({ isLight = false }) {
           <h2 className="text-xl font-bold tracking-tight">
             {isSignUp ? 'Create your Bittu AI account' : 'Welcome back to Bittu AI'}
           </h2>
-          <p className={`text-xs mt-1 ${isLight ? 'text-slate-500' : 'text-white/40'}`}>
+          <p className={`text-xs mt-1 ${activeIsLight ? 'text-slate-500' : 'text-white/40'}`}>
             {isSignUp
               ? 'Save your DSA progress, streak, and generated AI videos permanently.'
               : 'Log in to access your cloud progress and AI history.'}
@@ -98,17 +106,17 @@ export default function AuthModal({ isLight = false }) {
 
         {/* Mode Tabs */}
         <div className={`flex rounded-xl p-1 mb-5 border ${
-          isLight ? 'bg-slate-100 border-slate-200' : 'bg-white/5 border-white/10'
+          activeIsLight ? 'bg-slate-100 border-slate-200' : 'bg-white/5 border-white/10'
         }`}>
           <button
             type="button"
             onClick={() => switchMode('signin')}
             className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all ${
               !isSignUp
-                ? isLight
+                ? activeIsLight
                   ? 'bg-white text-violet-700 shadow-sm'
                   : 'bg-violet-600 text-white shadow-md'
-                : isLight ? 'text-slate-500 hover:text-slate-800' : 'text-white/40 hover:text-white'
+                : activeIsLight ? 'text-slate-500 hover:text-slate-800' : 'text-white/40 hover:text-white'
             }`}
           >
             Sign In
@@ -118,10 +126,10 @@ export default function AuthModal({ isLight = false }) {
             onClick={() => switchMode('signup')}
             className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all ${
               isSignUp
-                ? isLight
+                ? activeIsLight
                   ? 'bg-white text-violet-700 shadow-sm'
                   : 'bg-violet-600 text-white shadow-md'
-                : isLight ? 'text-slate-500 hover:text-slate-800' : 'text-white/40 hover:text-white'
+                : activeIsLight ? 'text-slate-500 hover:text-slate-800' : 'text-white/40 hover:text-white'
             }`}
           >
             Create Account
@@ -147,19 +155,22 @@ export default function AuthModal({ isLight = false }) {
         <form onSubmit={handleSubmit} className="space-y-4">
           {isSignUp && (
             <div>
-              <label className={`block text-xs font-semibold mb-1.5 ${isLight ? 'text-slate-700' : 'text-white/70'}`}>
+              <label className={`block text-xs font-semibold mb-1.5 ${activeIsLight ? 'text-slate-700' : 'text-white/70'}`}>
                 Full Name
               </label>
               <div className="relative">
-                <User size={15} className={`absolute left-3 top-1/2 -translate-y-1/2 ${isLight ? 'text-slate-400' : 'text-white/30'}`} />
+                <User size={15} className={`absolute left-3 top-1/2 -translate-y-1/2 ${activeIsLight ? 'text-slate-400' : 'text-white/30'}`} />
                 <input
                   type="text"
                   required
                   placeholder="e.g. Praveen Kumar"
                   value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
+                  onChange={(e) => {
+                    setFullName(e.target.value)
+                    if (error) setError(null)
+                  }}
                   className={`w-full pl-9 pr-4 py-2 rounded-xl text-xs border outline-none transition-all ${
-                    isLight
+                    activeIsLight
                       ? 'bg-white border-slate-300 text-slate-900 focus:border-violet-600 focus:ring-1 focus:ring-violet-600'
                       : 'bg-white/5 border-white/10 text-white focus:border-violet-500 focus:ring-1 focus:ring-violet-500'
                   }`}
@@ -169,19 +180,22 @@ export default function AuthModal({ isLight = false }) {
           )}
 
           <div>
-            <label className={`block text-xs font-semibold mb-1.5 ${isLight ? 'text-slate-700' : 'text-white/70'}`}>
+            <label className={`block text-xs font-semibold mb-1.5 ${activeIsLight ? 'text-slate-700' : 'text-white/70'}`}>
               Email Address
             </label>
             <div className="relative">
-              <Mail size={15} className={`absolute left-3 top-1/2 -translate-y-1/2 ${isLight ? 'text-slate-400' : 'text-white/30'}`} />
+              <Mail size={15} className={`absolute left-3 top-1/2 -translate-y-1/2 ${activeIsLight ? 'text-slate-400' : 'text-white/30'}`} />
               <input
                 type="email"
                 required
                 placeholder="you@example.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value)
+                  if (error) setError(null)
+                }}
                 className={`w-full pl-9 pr-4 py-2 rounded-xl text-xs border outline-none transition-all ${
-                  isLight
+                  activeIsLight
                     ? 'bg-white border-slate-300 text-slate-900 focus:border-violet-600 focus:ring-1 focus:ring-violet-600'
                     : 'bg-white/5 border-white/10 text-white focus:border-violet-500 focus:ring-1 focus:ring-violet-500'
                 }`}
@@ -190,19 +204,22 @@ export default function AuthModal({ isLight = false }) {
           </div>
 
           <div>
-            <label className={`block text-xs font-semibold mb-1.5 ${isLight ? 'text-slate-700' : 'text-white/70'}`}>
+            <label className={`block text-xs font-semibold mb-1.5 ${activeIsLight ? 'text-slate-700' : 'text-white/70'}`}>
               Password
             </label>
             <div className="relative">
-              <Lock size={15} className={`absolute left-3 top-1/2 -translate-y-1/2 ${isLight ? 'text-slate-400' : 'text-white/30'}`} />
+              <Lock size={15} className={`absolute left-3 top-1/2 -translate-y-1/2 ${activeIsLight ? 'text-slate-400' : 'text-white/30'}`} />
               <input
                 type={showPassword ? 'text' : 'password'}
                 required
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value)
+                  if (error) setError(null)
+                }}
                 className={`w-full pl-9 pr-10 py-2 rounded-xl text-xs border outline-none transition-all ${
-                  isLight
+                  activeIsLight
                     ? 'bg-white border-slate-300 text-slate-900 focus:border-violet-600 focus:ring-1 focus:ring-violet-600'
                     : 'bg-white/5 border-white/10 text-white focus:border-violet-500 focus:ring-1 focus:ring-violet-500'
                 }`}
@@ -210,7 +227,7 @@ export default function AuthModal({ isLight = false }) {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className={`absolute right-3 top-1/2 -translate-y-1/2 ${isLight ? 'text-slate-400 hover:text-slate-600' : 'text-white/30 hover:text-white'}`}
+                className={`absolute right-3 top-1/2 -translate-y-1/2 ${activeIsLight ? 'text-slate-400 hover:text-slate-600' : 'text-white/30 hover:text-white'}`}
               >
                 {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
               </button>
@@ -237,8 +254,8 @@ export default function AuthModal({ isLight = false }) {
         </form>
 
         {/* Footer Note */}
-        <p className={`text-center text-[11px] mt-5 ${isLight ? 'text-slate-400' : 'text-white/30'}`}>
-          100% Free · Cloud Synced · Powered by Supabase
+        <p className={`text-center text-[11px] mt-5 ${activeIsLight ? 'text-slate-400' : 'text-white/30'}`}>
+          100% Free · Cloud Synced & Local Persistent · Powered by Bittu AI & Supabase
         </p>
       </div>
     </div>

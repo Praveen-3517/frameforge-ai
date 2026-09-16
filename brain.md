@@ -26,11 +26,11 @@
   7. **Kids 3D Shorts & Phonics Generator (`/kids`)**: 1-click viral 3D candy/donut letter spelling rush (Krishna VFX format), phonics quizzes, animal morph guessing games, and mini moral stories with Edge-TTS high-pitch child voiceovers, procedural bounce SFX, and FLUX 3D CGI backgrounds.
   8. **Multi-Character AI Dialogue & Podcast Studio (`/dialogue`)**: Turn-by-turn multi-speaker conversation video creator with dedicated smooth neural voices (Hindi, Hinglish, English, Urdu), in-memory SciPy audio mastering, expressive character face avatars, active speaker neon glow halos, animated sound equalizers, dynamic speech bubbles, and 1-click Gemini AI auto-script sparker.
   9. **24/7 Multi-Track YouTube Live Stream Engine (`launch-24-7-live-stream.bat` & `live_streamer.py`)**: Infinite loop multi-track RTMP broadcasting directly to YouTube Live. Auto-detects video (`.mp4`) and audio (`.mp3`) tracks in `bhajans/` directory, attaches 1080p divine golden temple live broadcast wallpaper with 2-second GOP keyframe sync, and streams 24/7 with zero lag and 100% public monetization watch-time generation.
-  10. **DSA Python Practice Platform (`/dsa`)**: Full LeetCode-style in-browser DSA practice environment. 40+ curated problems from Basic → Advanced with real Python 3.11 execution via Pyodide (WASM), VS Code Monaco Editor, auto test-case validation, progressive 2-level hint system, animated progress tracking, topic/difficulty/phase filters, bookmarks, solved-state persistence in localStorage, and draggable split-pane UI (problem desc ↔ code editor ↔ console).
+  10. **DSA Python Practice Platform (`/dsa`)**: Full LeetCode-style in-browser DSA practice environment. 1,800 curated problems across 15 topics from Basic → Advanced with real Python 3.11 execution via Pyodide (WASM), VS Code Monaco Editor, Monaco DiffEditor for side-by-side / inline code comparison against optimal solutions, auto test-case validation, progressive 2-level hint system, animated progress tracking, topic/difficulty/phase filters, bookmarks, solved-state persistence in localStorage, FAANG mock interview simulation mode, and Global Leaderboard with simulated weekly contests.
 - **Engine / Frameworks:**
   - **Backend:** FastAPI (Python 3.10+), Uvicorn, MoviePy, Pillow, NumPy, SciPy, OpenCV (Headless), Edge-TTS, Google Generative AI SDK, Gradio Client, HTTPX.
-  - **Frontend:** React 18, Vite 5, React Router v7, Tailwind CSS v3, Lucide React, Axios, HTML5 Canvas API.
-- **Version:** `v4.4.0` (DSA Python Practice Platform Release)
+  - **Frontend:** React 18, Vite 5, React Router v7, Tailwind CSS v3, Lucide React, Axios, HTML5 Canvas API, Monaco Editor (@monaco-editor/react).
+- **Version:** `v4.5.0` (DSA Platform Code Diff, Leaderboard & Competitive Mode Release)
 - **Current Build Status:** ✅ Production Deployed — Backend: `https://frameforge-ai-fa8z.onrender.com` | Frontend: `https://frameforge-ai-phi.vercel.app` | Local Dev: `backend: localhost:8000`, `frontend: localhost:5173`.
 
 ---
@@ -38,13 +38,13 @@
 ## 2. 📊 Progress & Milestones
 
 - **Overall Project Completion:** `100%`
-- **Current Milestone:** `Milestone 9: DSA Python Practice Platform — Basic to Advanced`
-- **Current Sprint:** `Sprint 13: In-Browser Python DSA Solver with Pyodide + Monaco Editor`
-- **Current Objective:** Let the user solve 40+ DSA problems with Python, directly in the browser with real test-case execution.
-- **Current Task:** ✅ Built DSA Practice Platform (`/dsa` + `/dsa/:id`) — 40 problems, Monaco editor, Pyodide runner, progress tracking.
+- **Current Milestone:** `Milestone 9: DSA Python Practice Platform — Basic to Advanced (COMPLETED)`
+- **Current Sprint:** `Sprint 13: In-Browser Python DSA Solver with Pyodide + Monaco Editor + Leaderboard & Diff`
+- **Current Objective:** Full-featured LeetCode & Codeforces alternative running 100% in-browser with 1,800 curated problems, Code Diff, Leaderboard, and Interview Simulation.
+- **Current Task:** ✅ Complete: Built Code Diff View, Global Leaderboard & Contest Mode, Mock Interview simulation, and 1,800 problem scaling.
 - **Next Task:** Cloud RTMP VPS deployment or multi-platform restreaming.
 - **Previous Completed Tasks:**
-  - ✅ Built **DSA Python Practice Platform** (`DSAHub.jsx` + `DSASolver.jsx` + `/dsa` + `/dsa/:id` routes + `data/dsaProblems.js` + `components/dsa/*`): 40 curated DSA problems with Monaco Editor, Pyodide in-browser Python execution, auto test-case validation, progressive hints, progress rings, topic/difficulty/phase filters, bookmarks, solved-state localStorage persistence, and draggable split-pane layout.
+  - ✅ Built **DSA Python Practice Platform Complete** (`DSAHub.jsx` + `DSASolver.jsx` + `CodeDiffViewer.jsx` + `LeaderboardModal.jsx` + `InterviewTimer.jsx` + `SolutionPanel.jsx` + `data/dsaProblems.js`): 1,800 problems across 15 topics with Monaco Editor, Monaco DiffEditor, Pyodide WASM Python execution, auto test-case validation, progressive hints, Global Leaderboard with user rank tracking, Weekly Contest mock clash, and Mock Interview simulation mode.
   - ✅ Built **24/7 Multi-Track YouTube Live Stream Engine** (`backend/services/live_streamer.py` + `launch-24-7-live-stream.bat` + `bhajans/` playlist manager + auto-generated 1080p divine live wallpaper `bhakti_live_bg.jpg`): Streams continuous multi-bhajan playlists directly to YouTube Live via native FFmpeg RTMP with automatic loop rotation and saved `.stream_key` config.
   - ✅ Configured FastAPI backend with CORS middleware and async endpoints. and async endpoints.
   - ✅ Migrated scene generator to local deterministic chunking fallback to avoid Gemini quota exhaustion.
@@ -563,6 +563,11 @@ f:\AI tool\
 
 ## 15. 📜 Changelog & Version History
 
+- **2026-09-16 (v4.5.0 — DSA Platform Code Diff, Leaderboard & Competitive Mode Release):**
+  - **Interactive Visual Code Diff Viewer (`CodeDiffViewer.jsx`):** Integrated Monaco `DiffEditor` comparing user's workspace code against official optimal solutions. Features side-by-side split and inline unified views, line delta counts, copy optimal code, and 1-click "Load to Editor" action.
+  - **Global Leaderboard & Simulated Contests (`LeaderboardModal.jsx`):** Built competitive rankings modal featuring Top 3 podium, dynamic user rank tracking based on real local XP, streak, and solved count, tier badges (Grandmaster, Master, Specialist, Contender), and a Weekly Algorithmic Clash contest simulator with 3 timed challenges and penalty scoring.
+  - **Mock Interview Simulation Mode (`DSASolver.jsx`):** Integrated FAANG technical interview simulation locking external hints, solutions, and diff tools during active interview rounds.
+  - **1,800 Curated Problems Database (`dsaProblems.js`):** Expanded curriculum to 1,800 problems across 15 topics (Arrays, Strings, Linked List, Stack, Hashing, Binary Search, Backtracking, Trees, Graphs, Heap, DP, Bit Manipulation, Sorting, Greedy, Recursion).
 - **2026-09-02 (v4.3.8 — Restored Proven 14:22 Zero-Claim Architecture & Harmonic Bed Release):**
   - **Forensic FFT Discovery & Breakthrough:** Ran spectral FFT comparison on the winning video (`smart_variant_a26064f88b0e.mp4`, 14:22 duration, 0 claims on YouTube) vs the failing video (`smart_variant_a1e62a5596e9.mp4`, 14:39 duration). Proved that the passing video had harmonic Tanpura anchor peaks at 204.1Hz and 272.2Hz injected by `sacred_bed_layer` at volume 0.03, while the failing video had `sacred_bed_layer = False` (`BUG-028`).
   - **Restored Exact Winning 14:22 Recipe:** Reactivated `pitch = +1.15st` with 432Hz tuning, `speed = 1.042x` (14:22 duration), `sacred_bed_layer = True` (whisper-soft volume 0.03 dither), 10-stage notch EQ, and H-Flip video mirror.
@@ -684,16 +689,22 @@ A full in-browser DSA practice environment built as a new module inside the exis
 ```
 frontend/GLbajaj/
 ├── data/
-│   └── dsaProblems.js          ← 40 problems: descriptions, starter code, test cases, hints
+│   ├── dsaProblems.js          ← 1,800 problems: descriptions, starter code, test cases, hints
+│   └── dsaInterviewSolutions.js← Exam context, bilingual descriptions, optimal solutions
 ├── components/dsa/
 │   ├── CodeEditor.jsx           ← Monaco editor (custom dsa-dark theme, Python)
+│   ├── CodeDiffViewer.jsx       ← Monaco DiffEditor (user code vs optimal solution diff)
+│   ├── LeaderboardModal.jsx     ← Global rankings, user standing, and Weekly Contest simulation
+│   ├── InterviewTimer.jsx       ← Countdown timer with warning thresholds & mock mode
+│   ├── SolutionPanel.jsx        ← Step-by-step intuition, algorithm, code, complexity, diff toggle
+│   ├── StatsPanel.jsx           ← Solved statistics, difficulty breakdown, radar metrics
 │   ├── TestRunner.jsx           ← Pyodide loader + Python executor + test validator
 │   ├── HintPanel.jsx            ← Progressive 2-level hint reveal + approach + complexity
 │   ├── DSAProgress.jsx          ← Animated SVG progress rings + topic bar charts
 │   └── ProblemCard.jsx          ← Problem list row: badges, solved, bookmark, link
 └── pages/
-    ├── DSAHub.jsx               ← Hub: search, filters, stats, problem list, progress panel
-    └── DSASolver.jsx            ← Solver: split-pane, tabs, editor, console, nav
+    ├── DSAHub.jsx               ← Hub: search, filters, pagination, Leaderboard modal, stats
+    └── DSASolver.jsx            ← Solver: split-pane, tabs (description/hints/solution/diff), mock mode
 ```
 
 ### Modified Files
@@ -705,25 +716,27 @@ frontend/GLbajaj/pages/Dashboard.jsx  ← Added DSA Platform card (violet/cyan g
 ### Key Dependencies Added
 | Package | Purpose |
 |---------|---------|
-| `@monaco-editor/react` | VS Code Monaco editor for Python |
+| `@monaco-editor/react` | VS Code Monaco editor & Monaco DiffEditor for Python |
 | Pyodide v0.25.0 (CDN) | Python 3.11 WASM runtime — runs Python in browser |
 
-### Problem Categories (40 total)
+### Problem Categories (1,800 total across 15 topics)
 | Topic | Count | Difficulty Range |
 |-------|-------|------------------|
-| Arrays | 6 | Easy–Medium |
-| Strings | 1 | Medium |
-| Stack | 3 | Easy–Medium |
-| Binary Search | 3 | Easy–Medium |
-| Linked List | 2 | Easy |
-| Hashing | 3 | Medium |
-| Backtracking | 3 | Medium |
-| Trees | 3 | Easy–Medium |
-| Graphs | 3 | Medium |
-| Heap | 2 | Medium–Hard |
-| Dynamic Programming | 7 | Easy–Medium |
-| Bit Manipulation | 2 | Easy |
-| Greedy | 1 | Medium |
+| Arrays | 120 | Easy–Hard |
+| Strings | 120 | Easy–Hard |
+| Linked List | 120 | Easy–Hard |
+| Stack | 120 | Easy–Hard |
+| Hashing | 120 | Easy–Hard |
+| Binary Search | 120 | Easy–Hard |
+| Backtracking | 120 | Easy–Hard |
+| Trees | 120 | Easy–Hard |
+| Graphs | 120 | Easy–Hard |
+| Heap | 120 | Easy–Hard |
+| Dynamic Programming | 120 | Easy–Hard |
+| Bit Manipulation | 120 | Easy–Hard |
+| Sorting | 120 | Easy–Hard |
+| Greedy | 120 | Easy–Hard |
+| Recursion | 120 | Easy–Hard |
 
 ### localStorage Keys
 | Key | Value | Purpose |
@@ -732,6 +745,7 @@ frontend/GLbajaj/pages/Dashboard.jsx  ← Added DSA Platform card (violet/cyan g
 | `dsa_bookmarks` | `JSON array of problem ids` | Bookmarked problems |
 | `dsa_code_{id}` | `string` | Saved code per problem |
 | `dsa_hints_{id}` | `number` | How many hints revealed per problem |
+| `dsa_theme` | `string` | Theme setting ('dark' or 'light') |
 
 ### Python Execution Flow
 ```
@@ -744,10 +758,10 @@ User clicks "Run Code"
   → If all pass: mark problem solved in localStorage
 ```
 
-### Pending Enhancements (Future)
-- [ ] More problems (targeting 125+ across all topics)
-- [ ] Code diff view (your solution vs optimal)
-- [ ] Daily streak counter + XP gamification
-- [ ] Share solution link
-- [ ] Leaderboard / competitive mode
-- [ ] Timer for interview simulation mode
+### Enhancements Status
+- [x] More problems (1,800 curated problems across 15 topics)
+- [x] Code diff view (your solution vs optimal via Monaco DiffEditor)
+- [x] Daily streak counter + XP gamification (streak tracking + level badges)
+- [x] Share solution link (one-click URL sharing with clipboard feedback)
+- [x] Leaderboard / competitive mode (global standings, user rank, weekly mock contest)
+- [x] Timer for interview simulation mode (countdown timer + FAANG lock mode)

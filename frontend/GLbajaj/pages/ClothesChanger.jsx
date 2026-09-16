@@ -4,6 +4,8 @@ import { ArrowLeft, Upload, Shirt, Image as ImageIcon, Download } from 'lucide-r
 import axios from 'axios'
 import StarField from '../components/StarField'
 import { getApiUrl } from '../utils/apiUrl'
+import { useAuth } from '../context/AuthContext'
+import UserNav from '../components/auth/UserNav'
 
 export default function ClothesChanger() {
   const [image, setImage] = useState(null)
@@ -12,6 +14,7 @@ export default function ClothesChanger() {
   const [result, setResult] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const { user, openAuthModal } = useAuth()
 
   const handleImageChange = (e) => {
     const file = e.target.files[0]
@@ -23,6 +26,11 @@ export default function ClothesChanger() {
   }
 
   const handleGenerate = async () => {
+    if (!user) {
+      openAuthModal('signup')
+      return
+    }
+
     if (!image || !prompt) return
     setIsLoading(true)
     setError('')
@@ -50,10 +58,11 @@ export default function ClothesChanger() {
       <StarField />
       <div className="orb w-96 h-96 bg-cyan-600/20 -top-48 -left-48" style={{ animationDelay: '0s' }} />
 
-      <header className="relative z-10 flex items-center px-6 py-5 max-w-6xl mx-auto w-full">
+      <header className="relative z-10 flex items-center justify-between px-6 py-5 max-w-6xl mx-auto w-full">
         <Link to="/" className="flex items-center gap-2 text-white/50 hover:text-white transition-colors text-sm font-medium">
           <ArrowLeft size={16} /> Back to Dashboard
         </Link>
+        <UserNav />
       </header>
 
       <main className="relative z-10 flex-1 flex flex-col items-center px-4 pb-16">

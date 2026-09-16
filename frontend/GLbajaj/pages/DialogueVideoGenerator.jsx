@@ -32,6 +32,8 @@ import {
 } from 'lucide-react'
 import StarField from '../components/StarField'
 import { getApiUrl, getFullMediaUrl } from '../utils/apiUrl'
+import { useAuth } from '../context/AuthContext'
+import UserNav from '../components/auth/UserNav'
 
 const DEFAULT_CHARACTERS = [
   {
@@ -132,6 +134,7 @@ const COLOR_PALETTE = [
 ]
 
 export default function DialogueVideoGenerator() {
+  const { user, openAuthModal } = useAuth()
   const [title, setTitle] = useState('Chai vs Coffee Ultimate Debate')
   const [aspectRatio, setAspectRatio] = useState('9:16')
   const [layout, setLayout] = useState('split_podcast')
@@ -283,6 +286,10 @@ export default function DialogueVideoGenerator() {
 
   // 1-Click AI Script Generator (Gemini)
   const handleGenerateAiScript = async (customTopic) => {
+    if (!user) {
+      openAuthModal('signup')
+      return
+    }
     const topicToUse = (customTopic || aiTopic || 'Funny friendship debate').trim()
     setIsGeneratingScript(true)
     setError(null)
@@ -316,6 +323,10 @@ export default function DialogueVideoGenerator() {
 
   // Handle Video Generation with Real-Time Polling
   const handleGenerateVideo = async () => {
+    if (!user) {
+      openAuthModal('signup')
+      return
+    }
     // Validate dialogues
     const emptyLine = dialogues.find((d) => !d.text.trim())
     if (emptyLine) {
@@ -487,6 +498,7 @@ export default function DialogueVideoGenerator() {
           <span className="px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs font-mono font-bold">
             100% Free
           </span>
+          <UserNav />
         </div>
       </header>
 
