@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Play, RotateCcw, CheckCircle2, XCircle, Loader2, Terminal, AlertTriangle } from 'lucide-react'
+import { Play, RotateCcw, CheckCircle2, XCircle, Loader2, Terminal } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 
 let pyodideInstance = null
@@ -9,7 +9,6 @@ let pyodideReady = false
 async function getPyodide() {
   if (pyodideReady && pyodideInstance) return pyodideInstance
   if (pyodideLoading) {
-    // Wait for it to finish loading
     return new Promise((resolve) => {
       const check = setInterval(() => {
         if (pyodideReady && pyodideInstance) {
@@ -29,12 +28,12 @@ async function getPyodide() {
   return pyodide
 }
 
-export default function TestRunner({ problem, code, onSuccess }) {
+export default function TestRunner({ problem, code, onSuccess, isLight = false }) {
   const { user, openAuthModal } = useAuth()
   const [status, setStatus] = useState('idle') // idle | loading-pyodide | running | passed | failed | error
   const [output, setOutput] = useState('')
   const [testResults, setTestResults] = useState([])
-  const [pyodideStatus, setPyodideStatus] = useState('unloaded') // unloaded | loading | ready
+  const [pyodideStatus, setPyodideStatus] = useState('unloaded')
   const outputRef = useRef(null)
 
   // Load Pyodide script on mount
@@ -117,11 +116,9 @@ export default function TestRunner({ problem, code, onSuccess }) {
 
         for (const tc of problem.testCases) {
           try {
-            // Extract function name from starter code
             const fnMatch = problem.starterCode.match(/def (\w+)\s*\(/)
             const fnName = fnMatch ? fnMatch[1] : 'solution'
 
-            // Run test
             const testCode = `
 import json
 try:
@@ -176,29 +173,53 @@ except Exception as e:
   }
 
   const statusConfig = {
-    idle: { color: 'text-white/40', label: 'Ready to run' },
-    'loading-pyodide': { color: 'text-yellow-400', label: 'Loading Python...' },
-    running: { color: 'text-blue-400', label: 'Running...' },
-    passed: { color: 'text-emerald-400', label: '✓ All tests passed!' },
-    failed: { color: 'text-red-400', label: '✗ Some tests failed' },
-    error: { color: 'text-orange-400', label: '⚠ Runtime error' },
+    idle: {
+      color: isLight ? 'text-slate-500' : 'text-white/40',
+      label: 'Ready to run'
+    },
+    'loading-pyodide': {
+      color: isLight ? 'text-amber-700 font-bold' : 'text-yellow-400',
+      label: 'Loading Python...'
+    },
+    running: {
+      color: isLight ? 'text-blue-700 font-bold' : 'text-blue-400',
+      label: 'Running...'
+    },
+    passed: {
+      color: isLight ? 'text-emerald-700 font-bold' : 'text-emerald-400',
+      label: '✓ All tests passed!'
+    },
+    failed: {
+      color: isLight ? 'text-red-700 font-bold' : 'text-red-400',
+      label: '✗ Some tests failed'
+    },
+    error: {
+      color: isLight ? 'text-orange-700 font-bold' : 'text-orange-400',
+      label: '⚠ Runtime error'
+    },
   }
 
   return (
     <div className="flex flex-col h-full">
       {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/8 bg-white/2">
+      <div className={`flex items-center justify-between px-4 py-2.5 border-b transition-colors ${
+        isLight ? 'bg-slate-100 border-slate-200 text-slate-800' : 'border-white/8 bg-white/2 text-white'
+      }`}>
         <div className="flex items-center gap-2">
-          <Terminal size={14} className="text-violet-400" />
-          <span className="text-white/50 text-xs font-mono">Output Console</span>
+          <Terminal size={14} className={isLight ? 'text-violet-600' : 'text-violet-400'} />
+          <span className={`text-xs font-mono font-bold ${isLight ? 'text-slate-900' : 'text-white/50'}`}>
+            Output Console
+          </span>
           {pyodideStatus === 'loading' && (
-            <span className="text-yellow-400/70 text-xs flex items-center gap-1">
+            <span className={`text-xs flex items-center gap-1 ${isLight ? 'text-amber-700 font-medium' : 'text-yellow-400/70'}`}>
               <Loader2 size={10} className="animate-spin" />
               Loading Python engine...
             </span>
           )}
           {pyodideStatus === 'ready' && (
-            <span className="text-emerald-400/60 text-xs">● Python Ready</span>
+            <span className={`text-xs font-medium ${isLight ? 'text-emerald-700' : 'text-emerald-400/60'}`}>
+              ● Python Ready
+            </span>
           )}
         </div>
 
@@ -209,7 +230,11 @@ except Exception as e:
 
           <button
             onClick={reset}
-            className="p-1.5 rounded hover:bg-white/8 text-white/30 hover:text-white/70 transition-all"
+            className={`p-1.5 rounded transition-all ${
+              isLight
+                ? 'text-slate-500 hover:text-slate-900 hover:bg-slate-200'
+                : 'hover:bg-white/8 text-white/30 hover:text-white/70'
+            }`}
             title="Clear output"
           >
             <RotateCcw size={13} />
@@ -218,10 +243,10 @@ except Exception as e:
           <button
             onClick={runCode}
             disabled={status === 'running' || status === 'loading-pyodide'}
-            className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+            className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-bold transition-all duration-200 ${
               status === 'running' || status === 'loading-pyodide'
                 ? 'bg-violet-600/30 text-violet-400/50 cursor-not-allowed'
-                : 'bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500 text-white shadow-lg shadow-violet-500/20 hover:shadow-violet-500/40 hover:scale-105'
+                : 'bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500 text-white shadow-lg shadow-violet-500/20 active:scale-95'
             }`}
           >
             {status === 'running' || status === 'loading-pyodide' ? (
@@ -236,28 +261,47 @@ except Exception as e:
 
       {/* Test Results */}
       {testResults.length > 0 && (
-        <div className="px-4 py-3 border-b border-white/8 space-y-2">
-          <p className="text-white/40 text-xs font-mono uppercase tracking-wider mb-2">Test Cases</p>
+        <div className={`px-4 py-3 border-b space-y-2 ${
+          isLight ? 'border-slate-200 bg-slate-50/90' : 'border-white/8 bg-black/20'
+        }`}>
+          <p className={`text-xs font-mono font-bold uppercase tracking-wider mb-2 ${
+            isLight ? 'text-slate-700' : 'text-white/40'
+          }`}>
+            Test Case Results
+          </p>
           {testResults.map((r, i) => (
             <div
               key={i}
-              className={`flex items-start gap-3 p-2.5 rounded-lg text-xs border ${
+              className={`flex items-start gap-3 p-2.5 rounded-xl text-xs border ${
                 r.passed
-                  ? 'bg-emerald-500/8 border-emerald-500/20'
-                  : 'bg-red-500/8 border-red-500/20'
+                  ? isLight
+                    ? 'bg-emerald-50 border-emerald-300 text-emerald-950 shadow-sm'
+                    : 'bg-emerald-500/8 border-emerald-500/20 text-emerald-200'
+                  : isLight
+                    ? 'bg-red-50 border-red-300 text-red-950 shadow-sm'
+                    : 'bg-red-500/8 border-red-500/20 text-red-200'
               }`}
             >
               {r.passed ? (
-                <CheckCircle2 size={14} className="text-emerald-400 mt-0.5 shrink-0" />
+                <CheckCircle2 size={15} className="text-emerald-600 mt-0.5 shrink-0" />
               ) : (
-                <XCircle size={14} className="text-red-400 mt-0.5 shrink-0" />
+                <XCircle size={15} className="text-red-600 mt-0.5 shrink-0" />
               )}
               <div className="flex-1 min-w-0">
-                <div className="flex flex-wrap gap-x-4 gap-y-0.5">
-                  <span className="text-white/40">Input: <span className="text-white/70 font-mono">{r.input}</span></span>
-                  <span className="text-white/40">Expected: <span className="text-emerald-300/80 font-mono">{r.expected}</span></span>
+                <div className="flex flex-wrap gap-x-4 gap-y-1">
+                  <span>
+                    <span className={isLight ? 'text-slate-600 font-semibold' : 'text-white/40'}>Input: </span>
+                    <span className={`font-mono font-bold ${isLight ? 'text-slate-900' : 'text-white/80'}`}>{r.input}</span>
+                  </span>
+                  <span>
+                    <span className={isLight ? 'text-slate-600 font-semibold' : 'text-white/40'}>Expected: </span>
+                    <span className={`font-mono font-bold ${isLight ? 'text-emerald-800' : 'text-emerald-300/80'}`}>{r.expected}</span>
+                  </span>
                   {!r.passed && (
-                    <span className="text-white/40">Got: <span className="text-red-300/80 font-mono">{r.actual}</span></span>
+                    <span>
+                      <span className={isLight ? 'text-red-700 font-semibold' : 'text-white/40'}>Got: </span>
+                      <span className={`font-mono font-bold ${isLight ? 'text-red-800' : 'text-red-300/80'}`}>{r.actual}</span>
+                    </span>
                   )}
                 </div>
               </div>
@@ -269,19 +313,21 @@ except Exception as e:
       {/* Output area */}
       <div
         ref={outputRef}
-        className="flex-1 p-4 font-mono text-sm overflow-auto bg-[#050010]"
+        className={`flex-1 p-4 font-mono text-sm overflow-auto ${
+          isLight ? 'bg-[#0f172a] text-slate-100' : 'bg-[#050010] text-slate-300'
+        }`}
         style={{ minHeight: '80px' }}
       >
         {status === 'idle' && !output ? (
           <div className="flex flex-col items-center justify-center h-full text-center py-6">
             <Play size={24} className="text-white/10 mb-2" />
-            <p className="text-white/20 text-xs">Press Run Code to execute your Python solution</p>
+            <p className="text-white/30 text-xs">Press Run Code to execute your Python solution</p>
           </div>
         ) : (
           <pre className={`whitespace-pre-wrap break-words leading-relaxed ${
-            status === 'error' ? 'text-orange-300' :
-            status === 'passed' ? 'text-emerald-300' :
-            'text-slate-300'
+            status === 'error' ? 'text-rose-400 font-semibold' :
+            status === 'passed' ? 'text-emerald-400 font-semibold' :
+            'text-slate-200'
           }`}>
             {output}
           </pre>

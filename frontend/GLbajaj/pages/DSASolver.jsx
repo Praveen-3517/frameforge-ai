@@ -197,9 +197,9 @@ export default function DSASolver() {
       <div className={`flex items-center justify-between gap-2 px-3 sm:px-4 py-2 sm:py-2.5 border-b shrink-0 ${
         isLight ? 'border-slate-200 bg-white/80' : 'border-white/8 bg-white/[0.02]'
       }`}>
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
           <Link to="/dsa" className={`flex items-center gap-1 sm:gap-1.5 transition-colors text-xs sm:text-sm shrink-0 ${
-            isLight ? 'text-slate-500 hover:text-slate-900' : 'text-white/40 hover:text-white/80'
+            isLight ? 'text-slate-600 hover:text-slate-900 font-semibold' : 'text-white/40 hover:text-white/80'
           }`}>
             <ArrowLeft size={15} />
             <span className="hidden sm:inline">Problems</span>
@@ -209,8 +209,8 @@ export default function DSASolver() {
 
           {/* Problem title & difficulty */}
           <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-            <span className={`text-xs sm:text-sm font-mono shrink-0 ${isLight ? 'text-slate-400' : 'text-white/40'}`}>#{problem.id}</span>
-            <h1 className={`text-xs sm:text-sm font-semibold truncate max-w-[100px] xs:max-w-[150px] sm:max-w-xs md:max-w-none ${isLight ? 'text-slate-900' : 'text-white/90'}`}>
+            <span className={`text-xs sm:text-sm font-mono shrink-0 ${isLight ? 'text-slate-500 font-bold' : 'text-white/40'}`}>#{problem.id}</span>
+            <h1 className={`text-xs sm:text-sm font-bold truncate max-w-[120px] sm:max-w-none ${isLight ? 'text-slate-950 font-black' : 'text-white/90'}`}>
               {problem.title}
             </h1>
             <span className={`hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${diff.bg} ${diff.border} ${diff.color} shrink-0`}>
@@ -218,7 +218,7 @@ export default function DSASolver() {
               {problem.difficulty}
             </span>
             <span className={`hidden md:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] border shrink-0 ${
-              isLight ? 'bg-slate-100 border-slate-200 text-slate-500' : 'bg-white/4 border-white/8 text-white/35'
+              isLight ? 'bg-slate-100 border-slate-200 text-slate-600 font-medium' : 'bg-white/4 border-white/8 text-white/35'
             }`}>
               <Tag size={9} />
               {problem.pattern}
@@ -229,34 +229,22 @@ export default function DSASolver() {
         {/* ── Actions ── */}
         <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 overflow-x-auto scrollbar-none py-0.5">
 
-          {/* Theme Selector */}
-          <div className={`flex items-center p-0.5 rounded-lg border text-xs font-medium mr-0.5 sm:mr-1 ${
-            isLight ? 'bg-slate-200 border-slate-300' : 'bg-white/5 border-white/10'
-          }`}>
-            <button
-              onClick={() => setTheme('light')}
-              title="Light Mode"
-              className={`flex items-center gap-1 px-1.5 sm:px-2 py-1 rounded-md transition-all ${
-                isLight ? 'bg-white text-amber-600 font-bold shadow-sm' : 'text-white/40 hover:text-white'
-              }`}
-            >
-              <Sun size={12} />
-              <span className="hidden sm:inline text-[10px]">Light</span>
-            </button>
-            <button
-              onClick={() => setTheme('dark')}
-              title="Dark Mode"
-              className={`flex items-center gap-1 px-1.5 sm:px-2 py-1 rounded-md transition-all ${
-                !isLight ? 'bg-violet-600 text-white font-bold shadow-sm' : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              <Moon size={12} />
-              <span className="hidden sm:inline text-[10px]">Dark</span>
-            </button>
-          </div>
+          {/* Theme Toggle Button */}
+          <button
+            onClick={() => setTheme(isLight ? 'dark' : 'light')}
+            title={isLight ? "Switch to Dark Mode" : "Switch to Light Mode"}
+            className={`flex items-center gap-1 px-2 py-1.5 rounded-lg border text-xs font-bold transition-all shrink-0 ${
+              isLight
+                ? 'bg-amber-50 border-amber-300 text-amber-900 hover:bg-amber-100 shadow-sm'
+                : 'bg-white/5 border-white/10 text-white/70 hover:text-white'
+            }`}
+          >
+            {isLight ? <Sun size={13} className="text-amber-600" /> : <Moon size={13} className="text-violet-400" />}
+            <span className="hidden sm:inline text-[10px]">{isLight ? 'Light' : 'Dark'}</span>
+          </button>
 
           {/* Interview Timer */}
-          <InterviewTimer difficulty={problem.difficulty} />
+          <InterviewTimer difficulty={problem.difficulty} isLight={isLight} />
 
           {/* Interview Mode Toggle */}
           <button
@@ -702,6 +690,7 @@ export default function DSASolver() {
                     problem={problem}
                     hintsRevealed={hintsRevealed}
                     onRevealHint={revealHint}
+                    isLight={isLight}
                   />
                 )}
 
@@ -771,12 +760,14 @@ export default function DSASolver() {
 
           {/* Editor */}
           <div className="flex-1 min-h-0" style={{ flex: editorHeight }}>
-            <CodeEditor value={code} onChange={updateCode} />
+            <CodeEditor value={code} onChange={updateCode} isLight={isLight} />
           </div>
 
           {/* Drag handle */}
           <div
-            className="h-1 bg-white/5 border-y border-white/8 cursor-row-resize hover:bg-violet-500/20 transition-colors shrink-0 flex items-center justify-center"
+            className={`h-1 cursor-row-resize transition-colors shrink-0 flex items-center justify-center ${
+              isLight ? 'bg-slate-200 hover:bg-violet-200 border-y border-slate-300' : 'bg-white/5 border-y border-white/8 hover:bg-violet-500/20'
+            }`}
             onMouseDown={(e) => {
               const startY = e.clientY
               const startH = editorHeight
@@ -792,12 +783,12 @@ export default function DSASolver() {
               window.addEventListener('mouseup', onUp)
             }}
           >
-            <div className="flex gap-1"><span className="w-6 h-0.5 rounded-full bg-white/20" /></div>
+            <div className="flex gap-1"><span className={`w-6 h-0.5 rounded-full ${isLight ? 'bg-slate-400' : 'bg-white/20'}`} /></div>
           </div>
 
           {/* Console / Test Runner */}
           <div className="min-h-0" style={{ flex: 100 - editorHeight }}>
-            <TestRunner problem={problem} code={code} onSuccess={handleSuccess} />
+            <TestRunner problem={problem} code={code} onSuccess={handleSuccess} isLight={isLight} />
           </div>
         </div>
       </div>
