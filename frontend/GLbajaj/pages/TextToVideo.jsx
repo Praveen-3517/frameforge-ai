@@ -20,10 +20,10 @@ import UserNav from '../components/auth/UserNav'
    Timings are loose estimates based on typical API latency.
 ──────────────────────────────────────────────────────────────── */
 const STEP_DELAYS_MS = [
-  0,      // Step 1: Scene writing  — starts immediately
-  12000,  // Step 2: Voiceover      — ~12s after start
-  20000,  // Step 3: Video clips    — ~20s after start
-  200000, // Step 4: Final stitch   — ~200s (Replicate is slow)
+  0,     // Step 1: Scene writing  — starts immediately
+  12000, // Step 2: Voiceover      — ~12s after start
+  25000, // Step 3: Video clips    — ~25s after start
+  60000, // Step 4: Final stitch   — ~60s after start
 ]
 
 // App states
@@ -141,7 +141,15 @@ export default function App() {
           message = err.response.data?.detail || `Server error ${err.response.status}`
         }
       } else if (err.code === 'ECONNABORTED') {
-        message = 'Request timed out. The video may still be processing — try again in a moment.'
+        message = 'Request timed out. The video may still be processing — please try again.'
+      } else if (err.message && (
+        err.message.includes('EOF') ||
+        err.message.includes('stream') ||
+        err.message.includes('Network Error') ||
+        err.message.includes('ERR_CONNECTION_RESET') ||
+        err.message.includes('ERR_EMPTY_RESPONSE')
+      )) {
+        message = 'Connection was interrupted while receiving the video. The server may be busy — please try again in a few seconds.'
       } else if (!navigator.onLine) {
         message = 'No internet connection detected.'
       }

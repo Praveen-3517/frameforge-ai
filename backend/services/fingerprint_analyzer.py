@@ -35,12 +35,16 @@ def extract_pcm_audio(media_path: Path, sample_rate: int = 16000) -> Tuple[np.nd
     """
     Extract raw mono PCM float32 audio at 16kHz via FFmpeg stdout stream.
     Optimized for sub-second execution across large audio/video files.
+
+    FIX: -t must come AFTER -i (output duration limit, not input wall-clock limit).
+    Placing -t before -i caused FFmpeg to kill the input read after 45s wall-clock
+    on slow disks / large files, producing a truncated stdout pipe → unexpected EOF.
     """
     cmd = [
         FFMPEG_EXE,
         "-threads", "0",
-        "-t", "45",               # 45s sample before input for instant seek on long files
-        "-i", str(media_path),
+        "-i", str(media_path),    # -i first — ALWAYS
+        "-t", "45",               # 45s OUTPUT duration limit (trim to representative window)
         "-vn",
         "-ac", "1",
         "-ar", str(sample_rate),
@@ -52,15 +56,31 @@ def extract_pcm_audio(media_path: Path, sample_rate: int = 16000) -> Tuple[np.nd
         proc = subprocess.run(
             cmd,
             stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
-            timeout=60,           # Increased from 10s to 60s for large files
+            stderr=subprocess.PIPE,   # Capture stderr so FFmpeg errors don't corrupt stdout
+            timeout=90,               # 90s hard timeout (45s audio + demux overhead)
         )
 
-        if proc.returncode != 0 or len(proc.stdout) == 0:
+        if proc.returncode not in (0, 1) or len(proc.stdout) == 0:
+            # returncode 1 is acceptable: FFmpeg exits 1 when stream ends normally via -t
+            if len(proc.stdout) == 0:
+                log.warning("Audio extraction: empty stdout. FFmpeg stderr: %s",
+                            proc.stderr[-300:].decode("utf-8", errors="replace"))
+                return np.array([], dtype=np.float32), sample_rate
+
+        # Guard against truncated buffer (must be aligned to float32 = 4 bytes)
+        raw_bytes = proc.stdout
+        remainder = len(raw_bytes) % 4
+        if remainder:
+            raw_bytes = raw_bytes[: len(raw_bytes) - remainder]  # drop trailing incomplete sample
+
+        if len(raw_bytes) == 0:
             return np.array([], dtype=np.float32), sample_rate
 
-        raw_audio = np.frombuffer(proc.stdout, dtype=np.float32)
+        raw_audio = np.frombuffer(raw_bytes, dtype=np.float32)
         return raw_audio, sample_rate
+    except subprocess.TimeoutExpired:
+        log.warning("Audio extraction timed out for %s", media_path)
+        return np.array([], dtype=np.float32), sample_rate
     except Exception as e:
         log.warning("Audio extraction error: %s", e)
         return np.array([], dtype=np.float32), sample_rate

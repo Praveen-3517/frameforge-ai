@@ -30,9 +30,9 @@ import httpx
 import numpy as np
 import base64
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, BackgroundTasks, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException, BackgroundTasks, UploadFile, File, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from gradio_client import Client, handle_file
 from moviepy.editor import (
     AudioFileClip,
@@ -61,6 +61,16 @@ log = logging.getLogger("text2video")
 
 GEMINI_API_KEY: str  = os.getenv("GEMINI_API_KEY", "")
 FRONTEND_ORIGIN: str = os.getenv("FRONTEND_ORIGIN", "http://localhost:5173")
+DEBUG: bool          = os.getenv("DEBUG", "false").lower() == "true"
+
+# ── Allowed CORS origins — locked to production domains only ──────────────────
+_raw_origins = os.getenv(
+    "ALLOWED_ORIGINS",
+    "https://bittuai.online,https://www.bittuai.online,"
+    "https://frameforge-ai-phi.vercel.app,https://frameforge-ai.vercel.app,"
+    "http://localhost:5173,http://127.0.0.1:5173",
+)
+ALLOWED_ORIGINS: list = [o.strip() for o in _raw_origins.split(",") if o.strip()]
 
 OUTPUT_DIR = Path(os.getenv("OUTPUT_DIR", "outputs"))
 TEMP_DIR   = Path(os.getenv("TEMP_DIR",   "temp"))
@@ -102,21 +112,65 @@ class GenerateRequest(BaseModel):
 # 3.  FastAPI App + CORS
 # ─────────────────────────────────────────────────────────────
 
-app = FastAPI(
-    title="Bittu AI - Text-to-Video API (Free Stack)",
-    description="Convert any text into a narrated cinematic video. 100% Free.",
-    version="3.0.0",
-    docs_url="/docs",
+from fastapi.staticfiles import StaticFiles
+from starlette.middleware.base import BaseHTTPMiddleware
+
+# ── Security import ───────────────────────────────────────────────────────────
+from security import (
+    rate_limit, validate_upload_file, stream_upload_to_disk,
+    sanitize_text, sanitize_short_field, safe_output_path,
+    sanitize_enum, clamp,
+    ALLOWED_MEDIA_EXTENSIONS, ALLOWED_IMAGE_EXTENSIONS,
+    MAX_TEXT_LENGTH, MAX_PROMPT_LENGTH, MAX_TOPIC_LENGTH, MAX_WORD_LENGTH,
+    SECURITY_HEADERS,
 )
 
-from fastapi.staticfiles import StaticFiles
+# ── Email OTP Verification Service ───────────────────────────────────────────
+from email_service import (
+    request_otp,
+    verify_otp_code,
+    validate_email_address,
+)
 
+class SendOtpRequest(BaseModel):
+    email: str = Field(..., max_length=255)
+
+class VerifyOtpRequest(BaseModel):
+    email: str = Field(..., max_length=255)
+    otp: str = Field(..., min_length=6, max_length=6)
+
+# ── FastAPI app — docs hidden in production (DEBUG=true to expose) ────────────
+app = FastAPI(
+    title="Bittu AI — Media Generation API",
+    description="AI-powered media generation, DSA practice, and forensics.",
+    version="4.5.0",
+    docs_url="/docs"         if DEBUG else None,
+    redoc_url="/redoc"       if DEBUG else None,
+    openapi_url="/openapi.json" if DEBUG else None,
+)
+
+# ── Security Headers Middleware ───────────────────────────────────────────────
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Injects production-grade HTTP security headers on every response."""
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        for header, value in SECURITY_HEADERS.items():
+            response.headers[header] = value
+        if not DEBUG:
+            response.headers["Strict-Transport-Security"] = (
+                "max-age=31536000; includeSubDomains; preload"
+            )
+        return response
+
+app.add_middleware(SecurityHeadersMiddleware)
+
+# ── CORS — locked to specific trusted origins only ────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
 )
 
 app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
@@ -328,7 +382,7 @@ def _cleanup_temp_files(job_id: str) -> None:
 
 
 @app.post("/generate-video", tags=["Video Generation"])
-async def generate_video(payload: GenerateRequest) -> FileResponse:
+async def generate_video(payload: GenerateRequest, request: Request) -> StreamingResponse:
     """
     100% FREE pipeline — no paid APIs required:
     1. Gemini 1.5 Flash  → 3 image prompts
@@ -338,6 +392,10 @@ async def generate_video(payload: GenerateRequest) -> FileResponse:
     5. Return final MP4
     ⚡ ~30–60 seconds total
     """
+    # ── Security: rate limit + input sanitization ──────────────────────────
+    rate_limit(request, max_requests=5, window_sec=60)
+    payload.text = sanitize_text(payload.text, max_length=2000, field_name="text")
+
     job_id = uuid.uuid4().hex[:12]
     log.info("═" * 60)
     log.info("🚀  Job [%s] started — %s…", job_id, payload.text[:50])
@@ -381,11 +439,37 @@ async def generate_video(payload: GenerateRequest) -> FileResponse:
         log.info("✅  Job [%s] done in %.1fs", job_id, elapsed)
         log.info("═" * 60)
 
-        return FileResponse(
-            path=str(final_path),
+        # Use StreamingResponse with explicit Content-Length to prevent proxy-layer
+        # "unexpected EOF" errors. FileResponse without Content-Length causes Vercel →
+        # Render proxied connections to close early mid-stream.
+        file_size = os.path.getsize(str(final_path))
+
+        def video_file_generator(path: str, chunk_size: int = 1024 * 1024):
+            """Stream video in 1 MB chunks with explicit cleanup on completion."""
+            try:
+                with open(path, "rb") as f:
+                    while True:
+                        chunk = f.read(chunk_size)
+                        if not chunk:
+                            break
+                        yield chunk
+            finally:
+                # Schedule cleanup after streaming completes
+                try:
+                    Path(path).unlink(missing_ok=True)
+                except Exception:
+                    pass
+
+        return StreamingResponse(
+            video_file_generator(str(final_path)),
             media_type="video/mp4",
-            filename=f"bittu_{job_id}.mp4",
-            headers={"X-Job-Id": job_id, "X-Processing-Time": f"{elapsed:.1f}s"},
+            headers={
+                "Content-Disposition": f'attachment; filename="bittu_{job_id}.mp4"',
+                "Content-Length": str(file_size),
+                "X-Job-Id": job_id,
+                "X-Processing-Time": f"{elapsed:.1f}s",
+                "Cache-Control": "no-cache",
+            },
         )
 
     except HTTPException:
@@ -393,7 +477,7 @@ async def generate_video(payload: GenerateRequest) -> FileResponse:
     except Exception as exc:
         log.exception("❌  Job [%s] failed: %s", job_id, exc)
         _cleanup_temp_files(job_id)
-        raise HTTPException(status_code=500, detail=f"Video generation failed: {str(exc)}")
+        raise HTTPException(status_code=500, detail="Video generation failed. Please try again.")
 
 
 # ─────────────────────────────────────────────────────────────
@@ -404,12 +488,8 @@ async def generate_video(payload: GenerateRequest) -> FileResponse:
 @app.get("/", tags=["System"])
 async def root() -> dict:
     return {
-        "name": "Bittu AI Backend API",
+        "name": "Bittu AI API",
         "status": "online",
-        "version": "3.0.0",
-        "docs_url": "/docs",
-        "health_check": "/health",
-        "message": "Welcome to Bittu AI API. Visit /docs to test and explore all endpoints."
     }
 
 
@@ -427,17 +507,22 @@ async def health_check() -> dict:
 
 @app.post("/change-clothes", tags=["Image Generation"])
 async def change_clothes(
+    request: Request,
     image: UploadFile = File(...),
-    prompt: str = Form(...)
+    prompt: str = Form(...),
 ):
+    # ── Security ─────────────────────────────────────────────────────────────
+    rate_limit(request, max_requests=4, window_sec=60)
+    validate_upload_file(image, allowed_extensions=ALLOWED_IMAGE_EXTENSIONS)
+    prompt = sanitize_text(prompt, max_length=MAX_PROMPT_LENGTH, field_name="prompt")
+
     job_id = uuid.uuid4().hex[:12]
-    log.info("👕  Job [%s] started Clothes Change: %s", job_id, prompt)
-    
+    log.info("👕  Job [%s] started Clothes Change: %s", job_id, prompt[:80])
+
     try:
-        # Save uploaded user image
+        # Save uploaded user image (streaming — enforces 500 MB size cap)
         user_img_path = TEMP_DIR / f"{job_id}_user.jpg"
-        with open(user_img_path, "wb") as f:
-            f.write(await image.read())
+        await stream_upload_to_disk(image, user_img_path)
 
         # 0. Optimize the prompt using Gemini for hyper-realism (with safe fallback)
         optimized_prompt = prompt.strip()
@@ -511,10 +596,12 @@ async def change_clothes(
         
         return JSONResponse(content={"image_url": final_image_url})
         
+    except HTTPException:
+        raise
     except Exception as exc:
         log.exception("❌  Clothes Change failed: %s", exc)
         _cleanup_temp_files(job_id)
-        raise HTTPException(status_code=500, detail=f"Failed to change clothes: {str(exc)}")
+        raise HTTPException(status_code=500, detail="Clothes change failed. Please try again.")
 
 
 # ─────────────────────────────────────────────────────────────
@@ -531,6 +618,7 @@ from services.smart_transform import derive_transform_params
 
 @app.post("/api/variants/create", tags=["Media Variants"])
 async def create_video_variant(
+    request: Request,
     file: UploadFile = File(...),
     resolution: str = Form("original"),
     fit_mode: str = Form("fit"),
@@ -543,7 +631,6 @@ async def create_video_variant(
     normalize_audio: bool = Form(True),
     audio_sample_rate: int = Form(48000),
     strip_metadata: bool = Form(True),
-    # Deep visual & audio transforms (Anti-detection & Original Content Re-purposing)
     deep_visual: bool = Form(False),
     zoom_pct: float = Form(2.0),
     hue_shift_deg: float = Form(0.0),
@@ -551,7 +638,6 @@ async def create_video_variant(
     flip_horizontal: bool = Form(False),
     speed_multiplier: float = Form(1.0),
     add_vignette: bool = Form(False),
-    # Advanced Audio Modes (Cartoon Morph, Bhakti Scrambler, Max Protection, Mute)
     audio_mode: str = Form("max_protection"),
     pitch_shift_semitones: float = Form(0.0),
     time_stretch_pct: float = Form(0.0),
@@ -559,7 +645,6 @@ async def create_video_variant(
     audio_eq_filter: bool = Form(False),
     watermark_cleaner: bool = Form(True),
     stereo_decorrelate: bool = Form(True),
-    # Special Bhakti & Devotional Shield Suite
     tuning_432hz: bool = Form(False),
     temple_reverb: bool = Form(False),
     om_drone_resonance: bool = Form(False),
@@ -567,21 +652,33 @@ async def create_video_variant(
     preserve_formants: bool = Form(False),
     sacred_bed_layer: bool = Form(False),
 ):
+    # ── Security: rate limit, file validation, parameter clamping ──────────
+    rate_limit(request, max_requests=3, window_sec=60)
+    validate_upload_file(file, allowed_extensions=ALLOWED_MEDIA_EXTENSIONS)
+    # Clamp all numeric params to safe ranges — prevents resource exhaustion
+    brightness     = clamp(brightness,     -1.0, 1.0)
+    contrast       = clamp(contrast,        0.1, 3.0)
+    saturation     = clamp(saturation,      0.0, 3.0)
+    gamma          = clamp(gamma,           0.1, 3.0)
+    speed_multiplier = clamp(speed_multiplier, 0.5, 2.0)
+    zoom_pct       = clamp(zoom_pct,        0.0, 10.0)
+    hue_shift_deg  = clamp(hue_shift_deg, -180.0, 180.0)
+    pitch_shift_semitones = clamp(pitch_shift_semitones, -6.0, 6.0)
+    time_stretch_pct      = clamp(time_stretch_pct,       0.0, 10.0)
+    loop_count     = max(1, min(3, loop_count))   # Hard cap: 3 loops max
+    audio_sample_rate = 48000 if audio_sample_rate not in (22050, 44100, 48000) else audio_sample_rate
+
     job_id = uuid.uuid4().hex[:12]
-    ext = Path(file.filename or "video.mp4").suffix or ".mp4"
+    ext = Path(file.filename or "video.mp4").suffix.lower() or ".mp4"
     input_path = TEMP_DIR / f"{job_id}_orig{ext}"
     output_path = OUTPUT_DIR / f"variant_{job_id}.mp4"
 
-    log.info("🎥 Variant creation request received: %s [%s] (Audio Mode: %s, 432Hz: %s, Loop: %dx)", file.filename, job_id, audio_mode, tuning_432hz, loop_count)
+    log.info("🎥 Variant request: %s [%s] (mode=%s 432Hz=%s loop=%dx)",
+             file.filename, job_id, audio_mode, tuning_432hz, loop_count)
 
     try:
-        # Save original uploaded file safely
-        with open(input_path, "wb") as f:
-            while True:
-                chunk = await file.read(1024 * 1024)
-                if not chunk:
-                    break
-                f.write(chunk)
+        # Stream upload enforcing 500 MB size cap mid-stream
+        await stream_upload_to_disk(file, input_path)
 
         # Offload CPU-bound FFmpeg rendering to worker thread
         loop = asyncio.get_event_loop()
@@ -630,9 +727,11 @@ async def create_video_variant(
 
         return JSONResponse(content=result)
 
+    except HTTPException:
+        raise
     except Exception as exc:
         log.exception("❌ Variant generation failed: %s", exc)
-        raise HTTPException(status_code=500, detail=f"Variant generation failed: {str(exc)}")
+        raise HTTPException(status_code=500, detail="Variant generation failed. Please try again.")
     finally:
         # Cleanup original upload in temp directory after processing
         if input_path.exists():
@@ -647,20 +746,18 @@ async def create_video_variant(
 # ─────────────────────────────────────────────────────────────
 
 @app.post("/api/fingerprints/analyze", tags=["Media Forensics"])
-async def analyze_media_fingerprint(file: UploadFile = File(...)):
+async def analyze_media_fingerprint(request: Request, file: UploadFile = File(...)):
+    rate_limit(request, max_requests=5, window_sec=60)
+    validate_upload_file(file, allowed_extensions=ALLOWED_MEDIA_EXTENSIONS)
+
     job_id = uuid.uuid4().hex[:12]
-    ext = Path(file.filename or "media.mp4").suffix or ".mp4"
+    ext = Path(file.filename or "media.mp4").suffix.lower() or ".mp4"
     temp_path = TEMP_DIR / f"{job_id}_analyze{ext}"
 
-    log.info("🔬 Fingerprint analysis request received: %s [%s]", file.filename, job_id)
+    log.info("🔬 Fingerprint analysis: %s [%s]", file.filename, job_id)
 
     try:
-        with open(temp_path, "wb") as f:
-            while True:
-                chunk = await file.read(1024 * 1024)
-                if not chunk:
-                    break
-                f.write(chunk)
+        await stream_upload_to_disk(file, temp_path)
 
         loop = asyncio.get_event_loop()
 
@@ -682,29 +779,34 @@ async def analyze_media_fingerprint(file: UploadFile = File(...)):
             "video_fingerprint": video_analysis,
         })
 
+    except HTTPException:
+        raise
     except Exception as exc:
         log.exception("❌ Fingerprint analysis failed: %s", exc)
-        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(exc)}")
+        raise HTTPException(status_code=500, detail="Analysis failed. Please try again.")
 
 
 @app.post("/api/fingerprints/compare", tags=["Media Forensics"])
 async def compare_two_fingerprints(
+    request: Request,
     file_a: UploadFile = File(...),
     file_b: UploadFile = File(...),
 ):
+    rate_limit(request, max_requests=4, window_sec=60)
+    validate_upload_file(file_a, allowed_extensions=ALLOWED_MEDIA_EXTENSIONS)
+    validate_upload_file(file_b, allowed_extensions=ALLOWED_MEDIA_EXTENSIONS)
+
     job_id = uuid.uuid4().hex[:12]
-    ext_a = Path(file_a.filename or "file_a.mp4").suffix or ".mp4"
-    ext_b = Path(file_b.filename or "file_b.mp4").suffix or ".mp4"
+    ext_a  = Path(file_a.filename or "file_a.mp4").suffix.lower() or ".mp4"
+    ext_b  = Path(file_b.filename or "file_b.mp4").suffix.lower() or ".mp4"
     path_a = TEMP_DIR / f"{job_id}_compare_a{ext_a}"
     path_b = TEMP_DIR / f"{job_id}_compare_b{ext_b}"
 
-    log.info("⚖️ Dual fingerprint comparison requested: %s vs %s", file_a.filename, file_b.filename)
+    log.info("⚖️ Comparison: %s vs %s [%s]", file_a.filename, file_b.filename, job_id)
 
     try:
-        with open(path_a, "wb") as fa:
-            fa.write(await file_a.read())
-        with open(path_b, "wb") as fb:
-            fb.write(await file_b.read())
+        await stream_upload_to_disk(file_a, path_a)
+        await stream_upload_to_disk(file_b, path_b)
 
         loop = asyncio.get_event_loop()
         comparison = await loop.run_in_executor(
@@ -715,9 +817,11 @@ async def compare_two_fingerprints(
         comparison["job_id"] = job_id
         return JSONResponse(content=comparison)
 
+    except HTTPException:
+        raise
     except Exception as exc:
         log.exception("❌ Media comparison failed: %s", exc)
-        raise HTTPException(status_code=500, detail=f"Media comparison failed: {str(exc)}")
+        raise HTTPException(status_code=500, detail="Media comparison failed. Please try again.")
     finally:
         for p in (path_a, path_b):
             if p.exists():
@@ -733,11 +837,13 @@ async def compare_two_fingerprints(
 
 @app.post("/api/fingerprints/smart-transform", tags=["Media Forensics"])
 async def smart_fingerprint_transform(
+    request: Request,
     file: UploadFile = File(default=None),
     existing_job_id: str = Form(None),
     fingerprint_data: str = Form(None),
     mode: str = Form("auto"),
 ):
+    rate_limit(request, max_requests=3, window_sec=60)
     """
     One-click Smart Auto-Transform:
     1. Read pre-computed or perform fast parallel fingerprint analysis
@@ -761,18 +867,14 @@ async def smart_fingerprint_transform(
 
     if input_path is None:
         if file is not None and file.filename:
-            filename = file.filename
-            ext = Path(file.filename or "media.mp4").suffix or ".mp4"
-            input_path = TEMP_DIR / f"{job_id}_smart_orig{ext}"
+            validate_upload_file(file, allowed_extensions=ALLOWED_MEDIA_EXTENSIONS)
+            filename  = file.filename
+            ext       = Path(file.filename or "media.mp4").suffix.lower() or ".mp4"
+            input_path   = TEMP_DIR / f"{job_id}_smart_orig{ext}"
             is_new_upload = True
-            with open(input_path, "wb") as f:
-                while True:
-                    chunk = await file.read(1024 * 1024)
-                    if not chunk:
-                        break
-                    f.write(chunk)
+            await stream_upload_to_disk(file, input_path)
         else:
-            raise HTTPException(status_code=400, detail="No media file or valid analysis ID provided. Please re-upload your file.")
+            raise HTTPException(status_code=400, detail="No media file or valid analysis ID provided.")
 
     output_path = OUTPUT_DIR / f"smart_variant_{job_id}.mp4"
     log.info("🎯 Smart Auto-Transform requested: %s [%s] (Shield Mode: %s)", filename, job_id, mode)
@@ -895,9 +997,11 @@ async def smart_fingerprint_transform(
             "download_url": f"/api/media/smart_variant_{job_id}.mp4",
         })
 
+    except HTTPException:
+        raise
     except Exception as exc:
         log.exception("❌ Smart transform failed: %s", exc)
-        raise HTTPException(status_code=500, detail=f"Smart transform failed: {str(exc)}")
+        raise HTTPException(status_code=500, detail="Smart transform failed. Please try again.")
     finally:
         # Only clean up if it was a newly uploaded file for this request
         if is_new_upload and input_path and input_path.exists():
@@ -913,23 +1017,27 @@ async def smart_fingerprint_transform(
 
 @app.get("/api/media/{filename}", tags=["System"])
 async def serve_media_file(filename: str):
-    # Sanitize filename
-    safe_name = os.path.basename(filename)
-    file_path = OUTPUT_DIR / safe_name
+    # ── Path-traversal prevention via safe_output_path ────────────────────────
+    # Raises HTTP 400 on any traversal attempt (../../etc/passwd, null bytes, etc.)
+    file_path = safe_output_path(filename, OUTPUT_DIR)
+    safe_name = file_path.name
 
     if not file_path.exists():
-        raise HTTPException(status_code=404, detail="Requested media file not found.")
+        raise HTTPException(status_code=404, detail="Media file not found.")
 
     media_type = "video/mp4"
     if safe_name.endswith(".mp3"):
         media_type = "audio/mpeg"
-    elif safe_name.endswith(".jpg") or safe_name.endswith(".jpeg"):
+    elif safe_name.endswith((".jpg", ".jpeg")):
         media_type = "image/jpeg"
+    elif safe_name.endswith(".wav"):
+        media_type = "audio/wav"
 
     return FileResponse(
         path=str(file_path),
         media_type=media_type,
         filename=safe_name,
+        headers={"Cache-Control": "private, max-age=3600"},
     )
 
 
@@ -1027,8 +1135,14 @@ async def get_ai_kids_ideas_endpoint(req: KidsIdeasApiRequest):
     return JSONResponse(content={"status": "success", "ideas": ideas})
 
 @app.post("/api/kids/generate", tags=["Kids 3D Shorts"])
-async def generate_kids_short_endpoint(req: KidsGenerateApiRequest):
+async def generate_kids_short_endpoint(req: KidsGenerateApiRequest, request: Request):
     """Launches non-blocking async Kids 3D animation generation job."""
+    rate_limit(request, max_requests=5, window_sec=60)
+    # Sanitize word against shell injection (word goes into image prompts & TTS)
+    req.word = sanitize_short_field(req.word, max_length=MAX_WORD_LENGTH, field_name="word")
+    if req.story_script:
+        req.story_script = sanitize_text(req.story_script, max_length=2000, field_name="story_script")
+
     job_id = uuid.uuid4().hex[:8]
     log.info("👶 [Job %s] Enqueued Kids 3D Short: %s (%s)", job_id, req.word, req.variety)
     
@@ -1098,8 +1212,10 @@ async def get_dialogue_presets():
     })
 
 @app.post("/api/dialogue/ai-script", tags=["AI Dialogue Studio"])
-async def generate_dialogue_script_endpoint(req: AiDialogueScriptRequest):
+async def generate_dialogue_script_endpoint(req: AiDialogueScriptRequest, request: Request):
     """Generates engaging multi-character dialogue script using Gemini AI."""
+    rate_limit(request, max_requests=8, window_sec=60)
+    req.topic = sanitize_short_field(req.topic, max_length=MAX_TOPIC_LENGTH, field_name="topic")
     script = await generate_ai_dialogue_script(
         topic=req.topic,
         language=req.language,
@@ -1109,10 +1225,15 @@ async def generate_dialogue_script_endpoint(req: AiDialogueScriptRequest):
     return JSONResponse(content={"status": "success", "script": script})
 
 @app.post("/api/dialogue/generate", tags=["AI Dialogue Studio"])
-async def generate_dialogue_video_endpoint(req: DialogueVideoRequest):
+async def generate_dialogue_video_endpoint(req: DialogueVideoRequest, request: Request):
     """Launches non-blocking async multi-character dialogue video generation job."""
+    rate_limit(request, max_requests=4, window_sec=60)
+    # Sanitize title field against injection
+    if req.title:
+        req.title = sanitize_text(req.title, max_length=200, field_name="title")
+
     job_id = uuid.uuid4().hex[:8]
-    log.info("🎙️ [Job %s] Enqueued Dialogue Studio Video: %s (%d lines)", job_id, req.title, len(req.dialogues))
+    log.info("🎙️ [Job %s] Enqueued Dialogue Video: %s (%d lines)", job_id, req.title, len(req.dialogues))
     
     asyncio.create_task(build_dialogue_video_task(job_id, req))
     
@@ -1129,6 +1250,51 @@ async def get_dialogue_job_status(job_id: str):
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     return JSONResponse(content={"job_id": job_id, **job})
+
+
+# ─────────────────────────────────────────────────────────────
+# 11.5  Authentication & Verification Endpoints
+# ─────────────────────────────────────────────────────────────
+
+@app.post("/api/auth/send-otp", tags=["Authentication"])
+async def send_otp_endpoint(req: SendOtpRequest, request: Request):
+    """
+    Sends a cryptographically secure 6-digit OTP to the user's email inbox.
+    Includes rate limiting, format validation, and disposable domain filtering.
+    """
+    rate_limit(request, max_requests=5, window_sec=60)
+    email = req.email.strip().lower()
+
+    # Format & disposable domain validation
+    validation_err = validate_email_address(email)
+    if validation_err:
+        raise HTTPException(status_code=400, detail=validation_err)
+
+    res = await request_otp(email)
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("error", "Failed to send verification code."))
+
+    return JSONResponse(content=res)
+
+
+@app.post("/api/auth/verify-otp", tags=["Authentication"])
+async def verify_otp_endpoint(req: VerifyOtpRequest, request: Request):
+    """
+    Verifies the user-submitted 6-digit OTP against the stored SHA-256 hash.
+    Enforces 10-minute expiry and max 5 attempts lockout.
+    """
+    rate_limit(request, max_requests=10, window_sec=60)
+    email = req.email.strip().lower()
+    otp = req.otp.strip()
+
+    if not email or not otp or len(otp) != 6 or not otp.isdigit():
+        raise HTTPException(status_code=400, detail="Please enter a valid 6-digit verification code.")
+
+    res = verify_otp_code(email, otp)
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("error", "Verification failed."))
+
+    return JSONResponse(content=res)
 
 
 # ─────────────────────────────────────────────────────────────

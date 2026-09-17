@@ -1,15 +1,30 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { supabase } from '../utils/supabaseClient'
+import { getApiUrl } from '../utils/apiUrl'
 
 const AuthContext = createContext({})
 
-const LOCAL_USERS_KEY = 'bittu_ai_local_users'
+const LOCAL_USERS_KEY   = 'bittu_ai_local_users'
 const LOCAL_SESSION_KEY = 'bittu_ai_local_session'
+
+// ─── Password hashing (SHA-256 + deterministic salt, Web Crypto API) ──────────
+// Passwords are NEVER stored in plain text — only the hex digest is saved.
+async function hashPassword(password) {
+  const encoder = new TextEncoder()
+  // Deterministic salt derived from a fixed app secret + the password itself.
+  // This prevents trivial rainbow-table attacks on the stored hash.
+  const salted = 'bittu_ai_2026_!xZ9#kL' + password
+  const data   = encoder.encode(salted)
+  const hashBuf = await crypto.subtle.digest('SHA-256', data)
+  return Array.from(new Uint8Array(hashBuf))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('')
+}
 
 // Check if Supabase URL is a real configured project (not the placeholder)
 function isPlaceholderSupabase() {
-  const url = import.meta.env.VITE_SUPABASE_URL || 'https://vgiwwjfgujbkeovwwvcv.supabase.co'
-  return url.includes('vgiwwjfgujbkeovwwvcv') || !url.startsWith('https://')
+  const url = import.meta.env.VITE_SUPABASE_URL || ''
+  return !url || !url.startsWith('https://') || url.includes('vgiwwjfgujbkeovwwvcv')
 }
 
 export function AuthProvider({ children }) {
@@ -77,7 +92,7 @@ export function AuthProvider({ children }) {
   }
 
   // Local signup handler
-  const localSignUp = (email, password, fullName) => {
+  const localSignUp = async (email, password, fullName) => {
     const localUsers = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || '[]')
     const normalizedEmail = email.toLowerCase().trim()
     const existing = localUsers.find(u => u.email === normalizedEmail)
@@ -85,10 +100,13 @@ export function AuthProvider({ children }) {
       throw new Error('An account with this email already exists. Please Sign In.')
     }
 
+    // Hash password before storing — NEVER store plain text
+    const passwordHash = await hashPassword(password)
+
     const newUser = {
       id: 'usr_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
       email: normalizedEmail,
-      password, // Stored locally for offline authentication
+      passwordHash, // SHA-256 hash only — original password is never persisted
       user_metadata: {
         full_name: fullName.trim() || normalizedEmail.split('@')[0],
       },
@@ -98,35 +116,40 @@ export function AuthProvider({ children }) {
 
     localUsers.push(newUser)
     localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(localUsers))
-    localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify({ user: newUser }))
+    // Store session WITHOUT the password hash
+    const sessionUser = { ...newUser }
+    delete sessionUser.passwordHash
+    localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify({ user: sessionUser }))
 
-    setUser(newUser)
-    setSession({ user: newUser, access_token: 'local_token' })
-    return { user: newUser, session: { user: newUser } }
+    setUser(sessionUser)
+    setSession({ user: sessionUser, access_token: 'local_token' })
+    return { user: sessionUser, session: { user: sessionUser } }
   }
 
   // Local signin handler
-  const localSignIn = (email, password) => {
+  const localSignIn = async (email, password) => {
     const localUsers = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || '[]')
     const normalizedEmail = email.toLowerCase().trim()
     const foundUser = localUsers.find(u => u.email === normalizedEmail)
 
     if (!foundUser) {
-      // Auto-create for friendly demo testing if password meets criteria
-      if (password && password.length >= 6) {
-        return localSignUp(email, password, normalizedEmail.split('@')[0])
-      }
+      // No account found — require explicit signup; do NOT auto-create
       throw new Error('Account not found. Please click "Create Account" to sign up first.')
     }
 
-    if (foundUser.password !== password) {
+    // Compare hashed password
+    const inputHash = await hashPassword(password)
+    if (foundUser.passwordHash !== inputHash) {
       throw new Error('Incorrect password. Please try again.')
     }
 
-    localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify({ user: foundUser }))
-    setUser(foundUser)
-    setSession({ user: foundUser, access_token: 'local_token' })
-    return { user: foundUser, session: { user: foundUser } }
+    // Return session without password hash
+    const sessionUser = { ...foundUser }
+    delete sessionUser.passwordHash
+    localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify({ user: sessionUser }))
+    setUser(sessionUser)
+    setSession({ user: sessionUser, access_token: 'local_token' })
+    return { user: sessionUser, session: { user: sessionUser } }
   }
 
   // Sign Up with Email, Password & Full Name
@@ -195,6 +218,36 @@ export function AuthProvider({ children }) {
     setSession(null)
   }
 
+  // Request Email Verification OTP
+  const sendOtp = async (email) => {
+    const base = getApiUrl()
+    const res = await fetch(`${base}/api/auth/send-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email.trim().toLowerCase() }),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      throw new Error(data.detail || data.error || 'Failed to send verification code.')
+    }
+    return data
+  }
+
+  // Verify Email OTP Code
+  const verifyOtp = async (email, otp) => {
+    const base = getApiUrl()
+    const res = await fetch(`${base}/api/auth/verify-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email.trim().toLowerCase(), otp: otp.trim() }),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      throw new Error(data.detail || data.error || 'Invalid verification code.')
+    }
+    return data
+  }
+
   const value = {
     user,
     session,
@@ -208,6 +261,8 @@ export function AuthProvider({ children }) {
     signUp,
     signIn,
     signOut,
+    sendOtp,
+    verifyOtp,
   }
 
   return (
