@@ -15,6 +15,7 @@ import KidsShortsGenerator from './pages/KidsShortsGenerator'
 import DialogueVideoGenerator from './pages/DialogueVideoGenerator'
 import DSAHub from './pages/DSAHub'
 import DSASolver from './pages/DSASolver'
+import TopInterview150 from './pages/TopInterview150'
 
 export default function App() {
   return (
@@ -33,6 +34,7 @@ export default function App() {
           <Route path="/fingerprint" element={<ErrorBoundary><FingerprintAnalyzer /></ErrorBoundary>} />
           <Route path="/multiview" element={<ErrorBoundary><MultiViewPlayer /></ErrorBoundary>} />
           <Route path="/dsa" element={<ErrorBoundary><DSAHub /></ErrorBoundary>} />
+          <Route path="/dsa/top-interview-150" element={<ErrorBoundary><TopInterview150 /></ErrorBoundary>} />
           <Route path="/dsa/:id" element={<ErrorBoundary><DSASolver /></ErrorBoundary>} />
         </Routes>
       </BrowserRouter>

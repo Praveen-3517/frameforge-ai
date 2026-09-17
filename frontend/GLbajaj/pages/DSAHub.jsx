@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   Code2, Search, Trophy, Zap, BookOpen,
   BarChart3, Sparkles, ArrowLeft,
@@ -75,6 +75,7 @@ function computeXP(solvedIds) {
 }
 
 export default function DSAHub() {
+  const navigate = useNavigate()
   const { user } = useAuth()
   const [search, setSearch] = useState('')
   const [topic, setTopic] = useState('All')
@@ -445,43 +446,16 @@ export default function DSAHub() {
                   </p>
                 </div>
 
-                {/* Card 2: TOP INTERVIEW QUESTIONS (LOCKED / PRO UNLOCKED) */}
+                {/* Card 2: TOP INTERVIEW 150 (LeetCode Curated Study Plan) */}
                 <button
                   type="button"
-                  onClick={() => {
-                    if (isPro) {
-                      setTopInterviewOnly(prev => !prev)
-                    } else {
-                      setShowProModal(true)
-                    }
-                  }}
-                  className={`relative overflow-hidden rounded-2xl p-4 text-white shadow-lg group hover:-translate-y-0.5 transition-all text-left cursor-pointer ${
-                    isPro
-                      ? (topInterviewOnly
-                          ? 'bg-gradient-to-br from-amber-600 via-amber-500 to-yellow-600 border-2 border-amber-300 shadow-amber-500/40 ring-2 ring-amber-400/50'
-                          : 'bg-gradient-to-br from-[#1e1b4b] via-[#312e81] to-[#4338ca] border border-amber-400/40 hover:shadow-indigo-500/30')
-                      : 'bg-gradient-to-br from-[#1e3a8a] via-[#1d4ed8] to-[#0284c7] border border-cyan-400/30 hover:shadow-blue-500/30'
-                  }`}
+                  onClick={() => navigate('/dsa/top-interview-150')}
+                  className="relative overflow-hidden rounded-2xl p-4 text-white shadow-lg group hover:-translate-y-0.5 transition-all text-left cursor-pointer bg-gradient-to-br from-[#1e3a8a] via-[#1d4ed8] to-[#0284c7] border border-cyan-400/30 hover:shadow-blue-500/30"
                 >
-                  {/* Lock/Pro Badge in top right */}
-                  <div className={`absolute top-2.5 right-2.5 flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold backdrop-blur-md shadow-sm transition-colors ${
-                    isPro
-                      ? (topInterviewOnly
-                          ? 'bg-amber-400 text-slate-950 font-black'
-                          : 'bg-amber-400/20 border border-amber-400/50 text-amber-300')
-                      : 'bg-black/45 border border-amber-400/40 text-amber-300 group-hover:bg-amber-400/20'
-                  }`}>
-                    {isPro ? (
-                      <>
-                        <Crown size={11} className={topInterviewOnly ? "text-slate-950" : "text-amber-300"} />
-                        <span>{topInterviewOnly ? 'Active ✓' : 'Pro Unlocked'}</span>
-                      </>
-                    ) : (
-                      <>
-                        <Lock size={10} className="text-amber-400" />
-                        <span>₹99 / mo</span>
-                      </>
-                    )}
+                  {/* Badge in top right */}
+                  <div className="absolute top-2.5 right-2.5 flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold backdrop-blur-md shadow-sm transition-colors bg-black/45 border border-cyan-400/40 text-cyan-300 group-hover:bg-cyan-400/20">
+                    <Sparkles size={11} className="text-cyan-300" />
+                    <span>Top 150</span>
                   </div>
 
                   {/* 3D Chat Bubbles Graphic in Background */}
@@ -496,23 +470,14 @@ export default function DSAHub() {
                     <Target size={10} /> Study Plan
                   </span>
                   <h3 className="text-sm font-extrabold leading-tight mb-1 pr-16">
-                    Top Interview Questions
+                    Top Interview 150
                   </h3>
                   <p className="text-[11px] text-cyan-100/80 leading-relaxed pr-4 line-clamp-2">
-                    Curated FAANG & Tier-1 must-do technical interview question set.
+                    Must-do 150 interview questions asked at FAANG & top tech companies with solutions.
                   </p>
-                  <div className="mt-2 flex items-center gap-1 text-[10px] text-amber-300 font-medium">
-                    {isPro ? (
-                      <>
-                        <Sparkles size={11} className="text-amber-300" />
-                        <span>{topInterviewOnly ? 'Showing Top 150 FAANG Questions' : 'Click to filter Top 150 Questions'}</span>
-                      </>
-                    ) : (
-                      <>
-                        <Lock size={10} />
-                        <span>Click to unlock with ₹99 Pro Pass</span>
-                      </>
-                    )}
+                  <div className="mt-2 flex items-center gap-1 text-[10px] text-cyan-300 font-medium">
+                    <Sparkles size={11} />
+                    <span>Click to open full 150 questions & solutions →</span>
                   </div>
                 </button>
 
