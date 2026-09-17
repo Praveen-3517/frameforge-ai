@@ -111,42 +111,44 @@ export default function Dashboard() {
   const isLight = theme === 'light'
 
   return (
-    <div className={`relative min-h-screen flex flex-col transition-colors duration-300 ${
+    <div className={`relative min-h-screen flex flex-col transition-colors duration-300 w-full max-w-[100vw] overflow-x-hidden ${
       isLight ? 'bg-[#F4F6FB] text-slate-900' : 'bg-[#0B0D17] text-white'
     }`}>
       {!isLight && <StarField />}
 
-      {/* Ambient orbs */}
-      <div
-        className={`orb w-96 h-96 ${isLight ? 'bg-violet-400/10' : 'bg-violet-600/20'} -top-48 -left-48`}
-        style={{ animationDelay: '0s' }}
-      />
-      <div
-        className={`orb w-80 h-80 ${isLight ? 'bg-cyan-400/10' : 'bg-cyan-600/15'} top-1/3 -right-40`}
-        style={{ animationDelay: '3s' }}
-      />
-      <div
-        className={`orb w-72 h-72 ${isLight ? 'bg-pink-400/10' : 'bg-pink-600/10'} bottom-10 left-1/3`}
-        style={{ animationDelay: '5s' }}
-      />
+      {/* Ambient orbs — strictly clipped so they never stretch the mobile viewport */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div
+          className={`orb w-96 h-96 ${isLight ? 'bg-violet-400/10' : 'bg-violet-600/20'} -top-48 -left-48`}
+          style={{ animationDelay: '0s' }}
+        />
+        <div
+          className={`orb w-80 h-80 ${isLight ? 'bg-cyan-400/10' : 'bg-cyan-600/15'} top-1/3 -right-40`}
+          style={{ animationDelay: '3s' }}
+        />
+        <div
+          className={`orb w-72 h-72 ${isLight ? 'bg-pink-400/10' : 'bg-pink-600/10'} bottom-10 left-1/3`}
+          style={{ animationDelay: '5s' }}
+        />
+      </div>
 
       {/* Header */}
-      <header className="relative z-40 flex items-center justify-between px-6 py-4 max-w-5xl mx-auto w-full">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-violet-500/30">
-            <Zap size={16} className="text-white" />
+      <header className="relative z-40 flex items-center justify-between px-3.5 sm:px-6 py-3 sm:py-4 max-w-5xl mx-auto w-full">
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-violet-500/30">
+            <Zap size={15} className="text-white" />
           </div>
-          <span className={`font-bold text-base tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
+          <span className={`font-bold text-sm sm:text-base tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
             Bittu <span className="bg-gradient-to-r from-violet-500 to-cyan-500 bg-clip-text text-transparent">AI Tools</span>
           </span>
-          <span className={`hidden sm:inline-block px-2 py-0.5 rounded-full border text-[10px] font-mono ${
+          <span className={`hidden md:inline-block px-2 py-0.5 rounded-full border text-[10px] font-mono ${
             isLight ? 'bg-slate-200/80 border-slate-300 text-slate-600' : 'bg-white/5 border-white/10 text-white/40'
           }`}>
             v4.4.0
           </span>
         </div>
 
-        <nav className="flex items-center gap-3">
+        <nav className="flex items-center gap-1.5 sm:gap-2.5">
           {/* Quick Header Theme Switcher */}
           <div className={`flex items-center p-0.5 rounded-lg border text-xs font-medium ${
             isLight ? 'bg-slate-200 border-slate-300' : 'bg-white/5 border-white/10'
@@ -154,25 +156,25 @@ export default function Dashboard() {
             <button
               onClick={() => setTheme('light')}
               title="Switch to Light Theme"
-              className={`flex items-center gap-1 px-2 py-1 rounded-md transition-all ${
+              className={`flex items-center gap-1 px-1.5 sm:px-2 py-1 rounded-md transition-all ${
                 isLight
                   ? 'bg-white text-amber-600 font-bold shadow-sm'
                   : 'text-white/40 hover:text-white'
               }`}
             >
-              <Sun size={13} />
+              <Sun size={12} />
               <span className="hidden sm:inline text-[11px]">Light</span>
             </button>
             <button
               onClick={() => setTheme('dark')}
               title="Switch to Dark Theme"
-              className={`flex items-center gap-1 px-2 py-1 rounded-md transition-all ${
+              className={`flex items-center gap-1 px-1.5 sm:px-2 py-1 rounded-md transition-all ${
                 !isLight
                   ? 'bg-violet-600 text-white font-bold shadow-sm'
                   : 'text-slate-500 hover:text-slate-800'
               }`}
             >
-              <Moon size={13} />
+              <Moon size={12} />
               <span className="hidden sm:inline text-[11px]">Dark</span>
             </button>
           </div>
@@ -180,7 +182,7 @@ export default function Dashboard() {
           {/* Feedback Trigger Button */}
           <button
             onClick={() => window.dispatchEvent(new CustomEvent('open-feedback'))}
-            className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-xl border transition-all ${
+            className={`flex items-center gap-1.5 text-xs font-semibold px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl border transition-all ${
               isLight
                 ? 'bg-white border-slate-200 text-slate-700 hover:text-violet-700 shadow-sm'
                 : 'bg-white/5 border-white/10 text-white/70 hover:text-white hover:bg-white/10'
@@ -191,19 +193,22 @@ export default function Dashboard() {
             <span className="hidden sm:inline">Feedback</span>
           </button>
 
+          {/* API Docs — hidden on small phones to prevent header blowout */}
           <a
             href={`${getApiUrl()}/docs`}
             target="_blank"
             rel="noopener noreferrer"
-            className={`text-xs font-mono transition-colors ${
+            className={`hidden md:inline-block text-xs font-mono transition-colors ${
               isLight ? 'text-slate-500 hover:text-slate-800' : 'text-white/35 hover:text-white/65'
             }`}
           >
             API Docs
           </a>
+
+          {/* GitHub — hidden on small phones */}
           <a
             href="#"
-            className={`flex items-center gap-1.5 text-sm transition-colors ${
+            className={`hidden md:flex items-center gap-1.5 text-sm transition-colors ${
               isLight ? 'text-slate-500 hover:text-slate-800' : 'text-white/35 hover:text-white/65'
             }`}
           >
