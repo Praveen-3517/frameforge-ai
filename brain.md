@@ -30,20 +30,24 @@
 - **Engine / Frameworks:**
   - **Backend:** FastAPI (Python 3.10+), Uvicorn, MoviePy, Pillow, NumPy, SciPy, OpenCV (Headless), Edge-TTS, Google Generative AI SDK, Gradio Client, HTTPX.
   - **Frontend:** React 18, Vite 5, React Router v7, Tailwind CSS v3, Lucide React, Axios, HTML5 Canvas API, Monaco Editor (@monaco-editor/react).
-- **Version:** `v4.5.0` (DSA Platform Code Diff, Leaderboard & Competitive Mode Release)
-- **Current Build Status:** ✅ Production Deployed — Backend: `https://frameforge-ai-fa8z.onrender.com` | Frontend: `https://frameforge-ai-phi.vercel.app` | Local Dev: `backend: localhost:8000`, `frontend: localhost:5173`.
+- **Version:** `v4.8.0` (LeetCode Top Interview 150 + Live Razorpay Pro Pass ₹99/mo + 3D Brand Logo Identity Release)
+- **Current Build Status:** ✅ Production Deployed — Custom Domain: `https://www.bittuai.online` | Backend: `https://frameforge-ai-fa8z.onrender.com` | Frontend: `https://frameforge-ai-phi.vercel.app` | Local Dev: `backend: localhost:8000`, `frontend: localhost:5173`.
 
 ---
 
 ## 2. 📊 Progress & Milestones
 
 - **Overall Project Completion:** `100%`
-- **Current Milestone:** `Milestone 9: DSA Python Practice Platform — Basic to Advanced (COMPLETED)`
-- **Current Sprint:** `Sprint 13: In-Browser Python DSA Solver with Pyodide + Monaco Editor + Leaderboard & Diff`
-- **Current Objective:** Full-featured LeetCode & Codeforces alternative running 100% in-browser with 1,800 curated problems, Code Diff, Leaderboard, and Interview Simulation.
-- **Current Task:** ✅ Complete: Built Code Diff View, Global Leaderboard & Contest Mode, Mock Interview simulation, and 1,800 problem scaling.
-- **Next Task:** Cloud RTMP VPS deployment or multi-platform restreaming.
+- **Current Milestone:** `Milestone 12: Monetization & Top Interview 150 Pro Lock + Brand Identity (COMPLETED)`
+- **Current Sprint:** `Sprint 15: LeetCode Top Interview 150 Study Plan + Live Razorpay Pro Pass (₹99/mo) + Paywall & 3D Logo Overhaul`
+- **Current Objective:** Full-featured LeetCode alternative with Top Interview 150 study plan, optimal Python solutions, live Razorpay UPI checkout, Pro paywall gating, and high-tech 3D brand identity.
+- **Current Task:** ✅ Complete: Top Interview 150 with 23 topics, ₹99/mo Razorpay live payment gateway, strict Pro paywall locking, and 3D futuristic Bittu AI logo deployment.
+- **Next Task:** Multi-platform live streaming & automated daily problem scheduler.
 - **Previous Completed Tasks:**
+  - ✅ Built **LeetCode Top Interview 150 Study Plan** (`TopInterview150.jsx` + `topInterview150Data.js`): 150 essential curated questions across 23 topics with FAANG company tags, Python 3 optimal solutions, complexity analysis, approach breakdowns, and official LeetCode links.
+  - ✅ Integrated **Live Razorpay Payment Gateway & ₹99 Pro Pass** (`payment_service.py` + `ProPaymentModal.jsx` + `proSubscription.js`): Pure HTTPX REST API Razorpay order generation & HMAC-SHA256 signature verification supporting instant UPI (Google Pay, PhonePe, Paytm, QR) and Cards.
+  - ✅ Implemented **Pro Paywall & Zero-Leak Security Guard**: Top Interview 150 questions and solutions are strictly locked behind Pro Pass. Non-subscribers see locked banner, `🔒 Pro` tags, and `🔒 Solution (Pro)` buttons that open the ₹99 payment modal.
+  - ✅ Designed & Deployed **3D Futuristic Bittu AI Brand Logo**: High-tech cybernetic 3D emblem across favicon (`index.html`), main header (`Dashboard.jsx`), payment modal, DSA Hub, and social share previews.
   - ✅ Built **DSA Python Practice Platform Complete** (`DSAHub.jsx` + `DSASolver.jsx` + `CodeDiffViewer.jsx` + `LeaderboardModal.jsx` + `InterviewTimer.jsx` + `SolutionPanel.jsx` + `data/dsaProblems.js`): 1,800 problems across 15 topics with Monaco Editor, Monaco DiffEditor, Pyodide WASM Python execution, auto test-case validation, progressive hints, Global Leaderboard with user rank tracking, Weekly Contest mock clash, and Mock Interview simulation mode.
   - ✅ Built **24/7 Multi-Track YouTube Live Stream Engine** (`backend/services/live_streamer.py` + `launch-24-7-live-stream.bat` + `bhajans/` playlist manager + auto-generated 1080p divine live wallpaper `bhakti_live_bg.jpg`): Streams continuous multi-bhajan playlists directly to YouTube Live via native FFmpeg RTMP with automatic loop rotation and saved `.stream_key` config.
   - ✅ Configured FastAPI backend with CORS middleware and async endpoints. and async endpoints.
@@ -853,3 +857,137 @@ User clicks "Run Code"
 
 > **Note:** Brand name search "Bittu AI" should rank immediately (unique brand name).
 > Generic "free AI tools" terms require sustained content + backlink building.
+
+---
+
+## 22. 💰 Monetization & Live Razorpay Payment Gateway Architecture
+
+### 22.1 Overview & Business Model
+- **Plan Name:** DSA Pro Pass (30 Days Unlimited Access)
+- **Target Audience:** Engineering students, campus placement aspirants, FAANG interviewees.
+- **Price Point:** **₹99 / month** (Affordable, student-friendly micro-subscription, high conversion).
+- **Payment Modes Supported:**
+  - UPI (Google Pay, PhonePe, Paytm, BHIM, Cred, Amazon Pay)
+  - QR Code scanner
+  - Netbanking (all major Indian banks)
+  - Credit & Debit Cards (Visa, MasterCard, RuPay)
+
+### 22.2 Gateway Integration Architecture
+- **Provider:** Razorpay Live REST API
+- **Key ID:** `rzp_live_TdAIqK8iA6DzsG`
+- **Key Secret:** Stored securely in backend `.env` (`RAZORPAY_KEY_SECRET`)
+- **Zero Heavy Dependencies:** Custom implementation using standard `httpx` (async) and Python's built-in `hmac` / `hashlib` — no bloated SDKs.
+
+```
+┌──────────────┐             ┌─────────────────────┐             ┌──────────────────────┐
+│ Client (User)│             │ FastAPI Backend     │             │ Razorpay Live API    │
+└──────┬───────┘             └──────────┬──────────┘             └──────────┬───────────┘
+       │                                │                                   │
+       │ 1. Click "Unlock Pro Pass"     │                                   │
+       │───────────────────────────────>│ 2. POST /api/v1/orders            │
+       │    POST /api/payment/create    │──────────────────────────────────>│
+       │                                │    (Basic Auth + 9900 paise)      │
+       │                                │<──────────────────────────────────│
+       │ 3. Return { order_id, key_id } │    Return official order_id       │
+       │<───────────────────────────────│                                   │
+       │                                │                                   │
+       │ 4. Open Razorpay Checkout SDK  │                                   │
+       │    (UPI / PhonePe / GPay / QR) │                                   │
+       │───────────────────────────────────────────────────────────────────>│
+       │<───────────────────────────────────────────────────────────────────│
+       │ 5. Payment Success             │                                   │
+       │    { payment_id, signature }   │                                   │
+       │                                │                                   │
+       │ 6. Verify HMAC-SHA256 Signature│                                   │
+       │───────────────────────────────>│ 7. hmac.compare_digest(gen, sig)  │
+       │    POST /api/payment/verify    │    Save active subscriber record │
+       │                                │    (backend/data/subscribers.json)│
+       │ 8. Return { success: true }    │                                   │
+       │<───────────────────────────────│                                   │
+       │                                │                                   │
+       │ 9. Save local Pro status & fire│                                   │
+       │    'bittu_pro_updated' event   │                                   │
+```
+
+### 22.3 Backend Service Specification (`backend/payment_service.py`)
+- **`create_razorpay_order(amount_in_inr, email, plan_name)`**:
+  - Converts ₹99 to 9900 paise.
+  - Sends authenticated POST request to `https://api.razorpay.com/v1/orders`.
+  - Attaches audit metadata (user email, plan name, platform identifier).
+- **`verify_razorpay_payment(razorpay_order_id, razorpay_payment_id, razorpay_signature, email)`**:
+  - Re-computes cryptographic HMAC-SHA256 signature using secret:
+    `payload = f"{razorpay_order_id}|{razorpay_payment_id}"`
+  - Validates via constant-time `hmac.compare_digest()`.
+  - Calculates 30-day expiration (`datetime.utcnow() + timedelta(days=30)`).
+  - Persists atomic subscriber state in `backend/data/subscribers.json`.
+- **`check_user_pro_status(email)`**:
+  - Checks if user's subscription is currently active and unexpired.
+
+### 22.4 Frontend Pro Store (`frontend/GLbajaj/components/dsa/ProPaymentModal.jsx`)
+- **Dynamic Script Loader:** On-demand asynchronous injection of `https://checkout.razorpay.com/v1/checkout.js`.
+- **Pre-Fill Engine:** Automatically pre-fills logged-in user's email and name with generic, private fallbacks.
+- **Brand Identity:** Configured with `name: 'Bittu AI'`, `image: 'https://bittuai.online/bittu-logo.jpg'`, and brand violet theme `#7c3aed`.
+- **Cross-Component Reactivity:** Dispatches `bittu_pro_updated` window custom event to instantly unlock all locked features without requiring a page refresh.
+
+---
+
+## 23. 🎯 LeetCode Top Interview 150 Study Plan & Pro Paywall Architecture
+
+### 23.1 Curriculum & Coverage (`/dsa/top-interview-150`)
+The complete LeetCode Top Interview 150 study plan organized into 23 core interview categories:
+1. **Array / String** (Merge Sorted Array, Remove Element, Rotate Array, Jump Game, H-Index, Candy, Trapping Rain Water, etc.)
+2. **Two Pointers** (Valid Palindrome, Two Sum II, 3Sum, Container With Most Water)
+3. **Sliding Window** (Minimum Size Subarray Sum, Longest Substring Without Repeating Characters, Minimum Window Substring)
+4. **Matrix** (Valid Sudoku, Spiral Matrix, Rotate Image, Set Matrix Zeroes, Game of Life)
+5. **Hashmap** (Ransom Note, Isomorphic Strings, Word Pattern, Valid Anagram, Group Anagrams, Two Sum, Longest Consecutive Sequence)
+6. **Intervals** (Summary Ranges, Merge Intervals, Insert Interval, Minimum Number of Arrows)
+7. **Stack** (Valid Parentheses, Simplify Path, Min Stack, Evaluate Reverse Polish Notation, Basic Calculator)
+8. **Linked List** (Linked List Cycle, Add Two Numbers, Merge Two Sorted Lists, Reverse Linked List II, LRU Cache)
+9. **Binary Tree General** (Maximum Depth, Same Tree, Invert Binary Tree, Symmetric Tree, Lowest Common Ancestor)
+10. **Binary Tree BFS** (Binary Tree Level Order Traversal, Zigzag Level Order Traversal)
+11. **Binary Search Tree (BST)** (Minimum Absolute Difference in BST, Kth Smallest Element in BST, Validate BST)
+12. **Graph General** (Number of Islands, Surrounded Regions, Clone Graph, Course Schedule I & II)
+13. **Graph BFS** (Snakes and Ladders, Minimum Genetic Mutation, Word Ladder)
+14. **Trie** (Implement Trie, Design Add and Search Words Data Structure, Word Search II)
+15. **Backtracking** (Letter Combinations of a Phone Number, Combinations, Permutations, N-Queens II)
+16. **Divide & Conquer** (Sort List, Construct Quad Tree, Merge k Sorted Lists)
+17. **Kadane's Algorithm** (Maximum Subarray, Maximum Sum Circular Subarray)
+18. **Binary Search** (Search Insert Position, Search a 2D Matrix, Find Peak Element, Find Minimum in Rotated Sorted Array)
+19. **Heap / Priority Queue** (Kth Largest Element in an Array, Find Median from Data Stream)
+20. **Bit Manipulation** (Add Binary, Reverse Bits, Number of 1 Bits, Single Number I & II)
+21. **Math** (Palindrome Number, Plus One, Factorial Trailing Zeroes, Sqrt(x), Pow(x, n))
+22. **1D Dynamic Programming** (Climbing Stairs, House Robber, Word Break, Coin Change, Longest Increasing Subsequence)
+23. **Multidimensional DP** (Triangle, Unique Paths II, Minimum Path Sum, Longest Palindromic Substring, Edit Distance)
+
+### 23.2 Paywall & Zero Code Leak Protection
+- **Curriculum Transparency:** Free users can browse all 23 categories, problem names, difficulties, and company tags (Google, Amazon, Meta, Microsoft, Apple, Uber, Netflix, TCS).
+- **Hard Locked Editorial & Solutions:**
+  - Non-subscribers (`!isPro`) clicking any question title or `[Solution (Pro)]` button are blocked from viewing problem text or solutions; the action triggers `handleOpenSolution(problem)` which opens `ProPaymentModal`.
+  - The modal DOM strictly evaluates `{activeSolutionModal && isPro && (...)}`, ensuring zero solution code or approach text is rendered in the HTML for free visitors.
+- **Visual Locked State:**
+  - Prominent Golden Alert Banner at the top of `/dsa/top-interview-150` with direct `Unlock All 150 (₹99)` CTA.
+  - Problem rows display `🔒 Pro` badge.
+  - Solution buttons display `<Lock size={12} /> Solution (Pro)`.
+  - DSA Hub Card 2 displays `🔒 Locked · ₹99/mo`.
+
+---
+
+## 24. 🎨 Brand Identity & 3D Logo Design Assets
+
+### 24.1 Brand Emblem Specifications
+- **Design Concept:** Futuristic cybernetic Letter "B" composed of luminous glowing circuit nodes, neon cyan and royal violet energy ribbons, glassmorphic metallic sheen, and clean dark slate background.
+- **Primary Emblem File:** `frontend/public/bittu-logo.jpg` (1024x1024 High-Res JPG)
+- **Secondary / Alias:** `frontend/public/logo.jpg`
+
+### 24.2 Universal Platform Deployment Matrix
+| Placement | File Path / Location | Purpose |
+|-----------|----------------------|---------|
+| **Browser Favicon** | `frontend/index.html` (`<link rel="icon">`) | Tab branding in all browsers |
+| **Apple Touch Icon** | `frontend/index.html` (`<link rel="apple-touch-icon">`) | Mobile bookmark icon |
+| **Social Share Preview** | `frontend/public/og-image.png` + `index.html` | WhatsApp, Twitter, LinkedIn link cards |
+| **Main Dashboard Navbar** | `frontend/GLbajaj/pages/Dashboard.jsx` | Top-left brand logo with hover animation |
+| **DSA Hub Header** | `frontend/GLbajaj/pages/DSAHub.jsx` | Linked brand logo beside DSA Practice header |
+| **Top Interview 150 Sub-Header** | `frontend/GLbajaj/pages/TopInterview150.jsx` | Brand logo next to "Bittu AI Study Plan" |
+| **Pro Payment Modal** | `frontend/GLbajaj/components/dsa/ProPaymentModal.jsx` | Header trust badge on ₹99 checkout dialog |
+| **Razorpay Checkout Gateway** | `frontend/GLbajaj/components/dsa/ProPaymentModal.jsx` (`image: '...'`) | Merchant logo displayed on GPay/PhonePe/QR screen |
+
