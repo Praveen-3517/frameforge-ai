@@ -96,15 +96,19 @@ const STANDARD_TOOLS = [
 
 export default function Dashboard() {
   const [theme, setTheme] = useState(() => {
-    return localStorage.getItem('dsa_theme') || 'dark'
+    // Website always opens in light dashboard by default
+    return sessionStorage.getItem('dashboard_theme') || 'light'
   })
 
   useEffect(() => {
+    sessionStorage.setItem('dashboard_theme', theme)
     localStorage.setItem('dsa_theme', theme)
     if (theme === 'light') {
       document.documentElement.classList.add('light')
+      document.documentElement.classList.remove('dark')
     } else {
       document.documentElement.classList.remove('light')
+      document.documentElement.classList.add('dark')
     }
   }, [theme])
 

@@ -81,7 +81,7 @@ export default function DSAHub() {
   const [showStats, setShowStats] = useState(false)
   const [showLeaderboard, setShowLeaderboard] = useState(false)
   const [lockedModal, setLockedModal] = useState(false)
-  const [theme, setTheme] = useState(() => localStorage.getItem('dsa_theme') || 'dark')
+  const [theme, setTheme] = useState(() => sessionStorage.getItem('dsa_theme') || 'light')
   const [currentPage, setCurrentPage] = useState(1)
   const PAGE_SIZE = 30
 
@@ -96,11 +96,14 @@ export default function DSAHub() {
   useEffect(() => { updateStreak() }, [])
 
   useEffect(() => {
+    sessionStorage.setItem('dsa_theme', theme)
     localStorage.setItem('dsa_theme', theme)
     if (theme === 'light') {
       document.documentElement.classList.add('light')
+      document.documentElement.classList.remove('dark')
     } else {
       document.documentElement.classList.remove('light')
+      document.documentElement.classList.add('dark')
     }
   }, [theme])
 
