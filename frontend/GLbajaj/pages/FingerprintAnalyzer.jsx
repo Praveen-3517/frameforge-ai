@@ -305,7 +305,7 @@ export default function FingerprintAnalyzer() {
       <div className="orb w-80 h-80 bg-violet-600/15 top-1/3 -right-40" style={{ animationDelay: '3s' }} />
 
       {/* Header */}
-      <header className="relative z-10 flex items-center justify-between px-6 py-5 max-w-6xl mx-auto w-full">
+      <header className="relative z-40 flex items-center justify-between px-6 py-5 max-w-6xl mx-auto w-full">
         <Link
           to="/"
           className="flex items-center gap-2 text-white/50 hover:text-white transition-colors text-sm font-medium"

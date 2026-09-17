@@ -131,7 +131,7 @@ export default function Dashboard() {
       />
 
       {/* Header */}
-      <header className="relative z-10 flex items-center justify-between px-6 py-4 max-w-5xl mx-auto w-full">
+      <header className="relative z-40 flex items-center justify-between px-6 py-4 max-w-5xl mx-auto w-full">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-violet-500/30">
             <Zap size={16} className="text-white" />
@@ -147,9 +147,6 @@ export default function Dashboard() {
         </div>
 
         <nav className="flex items-center gap-3">
-          {/* User Sign In / Profile Nav */}
-          <UserNav isLight={isLight} />
-
           {/* Quick Header Theme Switcher */}
           <div className={`flex items-center p-0.5 rounded-lg border text-xs font-medium ${
             isLight ? 'bg-slate-200 border-slate-300' : 'bg-white/5 border-white/10'
@@ -212,6 +209,9 @@ export default function Dashboard() {
           >
             <Github size={14} /> GitHub
           </a>
+
+          {/* User Sign In / Profile Nav — positioned at far right */}
+          <UserNav isLight={isLight} />
         </nav>
       </header>
 

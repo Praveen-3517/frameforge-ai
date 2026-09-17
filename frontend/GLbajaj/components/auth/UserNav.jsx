@@ -46,7 +46,7 @@ export default function UserNav({ isLight = false }) {
   const initial = displayName.charAt(0).toUpperCase()
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative z-50" ref={dropdownRef}>
       <button
         type="button"
         onClick={() => setDropdownOpen(prev => !prev)}
@@ -68,10 +68,10 @@ export default function UserNav({ isLight = false }) {
       {/* Dropdown Menu */}
       {dropdownOpen && (
         <div
-          className={`absolute right-0 mt-2 w-56 rounded-2xl border p-2 shadow-2xl z-50 animate-fadeIn ${
+          className={`absolute right-0 top-full mt-2 w-64 rounded-2xl border p-2.5 shadow-2xl z-[100] animate-fadeIn ${
             activeIsLight
-              ? 'bg-white border-slate-200 text-slate-900 shadow-slate-300/60'
-              : 'bg-[#0f0a1c]/95 border-violet-500/20 text-white shadow-violet-950/40 backdrop-blur-xl'
+              ? 'bg-white border-slate-200 text-slate-900 shadow-slate-300/80'
+              : 'bg-[#0f0a1c] border-violet-500/30 text-white shadow-violet-950/60'
           }`}
         >
           {/* User Info Header */}
@@ -80,7 +80,7 @@ export default function UserNav({ isLight = false }) {
             <p className={`text-[11px] truncate ${activeIsLight ? 'text-slate-500' : 'text-white/40'}`}>
               {user.email}
             </p>
-            <div className="mt-2 flex items-center gap-1 text-[10px] text-emerald-500 font-semibold">
+            <div className="mt-2 flex items-center gap-1.5 text-[10px] text-emerald-500 font-semibold">
               <Cloud size={11} />
               <span>Cloud Sync Active</span>
             </div>
@@ -95,7 +95,7 @@ export default function UserNav({ isLight = false }) {
               signOut()
               setDropdownOpen(false)
             }}
-            className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-red-400 transition-colors cursor-pointer ${
+            className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-red-500 hover:text-red-600 transition-colors cursor-pointer ${
               activeIsLight ? 'hover:bg-red-50' : 'hover:bg-red-500/10'
             }`}
           >

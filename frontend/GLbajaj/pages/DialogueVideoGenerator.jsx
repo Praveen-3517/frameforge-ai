@@ -484,7 +484,7 @@ export default function DialogueVideoGenerator() {
       />
 
       {/* Header */}
-      <header className="relative z-10 flex items-center justify-between px-6 py-4 max-w-7xl mx-auto w-full border-b border-white/5 backdrop-blur-md">
+      <header className="relative z-40 flex items-center justify-between px-6 py-4 max-w-7xl mx-auto w-full border-b border-white/5 backdrop-blur-md">
         <Link
           to="/"
           className="flex items-center gap-2 text-white/50 hover:text-white transition-colors text-sm font-medium"

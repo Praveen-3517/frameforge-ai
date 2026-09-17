@@ -263,7 +263,7 @@ export default function KidsShortsGenerator() {
       <div className="orb w-80 h-80 bg-cyan-500/15 bottom-10 left-1/3 blur-3xl" />
 
       {/* Header */}
-      <header className="relative z-10 flex items-center justify-between px-6 py-4 max-w-7xl mx-auto w-full border-b border-white/10">
+      <header className="relative z-40 flex items-center justify-between px-6 py-4 max-w-7xl mx-auto w-full border-b border-white/10">
         <div className="flex items-center gap-3">
           <Link
             to="/"

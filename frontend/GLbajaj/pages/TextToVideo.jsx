@@ -183,7 +183,7 @@ export default function App() {
       <div className="orb w-64 h-64 bg-rose-600/10 bottom-20 left-1/4" style={{ animationDelay: '5s' }} />
 
       {/* ── Header ── */}
-      <header className="relative z-10 flex items-center justify-between px-6 py-5 max-w-6xl mx-auto w-full">
+      <header className="relative z-40 flex items-center justify-between px-6 py-5 max-w-6xl mx-auto w-full">
         <div className="flex items-center gap-3">
           <Link to="/" className="flex items-center gap-1.5 text-white/50 hover:text-white transition-colors text-sm font-medium mr-2">
             <ArrowLeft size={16} /> Dashboard
@@ -202,7 +202,6 @@ export default function App() {
         </div>
 
         <nav className="flex items-center gap-4">
-          <UserNav />
           <a
             href={`${getApiUrl()}/docs`}
             target="_blank"
@@ -220,6 +219,7 @@ export default function App() {
             <Github size={15} />
             GitHub
           </a>
+          <UserNav />
         </nav>
       </header>
 
