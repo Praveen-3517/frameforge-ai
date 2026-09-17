@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext'
 import AuthModal from './components/auth/AuthModal'
 import EarlyBirdModal from './components/EarlyBirdModal'
 import FeedbackModal from './components/FeedbackModal'
+import ErrorBoundary from './components/ErrorBoundary'
 import Dashboard from './pages/Dashboard'
 import TextToVideo from './pages/TextToVideo'
 import ClothesChanger from './pages/ClothesChanger'
@@ -23,16 +24,16 @@ export default function App() {
         <EarlyBirdModal />
         <FeedbackModal />
         <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/dialogue" element={<DialogueVideoGenerator />} />
-          <Route path="/video" element={<TextToVideo />} />
-          <Route path="/kids" element={<KidsShortsGenerator />} />
-          <Route path="/clothes" element={<ClothesChanger />} />
-          <Route path="/variant" element={<VideoVariantGenerator />} />
-          <Route path="/fingerprint" element={<FingerprintAnalyzer />} />
-          <Route path="/multiview" element={<MultiViewPlayer />} />
-          <Route path="/dsa" element={<DSAHub />} />
-          <Route path="/dsa/:id" element={<DSASolver />} />
+          <Route path="/" element={<ErrorBoundary><Dashboard /></ErrorBoundary>} />
+          <Route path="/dialogue" element={<ErrorBoundary><DialogueVideoGenerator /></ErrorBoundary>} />
+          <Route path="/video" element={<ErrorBoundary><TextToVideo /></ErrorBoundary>} />
+          <Route path="/kids" element={<ErrorBoundary><KidsShortsGenerator /></ErrorBoundary>} />
+          <Route path="/clothes" element={<ErrorBoundary><ClothesChanger /></ErrorBoundary>} />
+          <Route path="/variant" element={<ErrorBoundary><VideoVariantGenerator /></ErrorBoundary>} />
+          <Route path="/fingerprint" element={<ErrorBoundary><FingerprintAnalyzer /></ErrorBoundary>} />
+          <Route path="/multiview" element={<ErrorBoundary><MultiViewPlayer /></ErrorBoundary>} />
+          <Route path="/dsa" element={<ErrorBoundary><DSAHub /></ErrorBoundary>} />
+          <Route path="/dsa/:id" element={<ErrorBoundary><DSASolver /></ErrorBoundary>} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

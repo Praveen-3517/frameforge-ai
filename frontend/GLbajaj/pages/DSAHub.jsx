@@ -625,7 +625,7 @@ export default function DSAHub() {
           streak,
           solvedCount,
           easySolved,
-          medSolved,
+          medSolved: mediumSolved,
           hardSolved
         }}
         isLight={isLight}
