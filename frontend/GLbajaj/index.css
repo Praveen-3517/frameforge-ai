@@ -269,3 +269,15 @@ html.light .glass-card {
   border-color: rgba(226, 232, 240, 0.9);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
 }
+
+/* ═══════════════════════════════════════════════
+   Mobile Utilities
+═══════════════════════════════════════════════ */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+

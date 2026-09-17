@@ -144,32 +144,28 @@ export default function DSAHub() {
       <div className="relative z-10 max-w-7xl mx-auto px-4 py-5">
 
         {/* ── Header ── */}
-        <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-3">
-            <Link to="/" className={`p-2 rounded-lg border transition-all ${
-              isLight ? 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100' : 'bg-white/5 hover:bg-white/10 border-white/8 text-white/60'
-            }`}>
-              <ArrowLeft size={15} />
-            </Link>
+        <div className="mb-5">
+          {/* Row 1: Back button + Logo (always visible) */}
+          <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-600 to-cyan-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
-                <Code2 size={18} className="text-white" />
+              <Link to="/" className={`p-2 rounded-lg border transition-all ${
+                isLight ? 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100' : 'bg-white/5 hover:bg-white/10 border-white/8 text-white/60'
+              }`}>
+                <ArrowLeft size={15} />
+              </Link>
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-600 to-cyan-600 flex items-center justify-center shadow-lg shadow-violet-500/30 shrink-0">
+                <Code2 size={16} className="text-white" />
               </div>
               <div>
-                <h1 className={`text-lg font-bold tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                <h1 className={`text-base sm:text-lg font-bold tracking-tight leading-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
                   DSA <span className="bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">Practice</span>
                 </h1>
-                <p className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-white/30'}`}>Python · {total} Problems · Basic to Advanced</p>
+                <p className={`text-[10px] leading-none ${isLight ? 'text-slate-500' : 'text-white/30'}`}>Python · {total} Problems · Basic to Advanced</p>
               </div>
             </div>
-          </div>
 
-          <div className="flex items-center gap-2">
-            {/* User Profile / Auth Nav */}
-            <UserNav isLight={isLight} />
-
-            {/* Theme Toggle Feature */}
-            <div className={`flex items-center p-0.5 rounded-lg border text-xs font-medium ${
+            {/* Theme Toggle — always right */}
+            <div className={`flex items-center p-0.5 rounded-lg border text-xs font-medium shrink-0 ${
               isLight ? 'bg-slate-200 border-slate-300' : 'bg-white/5 border-white/10'
             }`}>
               <button
@@ -193,10 +189,16 @@ export default function DSAHub() {
                 <span className="hidden sm:inline text-[10px]">Dark</span>
               </button>
             </div>
+          </div>
+
+          {/* Row 2: Action buttons (Sign In + Leaderboard + Saved + Stats) */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            {/* User Profile / Auth Nav */}
+            <UserNav isLight={isLight} />
 
             <button
               onClick={() => setShowLeaderboard(true)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all shrink-0 ${
                 showLeaderboard
                   ? 'bg-amber-500/20 border-amber-500/40 text-amber-300 shadow-sm'
                   : isLight
@@ -210,25 +212,26 @@ export default function DSAHub() {
 
             <button
               onClick={() => setShowBookmarks(b => !b)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all shrink-0 ${
                 showBookmarks
                   ? 'bg-violet-500/20 border-violet-500/40 text-violet-300'
                   : isLight ? 'bg-white border-slate-200 text-slate-600 hover:border-slate-300' : 'bg-white/4 border-white/10 text-white/50 hover:border-white/20'
               }`}
             >
               <Star size={12} />
-              Saved {bookmarks.length > 0 && `(${bookmarks.length})`}
+              <span>Saved {bookmarks.length > 0 && `(${bookmarks.length})`}</span>
             </button>
+
             <button
               onClick={() => setShowStats(s => !s)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all shrink-0 ${
                 showStats
                   ? 'bg-cyan-500/20 border-cyan-500/40 text-cyan-300'
                   : isLight ? 'bg-white border-slate-200 text-slate-600 hover:border-slate-300' : 'bg-white/4 border-white/10 text-white/50 hover:border-white/20'
               }`}
             >
               <BarChart3 size={12} />
-              Stats
+              <span>Stats</span>
             </button>
           </div>
         </div>
@@ -399,76 +402,80 @@ export default function DSAHub() {
               )}
             </div>
 
-            {/* Filters */}
-            <div className="flex flex-wrap gap-2 mb-3">
-              <div className={`flex items-center gap-1 rounded-lg p-1 border ${
-                isLight ? 'bg-white border-slate-200/90 shadow-sm' : 'bg-white/3 border-white/8'
-              }`}>
-                {DIFFICULTIES.map(d => (
-                  <button
-                    key={d}
-                    onClick={() => setDifficulty(d)}
-                    className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
-                      difficulty === d
-                        ? d === 'Easy'
-                          ? isLight ? 'bg-emerald-600 text-white shadow-sm' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                          : d === 'Medium'
-                          ? isLight ? 'bg-amber-500 text-slate-950 shadow-sm font-bold' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                          : d === 'Hard'
-                          ? isLight ? 'bg-rose-600 text-white shadow-sm' : 'bg-red-500/20 text-red-300 border border-red-500/30'
-                          : isLight ? 'bg-violet-600 text-white shadow-sm' : 'bg-violet-500/20 text-violet-300 border border-violet-500/30'
-                        : isLight
-                        ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                        : 'text-white/40 hover:text-white/70'
-                    }`}
-                  >
-                    {d}
-                  </button>
-                ))}
-              </div>
+            {/* Filters — horizontally scrollable on mobile */}
+            <div className="overflow-x-auto pb-1 scrollbar-hide mb-3">
+              <div className="flex gap-2 min-w-max">
+                <div className={`flex items-center gap-1 rounded-lg p-1 border ${
+                  isLight ? 'bg-white border-slate-200/90 shadow-sm' : 'bg-white/3 border-white/8'
+                }`}>
+                  {DIFFICULTIES.map(d => (
+                    <button
+                      key={d}
+                      onClick={() => setDifficulty(d)}
+                      className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
+                        difficulty === d
+                          ? d === 'Easy'
+                            ? isLight ? 'bg-emerald-600 text-white shadow-sm' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                            : d === 'Medium'
+                            ? isLight ? 'bg-amber-500 text-slate-950 shadow-sm font-bold' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                            : d === 'Hard'
+                            ? isLight ? 'bg-rose-600 text-white shadow-sm' : 'bg-red-500/20 text-red-300 border border-red-500/30'
+                            : isLight ? 'bg-violet-600 text-white shadow-sm' : 'bg-violet-500/20 text-violet-300 border border-violet-500/30'
+                          : isLight
+                          ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                          : 'text-white/40 hover:text-white/70'
+                      }`}
+                    >
+                      {d}
+                    </button>
+                  ))}
+                </div>
 
-              <div className={`flex items-center gap-1 rounded-lg p-1 border ${
-                isLight ? 'bg-white border-slate-200/90 shadow-sm' : 'bg-white/3 border-white/8'
-              }`}>
-                {PHASES.map(p => (
-                  <button
-                    key={p}
-                    onClick={() => setPhase(p)}
-                    className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
-                      phase === p
-                        ? isLight
-                          ? 'bg-violet-600 text-white shadow-sm'
-                          : 'bg-violet-500/20 text-violet-300 border border-violet-500/30'
-                        : isLight
-                        ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                        : 'text-white/40 hover:text-white/70'
-                    }`}
-                  >
-                    {p}
-                  </button>
-                ))}
+                <div className={`flex items-center gap-1 rounded-lg p-1 border ${
+                  isLight ? 'bg-white border-slate-200/90 shadow-sm' : 'bg-white/3 border-white/8'
+                }`}>
+                  {PHASES.map(p => (
+                    <button
+                      key={p}
+                      onClick={() => setPhase(p)}
+                      className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
+                        phase === p
+                          ? isLight
+                            ? 'bg-violet-600 text-white shadow-sm'
+                            : 'bg-violet-500/20 text-violet-300 border border-violet-500/30'
+                          : isLight
+                          ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                          : 'text-white/40 hover:text-white/70'
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
-            {/* Topic pills */}
-            <div className="flex flex-wrap gap-1.5 mb-4">
-              {TOPICS.filter(t => t === 'All' || dsaProblems.some(p => p.topic === t)).map(t => (
-                <button
-                  key={t}
-                  onClick={() => setTopic(t)}
-                  className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-all ${
-                    topic === t
-                      ? isLight
-                        ? 'bg-violet-600 border-violet-600 text-white font-bold shadow-md shadow-violet-600/20'
-                        : 'bg-violet-500/25 border-violet-500/50 text-violet-300'
-                      : isLight
-                      ? 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100 hover:border-slate-300 shadow-sm font-semibold'
-                      : 'bg-white/3 border-white/8 text-white/40 hover:text-white/70 hover:border-white/20'
-                  }`}
-                >
-                  {t}
-                </button>
-              ))}
+            {/* Topic pills — horizontally scrollable on mobile */}
+            <div className="overflow-x-auto pb-2 scrollbar-hide mb-4">
+              <div className="flex gap-1.5 min-w-max">
+                {TOPICS.filter(t => t === 'All' || dsaProblems.some(p => p.topic === t)).map(t => (
+                  <button
+                    key={t}
+                    onClick={() => setTopic(t)}
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-all whitespace-nowrap ${
+                      topic === t
+                        ? isLight
+                          ? 'bg-violet-600 border-violet-600 text-white font-bold shadow-md shadow-violet-600/20'
+                          : 'bg-violet-500/25 border-violet-500/50 text-violet-300'
+                        : isLight
+                        ? 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100 hover:border-slate-300 shadow-sm font-semibold'
+                        : 'bg-white/3 border-white/8 text-white/40 hover:text-white/70 hover:border-white/20'
+                    }`}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Problem Count */}
@@ -523,10 +530,11 @@ export default function DSAHub() {
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <div className={`flex flex-wrap items-center justify-between gap-3 mt-6 p-3 rounded-xl border ${
+              <div className={`mt-6 p-3 rounded-xl border ${
                 isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-white/[0.02] border-white/8'
               }`}>
-                <div className="flex items-center gap-1.5">
+                {/* Prev / Next + Page info */}
+                <div className="flex items-center justify-between gap-2 mb-2">
                   <button
                     onClick={() => {
                       setCurrentPage(p => Math.max(1, p - 1))
@@ -537,13 +545,19 @@ export default function DSAHub() {
                       currentPage === 1
                         ? 'opacity-40 cursor-not-allowed border-transparent'
                         : isLight
-                        ? 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200 hover:text-slate-900'
+                        ? 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200'
                         : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white'
                     }`}
                   >
                     <ChevronLeft size={14} />
-                    <span>Previous</span>
+                    <span>Prev</span>
                   </button>
+
+                  <span className={`text-xs font-mono font-bold ${
+                    isLight ? 'text-slate-700' : 'text-white/60'
+                  }`}>
+                    {currentPage} / {totalPages}
+                  </span>
 
                   <button
                     onClick={() => {
@@ -555,7 +569,7 @@ export default function DSAHub() {
                       currentPage === totalPages
                         ? 'opacity-40 cursor-not-allowed border-transparent'
                         : isLight
-                        ? 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200 hover:text-slate-900'
+                        ? 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200'
                         : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white'
                     }`}
                   >
@@ -564,42 +578,40 @@ export default function DSAHub() {
                   </button>
                 </div>
 
-                {/* Page Number Quick Buttons */}
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: Math.min(7, totalPages) }, (_, idx) => {
-                    let pageNum = idx + 1
-                    if (totalPages > 7) {
-                      if (currentPage > 4 && currentPage < totalPages - 3) {
-                        pageNum = currentPage - 3 + idx
-                      } else if (currentPage >= totalPages - 3) {
-                        pageNum = totalPages - 6 + idx
+                {/* Page Number Quick Buttons — scrollable on mobile */}
+                <div className="overflow-x-auto scrollbar-hide">
+                  <div className="flex items-center gap-1 min-w-max mx-auto justify-center">
+                    {Array.from({ length: Math.min(7, totalPages) }, (_, idx) => {
+                      let pageNum = idx + 1
+                      if (totalPages > 7) {
+                        if (currentPage > 4 && currentPage < totalPages - 3) {
+                          pageNum = currentPage - 3 + idx
+                        } else if (currentPage >= totalPages - 3) {
+                          pageNum = totalPages - 6 + idx
+                        }
                       }
-                    }
-                    return (
-                      <button
-                        key={pageNum}
-                        onClick={() => {
-                          setCurrentPage(pageNum)
-                          window.scrollTo({ top: 300, behavior: 'smooth' })
-                        }}
-                        className={`w-7 h-7 rounded-lg text-xs font-mono font-bold transition-all ${
-                          currentPage === pageNum
-                            ? isLight
-                              ? 'bg-violet-600 text-white shadow-md shadow-violet-600/30'
-                              : 'bg-violet-500 text-white shadow-lg shadow-violet-500/30'
-                            : isLight
-                            ? 'text-slate-600 hover:bg-slate-100'
-                            : 'text-white/40 hover:bg-white/5 hover:text-white'
-                        }`}
-                      >
-                        {pageNum}
-                      </button>
-                    )
-                  })}
-                </div>
-
-                <div className={`text-xs font-mono ${isLight ? 'text-slate-500' : 'text-white/40'}`}>
-                  Page {currentPage} of {totalPages}
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => {
+                            setCurrentPage(pageNum)
+                            window.scrollTo({ top: 300, behavior: 'smooth' })
+                          }}
+                          className={`w-8 h-8 rounded-lg text-xs font-mono font-bold transition-all ${
+                            currentPage === pageNum
+                              ? isLight
+                                ? 'bg-violet-600 text-white shadow-md shadow-violet-600/30'
+                                : 'bg-violet-500 text-white shadow-lg shadow-violet-500/30'
+                              : isLight
+                              ? 'text-slate-600 hover:bg-slate-100'
+                              : 'text-white/40 hover:bg-white/5 hover:text-white'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
               </div>
             )}
