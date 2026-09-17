@@ -101,7 +101,7 @@ export default function ProPaymentModal({ isOpen, onClose, onSuccess, isLight = 
         currency: orderData.currency || 'INR',
         name: 'Bittu AI',
         description: 'DSA Pro Pass (30 Days Unlimited Access)',
-        image: '/vite.svg',
+        image: 'https://bittuai.online/bittu-logo.jpg',
         order_id: orderData.order_id,
         prefill: {
           name: name.trim() || 'Student Coder',
@@ -259,15 +259,27 @@ export default function ProPaymentModal({ isOpen, onClose, onSuccess, isLight = 
         ) : (
           /* ─── CHECKOUT & PLAN DETAILS ─── */
           <div className="p-6 sm:p-7">
-            {/* Header Badge */}
-            <div className="flex items-center gap-2 mb-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/40 text-amber-400 text-[11px] font-mono font-bold tracking-wider uppercase">
-                <Crown size={12} className="text-amber-400" />
-                DSA Pro Pass
-              </span>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold">
-                <Sparkles size={10} /> 97% OFF
-              </span>
+            {/* Header Badge & Brand Logo */}
+            <div className="flex items-center gap-3 mb-3">
+              <img
+                src="/bittu-logo.jpg"
+                alt="Bittu AI"
+                className="w-11 h-11 rounded-2xl object-cover shadow-lg shadow-violet-500/25 border border-violet-400/30 shrink-0"
+              />
+              <div>
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/40 text-amber-400 text-[10px] font-mono font-bold tracking-wider uppercase">
+                    <Crown size={11} className="text-amber-400" />
+                    DSA Pro Pass
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold">
+                    <Sparkles size={10} /> 97% OFF
+                  </span>
+                </div>
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                  Bittu AI Official Member
+                </span>
+              </div>
             </div>
 
             <h3 className="text-xl sm:text-2xl font-black tracking-tight mb-1.5">

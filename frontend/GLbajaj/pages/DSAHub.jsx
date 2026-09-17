@@ -181,9 +181,13 @@ export default function DSAHub() {
               }`}>
                 <ArrowLeft size={15} />
               </Link>
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-600 to-cyan-600 flex items-center justify-center shadow-lg shadow-violet-500/30 shrink-0">
-                <Code2 size={16} className="text-white" />
-              </div>
+              <Link to="/" className="shrink-0 group">
+                <img
+                  src="/bittu-logo.jpg"
+                  alt="Bittu AI Logo"
+                  className="w-8 h-8 rounded-xl object-cover shadow-lg shadow-violet-500/25 border border-white/10 group-hover:scale-105 transition-transform"
+                />
+              </Link>
               <div>
                 <h1 className={`text-base sm:text-lg font-bold tracking-tight leading-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
                   DSA <span className="bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">Practice</span>

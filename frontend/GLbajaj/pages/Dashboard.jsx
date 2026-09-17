@@ -138,11 +138,13 @@ export default function Dashboard() {
 
       {/* Header */}
       <header className="relative z-40 flex items-center justify-between px-3.5 sm:px-6 py-3 sm:py-4 max-w-5xl mx-auto w-full">
-        <div className="flex items-center gap-2 shrink-0">
-          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-violet-500/30">
-            <Zap size={15} className="text-white" />
-          </div>
-          <span className={`font-bold text-sm sm:text-base tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
+        <div className="flex items-center gap-2.5 shrink-0">
+          <img
+            src="/bittu-logo.jpg"
+            alt="Bittu AI Logo"
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl object-cover shadow-lg shadow-violet-500/25 border border-white/15 hover:scale-105 transition-transform"
+          />
+          <span className={`font-black text-sm sm:text-base tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
             Bittu <span className="bg-gradient-to-r from-violet-500 to-cyan-500 bg-clip-text text-transparent">AI Tools</span>
           </span>
           <span className={`hidden md:inline-block px-2 py-0.5 rounded-full border text-[10px] font-mono ${

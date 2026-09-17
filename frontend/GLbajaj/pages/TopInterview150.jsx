@@ -136,9 +136,16 @@ export default function TopInterview150() {
               <span>Back to DSA Hub</span>
             </Link>
             <div className="h-5 w-px bg-slate-200 dark:bg-white/10 hidden sm:block" />
-            <span className="text-xs font-bold uppercase tracking-wider text-violet-600 hidden sm:inline">
-              Bittu AI Study Plan
-            </span>
+            <Link to="/" className="flex items-center gap-2 group">
+              <img
+                src="/bittu-logo.jpg"
+                alt="Bittu AI"
+                className="w-6 h-6 rounded-lg object-cover shadow-sm border border-violet-400/30 group-hover:scale-105 transition-transform"
+              />
+              <span className="text-xs font-bold uppercase tracking-wider text-violet-600 hidden sm:inline">
+                Bittu AI Study Plan
+              </span>
+            </Link>
           </div>
 
           <div className="flex items-center gap-2">
