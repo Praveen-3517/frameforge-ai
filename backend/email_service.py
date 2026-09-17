@@ -26,6 +26,9 @@ import time
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import Dict, Optional, Tuple
+from dotenv import load_dotenv
+
+load_dotenv()
 
 log = logging.getLogger("bittuai.email")
 
@@ -33,12 +36,16 @@ log = logging.getLogger("bittuai.email")
 # 1.  Configuration
 # ─────────────────────────────────────────────────────────────
 
-SMTP_HOST: str      = os.getenv("SMTP_HOST", "smtp.gmail.com")
-SMTP_PORT: int      = int(os.getenv("SMTP_PORT", "587"))
-SMTP_USER: str      = os.getenv("SMTP_USER", "").strip()
-SMTP_PASSWORD: str  = os.getenv("SMTP_PASSWORD", "").strip()
-SMTP_FROM_NAME: str = os.getenv("SMTP_FROM_NAME", "Bittu AI Verification").strip()
-DEBUG: bool         = os.getenv("DEBUG", "false").lower() == "true"
+def _get_smtp_credentials() -> Tuple[str, int, str, str, str]:
+    """Dynamically reads credentials from environment, stripping whitespace from app password."""
+    host      = os.getenv("SMTP_HOST", "smtp.gmail.com").strip()
+    port      = int(os.getenv("SMTP_PORT", "587"))
+    user      = os.getenv("SMTP_USER", "").strip()
+    password  = os.getenv("SMTP_PASSWORD", "").strip().replace(" ", "")
+    from_name = os.getenv("SMTP_FROM_NAME", "Bittu AI Verification").strip()
+    return host, port, user, password, from_name
+
+DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
 
 OTP_TTL_SECONDS: int    = 600   # 10 minutes
 COOLDOWN_SECONDS: int   = 60    # 1 minute between resends
@@ -183,30 +190,31 @@ def _build_otp_email_html(otp: str, recipient_email: str) -> str:
 
 def _send_smtp_sync(to_email: str, subject: str, text_content: str, html_content: str) -> None:
     """Synchronous SMTP email sender designed to run via asyncio.to_thread."""
-    if not SMTP_USER or not SMTP_PASSWORD:
+    host, port, user, password, from_name = _get_smtp_credentials()
+    if not user or not password:
         raise ValueError("SMTP credentials (SMTP_USER / SMTP_PASSWORD) are not configured.")
 
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
-    msg["From"]    = f"{SMTP_FROM_NAME} <{SMTP_USER}>"
+    msg["From"]    = f"{from_name} <{user}>"
     msg["To"]      = to_email
 
     msg.attach(MIMEText(text_content, "plain"))
     msg.attach(MIMEText(html_content, "html"))
 
-    if SMTP_PORT == 465:
+    if port == 465:
         context = ssl.create_default_context()
-        with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, context=context, timeout=15) as server:
-            server.login(SMTP_USER, SMTP_PASSWORD)
-            server.sendmail(SMTP_USER, [to_email], msg.as_string())
+        with smtplib.SMTP_SSL(host, port, context=context, timeout=15) as server:
+            server.login(user, password)
+            server.sendmail(user, [to_email], msg.as_string())
     else:
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=15) as server:
+        with smtplib.SMTP(host, port, timeout=15) as server:
             context = ssl.create_default_context()
             server.ehlo()
             server.starttls(context=context)
             server.ehlo()
-            server.login(SMTP_USER, SMTP_PASSWORD)
-            server.sendmail(SMTP_USER, [to_email], msg.as_string())
+            server.login(user, password)
+            server.sendmail(user, [to_email], msg.as_string())
 
 
 # ─────────────────────────────────────────────────────────────
@@ -248,7 +256,8 @@ async def request_otp(email: str) -> dict:
     }
 
     # Dispatch email
-    has_smtp = bool(SMTP_USER and SMTP_PASSWORD)
+    _, _, user, password, _ = _get_smtp_credentials()
+    has_smtp = bool(user and password)
     if has_smtp:
         subject = f"{otp} is your Bittu AI verification code"
         text_body = f"Your Bittu AI verification code is: {otp}\nValid for 10 minutes.\nDo not share this code."
