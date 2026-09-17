@@ -4,7 +4,7 @@ import {
   Code2, Search, Trophy, Zap, BookOpen,
   BarChart3, Sparkles, ArrowLeft,
   Target, Flame, Star, CheckCircle2, X, Sun, Moon,
-  ChevronLeft, ChevronRight
+  ChevronLeft, ChevronRight, Lock
 } from 'lucide-react'
 import ProblemCard from '../components/dsa/ProblemCard'
 import StatsPanel from '../components/dsa/StatsPanel'
@@ -80,6 +80,7 @@ export default function DSAHub() {
   const [showBookmarks, setShowBookmarks] = useState(false)
   const [showStats, setShowStats] = useState(false)
   const [showLeaderboard, setShowLeaderboard] = useState(false)
+  const [lockedModal, setLockedModal] = useState(false)
   const [theme, setTheme] = useState(() => localStorage.getItem('dsa_theme') || 'dark')
   const [currentPage, setCurrentPage] = useState(1)
   const PAGE_SIZE = 30
@@ -374,6 +375,88 @@ export default function DSAHub() {
           {/* ── Main Content ── */}
           <div className="flex-1 min-w-0">
 
+            {/* ── LeetCode-Style Featured Study Banners ── */}
+            <div className="mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+
+                {/* Card 1: Interview Crash Course */}
+                <div className="relative overflow-hidden rounded-2xl p-4 bg-gradient-to-br from-[#3b0764] via-[#581c87] to-[#7e22ce] text-white shadow-lg border border-purple-400/20 group hover:shadow-purple-500/20 hover:-translate-y-0.5 transition-all">
+                  <div className="absolute -right-3 -bottom-3 w-24 h-24 opacity-20 pointer-events-none">
+                    <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-full h-full text-purple-200">
+                      <circle cx="30" cy="30" r="10" fill="currentColor" fillOpacity="0.4" />
+                      <circle cx="75" cy="35" r="8" fill="currentColor" fillOpacity="0.4" />
+                      <circle cx="50" cy="75" r="9" fill="currentColor" fillOpacity="0.4" />
+                      <line x1="30" y1="30" x2="50" y2="75" />
+                      <line x1="75" y1="35" x2="50" y2="75" />
+                    </svg>
+                  </div>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/15 border border-white/20 text-purple-200 mb-1.5">
+                    <Sparkles size={10} /> Course
+                  </span>
+                  <h3 className="text-sm font-bold leading-tight mb-1">
+                    Interview Crash Course
+                  </h3>
+                  <p className="text-[11px] text-purple-200/80 leading-relaxed line-clamp-2">
+                    Data Structures and Algorithms masterclass with real Python 3.11 WASM.
+                  </p>
+                </div>
+
+                {/* Card 2: TOP INTERVIEW QUESTIONS (LOCKED) */}
+                <button
+                  type="button"
+                  onClick={() => setLockedModal(true)}
+                  className="relative overflow-hidden rounded-2xl p-4 bg-gradient-to-br from-[#1e3a8a] via-[#1d4ed8] to-[#0284c7] text-white shadow-lg border border-cyan-400/30 group hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all text-left cursor-pointer"
+                >
+                  {/* Lock Badge in top right */}
+                  <div className="absolute top-2.5 right-2.5 flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/45 border border-amber-400/40 text-amber-300 text-[10px] font-mono font-bold backdrop-blur-md shadow-sm group-hover:bg-amber-400/20 transition-colors">
+                    <Lock size={10} className="text-amber-400" />
+                    <span>Locked</span>
+                  </div>
+
+                  {/* 3D Chat Bubbles Graphic in Background */}
+                  <div className="absolute -right-2 -bottom-2 w-24 h-24 opacity-25 pointer-events-none">
+                    <div className="relative w-full h-full">
+                      <div className="absolute right-1 bottom-1 w-14 h-10 rounded-xl bg-white/40 border border-white/60 shadow-lg" />
+                      <div className="absolute right-6 bottom-6 w-12 h-8 rounded-xl bg-cyan-200/50 border border-white/60 shadow-lg" />
+                    </div>
+                  </div>
+
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/15 border border-white/20 text-cyan-200 mb-1.5">
+                    <Target size={10} /> Study Plan
+                  </span>
+                  <h3 className="text-sm font-extrabold leading-tight mb-1 pr-12">
+                    Top Interview Questions
+                  </h3>
+                  <p className="text-[11px] text-cyan-100/80 leading-relaxed pr-4 line-clamp-2">
+                    Curated FAANG & Tier-1 must-do technical interview question set.
+                  </p>
+                  <div className="mt-2 flex items-center gap-1 text-[10px] text-amber-300 font-medium">
+                    <Lock size={10} />
+                    <span>Releasing soon · Click to preview</span>
+                  </div>
+                </button>
+
+                {/* Card 3: 30 Days Challenge */}
+                <div className="relative overflow-hidden rounded-2xl p-4 bg-gradient-to-br from-[#7c2d12] via-[#c2410c] to-[#ea580c] text-white shadow-lg border border-orange-400/20 group hover:shadow-orange-500/20 hover:-translate-y-0.5 transition-all">
+                  {/* Calendar badge graphic in background */}
+                  <div className="absolute -right-2 -bottom-2 w-20 h-20 rounded-2xl bg-white/10 border border-white/20 rotate-12 flex flex-col items-center justify-center pointer-events-none opacity-40">
+                    <span className="text-[9px] font-mono font-bold">DAY</span>
+                    <span className="text-xl font-black">30</span>
+                  </div>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/15 border border-white/20 text-orange-200 mb-1.5">
+                    <Flame size={10} /> 30-Day Sprint
+                  </span>
+                  <h3 className="text-sm font-bold leading-tight mb-1">
+                    30 Days Challenge
+                  </h3>
+                  <p className="text-[11px] text-orange-200/80 leading-relaxed line-clamp-2">
+                    Beginner friendly daily problem-solving routine for interview readiness.
+                  </p>
+                </div>
+
+              </div>
+            </div>
+
             {/* Search */}
             <div className="relative mb-3">
               <Search size={14} className={`absolute left-3 top-1/2 -translate-y-1/2 ${
@@ -642,6 +725,51 @@ export default function DSAHub() {
         }}
         isLight={isLight}
       />
+
+      {/* ── Top Interview Questions — Locked Preview Modal ── */}
+      {lockedModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fadeIn">
+          <div className={`relative w-full max-w-sm rounded-3xl border p-6 text-center shadow-2xl transition-all ${
+            isLight
+              ? 'bg-white border-slate-200 text-slate-900 shadow-slate-300/60'
+              : 'bg-[#0f0a1c] border-violet-500/30 text-white shadow-violet-900/30'
+          }`}>
+            <button
+              onClick={() => setLockedModal(false)}
+              className={`absolute top-4 right-4 p-1.5 rounded-lg transition-colors ${
+                isLight ? 'hover:bg-slate-100 text-slate-400 hover:text-slate-800' : 'hover:bg-white/10 text-white/40 hover:text-white'
+              }`}
+            >
+              <X size={18} />
+            </button>
+
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-cyan-500 text-white flex items-center justify-center mx-auto mb-3.5 shadow-lg shadow-blue-500/30">
+              <Lock size={24} className="text-amber-300" />
+            </div>
+
+            <h3 className="text-base font-extrabold mb-1 tracking-tight">
+              Top Interview Questions
+            </h3>
+            
+            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 text-xs font-mono font-semibold mb-3">
+              <Lock size={11} />
+              <span>Locked · Releasing Soon</span>
+            </div>
+
+            <p className={`text-xs leading-relaxed mb-5 ${isLight ? 'text-slate-600' : 'text-white/60'}`}>
+              Ye exclusive study plan abhi <strong>Locked</strong> hai. Top FAANG & Tier-1 companies ke selected interview questions jald hi unlock honge!
+            </p>
+
+            <button
+              type="button"
+              onClick={() => setLockedModal(false)}
+              className="w-full py-2.5 rounded-xl font-bold text-xs bg-gradient-to-r from-violet-600 via-purple-600 to-cyan-600 text-white shadow-lg shadow-violet-600/30 hover:opacity-95 active:scale-[0.98] transition-all cursor-pointer"
+            >
+              Got it (समझ गया)
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
