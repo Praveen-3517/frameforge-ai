@@ -351,7 +351,7 @@ export default function AuthModal({ isLight = false }) {
                       required
                       minLength={2}
                       maxLength={60}
-                      placeholder="e.g. Praveen Kumar"
+                      placeholder="e.g. Rahul Sharma"
                       value={fullName}
                       onChange={(e) => { setFullName(e.target.value); if (error) setError(null); }}
                       className={`w-full pl-9 pr-4 py-2.5 rounded-xl text-xs border outline-none transition-all ${inputBase}`}

@@ -352,7 +352,7 @@ export default function ProPaymentModal({ isOpen, onClose, onSuccess, isLight = 
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Praveen Maurya"
+                    placeholder="Enter your full name"
                     disabled={loading}
                     className={`w-full px-3 py-2 rounded-xl text-xs border outline-none transition-all ${
                       isLight
