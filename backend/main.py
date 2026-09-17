@@ -139,6 +139,25 @@ class VerifyOtpRequest(BaseModel):
     email: str = Field(..., max_length=255)
     otp: str = Field(..., min_length=6, max_length=6)
 
+# ── Razorpay Payment Gateway Service ──────────────────────────────────────────
+from payment_service import (
+    create_razorpay_order,
+    verify_razorpay_signature,
+    activate_user_pro,
+    get_user_pro_status,
+)
+
+class CreateOrderRequest(BaseModel):
+    amount: int = Field(default=99, ge=1, le=100000)
+    email: Optional[str] = Field(default=None, max_length=255)
+    plan_name: Optional[str] = Field(default="DSA Pro Pass (1 Month)", max_length=100)
+
+class VerifyPaymentRequest(BaseModel):
+    email: Optional[str] = Field(default=None, max_length=255)
+    razorpay_order_id: str = Field(..., max_length=100)
+    razorpay_payment_id: str = Field(..., max_length=100)
+    razorpay_signature: str = Field(..., max_length=255)
+
 # ── FastAPI app — docs hidden in production (DEBUG=true to expose) ────────────
 app = FastAPI(
     title="Bittu AI — Media Generation API",
@@ -1295,6 +1314,68 @@ async def verify_otp_endpoint(req: VerifyOtpRequest, request: Request):
         raise HTTPException(status_code=400, detail=res.get("error", "Verification failed."))
 
     return JSONResponse(content=res)
+
+
+# ─────────────────────────────────────────────────────────────
+# 11.6  Razorpay Payment & DSA Pro Membership Endpoints
+# ─────────────────────────────────────────────────────────────
+
+@app.post("/api/payment/create-order", tags=["Payment"])
+async def create_payment_order_endpoint(req: CreateOrderRequest, request: Request):
+    """
+    Creates an official Razorpay order (₹99 default) with live credentials.
+    Returns the order ID and key ID for client-side Razorpay Checkout.
+    """
+    rate_limit(request, max_requests=10, window_sec=60)
+    email = req.email.strip().lower() if req.email else None
+    
+    res = await create_razorpay_order(
+        amount_in_inr=req.amount,
+        email=email,
+        plan_name=req.plan_name or "DSA Pro Pass (1 Month)",
+    )
+    if not res.get("success"):
+        raise HTTPException(status_code=500, detail=res.get("error", "Failed to initialize payment order."))
+
+    return JSONResponse(content=res)
+
+
+@app.post("/api/payment/verify-payment", tags=["Payment"])
+async def verify_payment_endpoint(req: VerifyPaymentRequest, request: Request):
+    """
+    Verifies the cryptographic HMAC-SHA256 signature from Razorpay.
+    Upon verification, activates 30 days of Pro membership for the user.
+    """
+    rate_limit(request, max_requests=10, window_sec=60)
+    order_id = req.razorpay_order_id.strip()
+    payment_id = req.razorpay_payment_id.strip()
+    signature = req.razorpay_signature.strip()
+    email = req.email.strip().lower() if req.email else "guest@bittuai.online"
+
+    # Cryptographically verify the signature
+    is_valid = verify_razorpay_signature(order_id, payment_id, signature)
+    if not is_valid:
+        raise HTTPException(status_code=400, detail="Invalid payment signature. Verification failed.")
+
+    # Activate Pro membership
+    result = activate_user_pro(
+        email=email,
+        order_id=order_id,
+        payment_id=payment_id,
+        amount_inr=99,
+        days=30,
+    )
+
+    return JSONResponse(content=result)
+
+
+@app.get("/api/payment/status", tags=["Payment"])
+async def get_payment_status_endpoint(email: Optional[str] = None):
+    """
+    Checks if an email currently has an active Pro membership.
+    """
+    status = get_user_pro_status(email)
+    return JSONResponse(content=status)
 
 
 # ─────────────────────────────────────────────────────────────

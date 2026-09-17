@@ -4,11 +4,13 @@ import {
   Code2, Search, Trophy, Zap, BookOpen,
   BarChart3, Sparkles, ArrowLeft,
   Target, Flame, Star, CheckCircle2, X, Sun, Moon,
-  ChevronLeft, ChevronRight, Lock
+  ChevronLeft, ChevronRight, Lock, Crown
 } from 'lucide-react'
 import ProblemCard from '../components/dsa/ProblemCard'
 import StatsPanel from '../components/dsa/StatsPanel'
 import LeaderboardModal from '../components/dsa/LeaderboardModal'
+import ProPaymentModal from '../components/dsa/ProPaymentModal'
+import { getCachedProStatus, fetchRemoteProStatus } from '../utils/proSubscription'
 import { dsaProblems, filterProblems } from '../data/dsaProblems'
 import StarField from '../components/StarField'
 import { getLevel, getStreak, updateStreak, LEVELS } from '../utils/dsaStats'
@@ -73,6 +75,7 @@ function computeXP(solvedIds) {
 }
 
 export default function DSAHub() {
+  const { user } = useAuth()
   const [search, setSearch] = useState('')
   const [topic, setTopic] = useState('All')
   const [difficulty, setDifficulty] = useState('All')
@@ -80,17 +83,33 @@ export default function DSAHub() {
   const [showBookmarks, setShowBookmarks] = useState(false)
   const [showStats, setShowStats] = useState(false)
   const [showLeaderboard, setShowLeaderboard] = useState(false)
-  const [lockedModal, setLockedModal] = useState(false)
+  const [showProModal, setShowProModal] = useState(false)
+  const [isPro, setIsPro] = useState(() => getCachedProStatus(user?.email).isPro)
+  const [topInterviewOnly, setTopInterviewOnly] = useState(false)
   const [theme, setTheme] = useState(() => sessionStorage.getItem('dsa_theme') || 'light')
   const [currentPage, setCurrentPage] = useState(1)
   const PAGE_SIZE = 30
 
   const { solved, bookmarks, markSolved, toggleBookmark } = useDSAStorage()
 
+  // Sync remote Pro subscription status
+  useEffect(() => {
+    if (user?.email) {
+      fetchRemoteProStatus(user.email).then(status => {
+        if (status?.isPro) setIsPro(true)
+      })
+    }
+    const handleProUpdate = (e) => {
+      if (e.detail?.isPro) setIsPro(true)
+    }
+    window.addEventListener('bittu_pro_updated', handleProUpdate)
+    return () => window.removeEventListener('bittu_pro_updated', handleProUpdate)
+  }, [user])
+
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1)
-  }, [search, topic, difficulty, phase, showBookmarks])
+  }, [search, topic, difficulty, phase, showBookmarks, topInterviewOnly])
 
   // Update streak on mount
   useEffect(() => { updateStreak() }, [])
@@ -118,8 +137,12 @@ export default function DSAHub() {
     let problems = filterProblems(topic, difficulty, search)
     if (phase !== 'All') problems = problems.filter(p => p.phase === phaseMap[phase])
     if (showBookmarks) problems = problems.filter(p => bookmarks.includes(p.id))
+    if (topInterviewOnly && isPro) {
+      // Curated Top 150 Interview Questions for Pro members
+      problems = problems.filter(p => p.id <= 150)
+    }
     return problems
-  }, [topic, difficulty, search, phase, showBookmarks, bookmarks])
+  }, [topic, difficulty, search, phase, showBookmarks, bookmarks, topInterviewOnly, isPro])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const paginatedProblems = useMemo(() => {
@@ -199,6 +222,24 @@ export default function DSAHub() {
           <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
             {/* User Profile / Auth Nav */}
             <UserNav isLight={isLight} />
+
+            {/* Pro Membership Status / Upgrade Button */}
+            {!isPro ? (
+              <button
+                type="button"
+                onClick={() => setShowProModal(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white shadow-sm shadow-amber-500/25 hover:opacity-95 active:scale-95 transition-all shrink-0 cursor-pointer"
+                title="Unlock Top Interview Questions & Pro Perks for ₹99/mo"
+              >
+                <Crown size={13} className="text-white fill-white/20" />
+                <span>DSA Pro (₹99)</span>
+              </button>
+            ) : (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-amber-500/15 to-yellow-500/15 border border-amber-400/40 text-amber-500 shrink-0">
+                <Crown size={13} className="text-amber-500 fill-amber-500/20" />
+                <span>PRO ACTIVE</span>
+              </div>
+            )}
 
             <button
               onClick={() => setShowLeaderboard(true)}
@@ -404,16 +445,43 @@ export default function DSAHub() {
                   </p>
                 </div>
 
-                {/* Card 2: TOP INTERVIEW QUESTIONS (LOCKED) */}
+                {/* Card 2: TOP INTERVIEW QUESTIONS (LOCKED / PRO UNLOCKED) */}
                 <button
                   type="button"
-                  onClick={() => setLockedModal(true)}
-                  className="relative overflow-hidden rounded-2xl p-4 bg-gradient-to-br from-[#1e3a8a] via-[#1d4ed8] to-[#0284c7] text-white shadow-lg border border-cyan-400/30 group hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all text-left cursor-pointer"
+                  onClick={() => {
+                    if (isPro) {
+                      setTopInterviewOnly(prev => !prev)
+                    } else {
+                      setShowProModal(true)
+                    }
+                  }}
+                  className={`relative overflow-hidden rounded-2xl p-4 text-white shadow-lg group hover:-translate-y-0.5 transition-all text-left cursor-pointer ${
+                    isPro
+                      ? (topInterviewOnly
+                          ? 'bg-gradient-to-br from-amber-600 via-amber-500 to-yellow-600 border-2 border-amber-300 shadow-amber-500/40 ring-2 ring-amber-400/50'
+                          : 'bg-gradient-to-br from-[#1e1b4b] via-[#312e81] to-[#4338ca] border border-amber-400/40 hover:shadow-indigo-500/30')
+                      : 'bg-gradient-to-br from-[#1e3a8a] via-[#1d4ed8] to-[#0284c7] border border-cyan-400/30 hover:shadow-blue-500/30'
+                  }`}
                 >
-                  {/* Lock Badge in top right */}
-                  <div className="absolute top-2.5 right-2.5 flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/45 border border-amber-400/40 text-amber-300 text-[10px] font-mono font-bold backdrop-blur-md shadow-sm group-hover:bg-amber-400/20 transition-colors">
-                    <Lock size={10} className="text-amber-400" />
-                    <span>Locked</span>
+                  {/* Lock/Pro Badge in top right */}
+                  <div className={`absolute top-2.5 right-2.5 flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold backdrop-blur-md shadow-sm transition-colors ${
+                    isPro
+                      ? (topInterviewOnly
+                          ? 'bg-amber-400 text-slate-950 font-black'
+                          : 'bg-amber-400/20 border border-amber-400/50 text-amber-300')
+                      : 'bg-black/45 border border-amber-400/40 text-amber-300 group-hover:bg-amber-400/20'
+                  }`}>
+                    {isPro ? (
+                      <>
+                        <Crown size={11} className={topInterviewOnly ? "text-slate-950" : "text-amber-300"} />
+                        <span>{topInterviewOnly ? 'Active ✓' : 'Pro Unlocked'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Lock size={10} className="text-amber-400" />
+                        <span>₹99 / mo</span>
+                      </>
+                    )}
                   </div>
 
                   {/* 3D Chat Bubbles Graphic in Background */}
@@ -427,15 +495,24 @@ export default function DSAHub() {
                   <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/15 border border-white/20 text-cyan-200 mb-1.5">
                     <Target size={10} /> Study Plan
                   </span>
-                  <h3 className="text-sm font-extrabold leading-tight mb-1 pr-12">
+                  <h3 className="text-sm font-extrabold leading-tight mb-1 pr-16">
                     Top Interview Questions
                   </h3>
                   <p className="text-[11px] text-cyan-100/80 leading-relaxed pr-4 line-clamp-2">
                     Curated FAANG & Tier-1 must-do technical interview question set.
                   </p>
                   <div className="mt-2 flex items-center gap-1 text-[10px] text-amber-300 font-medium">
-                    <Lock size={10} />
-                    <span>Releasing soon · Click to preview</span>
+                    {isPro ? (
+                      <>
+                        <Sparkles size={11} className="text-amber-300" />
+                        <span>{topInterviewOnly ? 'Showing Top 150 FAANG Questions' : 'Click to filter Top 150 Questions'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Lock size={10} />
+                        <span>Click to unlock with ₹99 Pro Pass</span>
+                      </>
+                    )}
                   </div>
                 </button>
 
@@ -573,6 +650,24 @@ export default function DSAHub() {
                 {search && <span> for "<span className={isLight ? 'text-violet-700 font-bold' : 'text-violet-300'}>{search}</span>"</span>}
               </p>
               <div className="flex items-center gap-2">
+                {topInterviewOnly && isPro && (
+                  <span className={`text-xs px-2.5 py-0.5 rounded-full border flex items-center gap-1 font-semibold ${
+                    isLight
+                      ? 'bg-amber-100 border-amber-300 text-amber-900'
+                      : 'text-amber-300 bg-amber-500/15 border-amber-500/30'
+                  }`}>
+                    <Crown size={11} className="text-amber-500" />
+                    <span>Top 150 Interview Set</span>
+                    <button
+                      type="button"
+                      onClick={() => setTopInterviewOnly(false)}
+                      className="ml-1 hover:opacity-70 text-[13px] leading-none"
+                      title="Clear Top Interview filter"
+                    >
+                      ×
+                    </button>
+                  </span>
+                )}
                 {showBookmarks && (
                   <span className={`text-xs px-2 py-0.5 rounded-full border ${
                     isLight
@@ -729,50 +824,16 @@ export default function DSAHub() {
         isLight={isLight}
       />
 
-      {/* ── Top Interview Questions — Locked Preview Modal ── */}
-      {lockedModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fadeIn">
-          <div className={`relative w-full max-w-sm rounded-3xl border p-6 text-center shadow-2xl transition-all ${
-            isLight
-              ? 'bg-white border-slate-200 text-slate-900 shadow-slate-300/60'
-              : 'bg-[#0f0a1c] border-violet-500/30 text-white shadow-violet-900/30'
-          }`}>
-            <button
-              onClick={() => setLockedModal(false)}
-              className={`absolute top-4 right-4 p-1.5 rounded-lg transition-colors ${
-                isLight ? 'hover:bg-slate-100 text-slate-400 hover:text-slate-800' : 'hover:bg-white/10 text-white/40 hover:text-white'
-              }`}
-            >
-              <X size={18} />
-            </button>
-
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-cyan-500 text-white flex items-center justify-center mx-auto mb-3.5 shadow-lg shadow-blue-500/30">
-              <Lock size={24} className="text-amber-300" />
-            </div>
-
-            <h3 className="text-base font-extrabold mb-1 tracking-tight">
-              Top Interview Questions
-            </h3>
-            
-            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 text-xs font-mono font-semibold mb-3">
-              <Lock size={11} />
-              <span>Locked · Releasing Soon</span>
-            </div>
-
-            <p className={`text-xs leading-relaxed mb-5 ${isLight ? 'text-slate-600' : 'text-white/60'}`}>
-              Ye exclusive study plan abhi <strong>Locked</strong> hai. Top FAANG & Tier-1 companies ke selected interview questions jald hi unlock honge!
-            </p>
-
-            <button
-              type="button"
-              onClick={() => setLockedModal(false)}
-              className="w-full py-2.5 rounded-xl font-bold text-xs bg-gradient-to-r from-violet-600 via-purple-600 to-cyan-600 text-white shadow-lg shadow-violet-600/30 hover:opacity-95 active:scale-[0.98] transition-all cursor-pointer"
-            >
-              Got it (समझ गया)
-            </button>
-          </div>
-        </div>
-      )}
+      {/* ── DSA Pro Pass Payment & Unlock Modal ── */}
+      <ProPaymentModal
+        isOpen={showProModal}
+        onClose={() => setShowProModal(false)}
+        onSuccess={(data) => {
+          setIsPro(true)
+          setTopInterviewOnly(true)
+        }}
+        isLight={isLight}
+      />
     </div>
   )
 }
