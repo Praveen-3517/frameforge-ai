@@ -4,10 +4,10 @@ import {
   ArrowLeft, CheckCircle2, Circle, FileText,
   Search, Sparkles, Trophy, Lock, Crown,
   ExternalLink, Copy, Check, X, ChevronDown, ChevronUp,
-  Tag, Code2, ArrowRight
+  Tag, Code2, ArrowRight, Zap
 } from 'lucide-react'
 import { TOP_INTERVIEW_150, TOP_INTERVIEW_CATEGORIES } from '../data/topInterview150Data'
-import { getCachedProStatus } from '../utils/proSubscription'
+import { getCachedProStatus, fetchRemoteProStatus } from '../utils/proSubscription'
 import { useAuth } from '../context/AuthContext'
 import ProPaymentModal from '../components/dsa/ProPaymentModal'
 
@@ -40,14 +40,28 @@ export default function TopInterview150() {
   const [theme] = useState(() => sessionStorage.getItem('dsa_theme') || 'light')
   const isLight = theme === 'light'
 
-  // Listen for Pro status updates
+  // Sync and Listen for Pro status updates
   useEffect(() => {
+    if (user?.email) {
+      fetchRemoteProStatus(user.email).then(status => {
+        if (status?.isPro) setIsPro(true)
+      })
+    }
     const handleProUpdate = (e) => {
       if (e.detail?.isPro) setIsPro(true)
     }
     window.addEventListener('bittu_pro_updated', handleProUpdate)
     return () => window.removeEventListener('bittu_pro_updated', handleProUpdate)
-  }, [])
+  }, [user])
+
+  // Guarded Solution opener: Only Pro subscribers can open solutions or problem details!
+  const handleOpenSolution = (problem) => {
+    if (!isPro) {
+      setShowProModal(true)
+      return
+    }
+    setActiveSolutionModal(problem)
+  }
 
   // Toggle problem solved
   const toggleSolved = (id, e) => {
@@ -231,6 +245,46 @@ export default function TopInterview150() {
           </div>
         </div>
 
+        {/* ── Locked Pro Notice Banner (If not subscribed) ── */}
+        {!isPro && (
+          <div className={`relative overflow-hidden rounded-3xl border p-5 sm:p-6 mb-8 transition-all ${
+            isLight
+              ? 'bg-gradient-to-r from-amber-500/10 via-yellow-500/10 to-amber-600/10 border-amber-300 shadow-sm'
+              : 'bg-gradient-to-r from-amber-950/40 via-yellow-950/25 to-amber-900/30 border-amber-500/30 shadow-lg shadow-amber-950/30'
+          }`}>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 relative z-10">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-yellow-600 text-white flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/30">
+                  <Lock size={22} className="text-white" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                    <h2 className="text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-white">
+                      Top Interview 150 Questions & Solutions are Locked 🔒
+                    </h2>
+                    <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-500 text-slate-950 shadow-sm">
+                      Pro Pass Required
+                    </span>
+                  </div>
+                  <p className={`text-xs sm:text-sm leading-relaxed max-w-2xl ${
+                    isLight ? 'text-slate-600' : 'text-slate-300'
+                  }`}>
+                    All 150 company-tagged questions, optimal Python 3 solutions, step-by-step intuition, and time/space complexity breakdowns require a Bittu AI Pro Pass. Get unlimited instant access for just <strong>₹99/month</strong>.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowProModal(true)}
+                className="shrink-0 w-full sm:w-auto px-6 py-3 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-wider bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-slate-950 shadow-xl shadow-amber-500/30 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Crown size={16} className="fill-slate-950" />
+                <span>Unlock All 150 (₹99)</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* ── Search & Filter Controls ── */}
         <div className="flex flex-col sm:flex-row gap-3 items-center justify-between mb-6">
           {/* Search Box */}
@@ -342,13 +396,22 @@ export default function TopInterview150() {
 
                             <div className="min-w-0">
                               <div className="flex items-baseline gap-2 flex-wrap">
-                                <span className={`text-sm font-semibold tracking-tight ${
-                                  isSolved
-                                    ? isLight ? 'text-slate-500 line-through' : 'text-white/50 line-through'
-                                    : isLight ? 'text-slate-900' : 'text-white'
-                                }`}>
-                                  {problem.title}
-                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenSolution(problem)}
+                                  className={`text-left text-sm font-semibold tracking-tight hover:underline flex items-center gap-2 group/title cursor-pointer ${
+                                    isSolved
+                                      ? isLight ? 'text-slate-500 line-through' : 'text-white/50 line-through'
+                                      : isLight ? 'text-slate-900 hover:text-violet-600' : 'text-white hover:text-cyan-300'
+                                  }`}
+                                >
+                                  <span>{problem.title}</span>
+                                  {!isPro && (
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-500/15 border border-amber-500/30 text-amber-500 no-underline">
+                                      <Lock size={10} /> Pro
+                                    </span>
+                                  )}
+                                </button>
                               </div>
 
                               {/* Company tags when "Show tags" is checked */}
@@ -376,15 +439,27 @@ export default function TopInterview150() {
                             {/* [Solution] Editorial Button matching LeetCode screenshot */}
                             <button
                               type="button"
-                              onClick={() => setActiveSolutionModal(problem)}
-                              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
-                                isLight
+                              onClick={() => handleOpenSolution(problem)}
+                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                                !isPro
+                                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-500 hover:bg-amber-500/20 hover:border-amber-500/50 shadow-sm shadow-amber-500/10'
+                                  : isLight
                                   ? 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-violet-50 hover:border-violet-300 hover:text-violet-700 shadow-sm'
                                   : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white'
                               }`}
+                              title={!isPro ? 'Pro Subscription Required (₹99/mo)' : 'View Editorial Solution'}
                             >
-                              <FileText size={13} className="text-violet-500" />
-                              <span>Solution</span>
+                              {!isPro ? (
+                                <>
+                                  <Lock size={12} className="text-amber-500" />
+                                  <span className="font-bold">Solution (Pro)</span>
+                                </>
+                              ) : (
+                                <>
+                                  <FileText size={13} className="text-violet-500" />
+                                  <span>Solution</span>
+                                </>
+                              )}
                             </button>
 
                             {/* Difficulty Tag */}
@@ -410,7 +485,7 @@ export default function TopInterview150() {
       </div>
 
       {/* ── EDITORIAL SOLUTION MODAL / DRAWER ── */}
-      {activeSolutionModal && (
+      {activeSolutionModal && isPro && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
           <div className={`relative w-full max-w-3xl max-h-[90vh] flex flex-col rounded-3xl border shadow-2xl overflow-hidden transition-all ${
             isLight

@@ -453,9 +453,22 @@ export default function DSAHub() {
                   className="relative overflow-hidden rounded-2xl p-4 text-white shadow-lg group hover:-translate-y-0.5 transition-all text-left cursor-pointer bg-gradient-to-br from-[#1e3a8a] via-[#1d4ed8] to-[#0284c7] border border-cyan-400/30 hover:shadow-blue-500/30"
                 >
                   {/* Badge in top right */}
-                  <div className="absolute top-2.5 right-2.5 flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold backdrop-blur-md shadow-sm transition-colors bg-black/45 border border-cyan-400/40 text-cyan-300 group-hover:bg-cyan-400/20">
-                    <Sparkles size={11} className="text-cyan-300" />
-                    <span>Top 150</span>
+                  <div className={`absolute top-2.5 right-2.5 flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold backdrop-blur-md shadow-sm transition-colors ${
+                    isPro
+                      ? 'bg-emerald-500/20 border border-emerald-400/40 text-emerald-300'
+                      : 'bg-black/55 border border-amber-400/60 text-amber-300 shadow-md'
+                  }`}>
+                    {isPro ? (
+                      <>
+                        <Crown size={11} className="text-emerald-300" />
+                        <span>Pro Unlocked</span>
+                      </>
+                    ) : (
+                      <>
+                        <Lock size={11} className="text-amber-300" />
+                        <span>Locked · ₹99/mo</span>
+                      </>
+                    )}
                   </div>
 
                   {/* 3D Chat Bubbles Graphic in Background */}
@@ -469,15 +482,25 @@ export default function DSAHub() {
                   <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/15 border border-white/20 text-cyan-200 mb-1.5">
                     <Target size={10} /> Study Plan
                   </span>
-                  <h3 className="text-sm font-extrabold leading-tight mb-1 pr-16">
-                    Top Interview 150
+                  <h3 className="text-sm font-extrabold leading-tight mb-1 pr-16 flex items-center gap-1.5">
+                    <span>Top Interview 150</span>
+                    {!isPro && <Lock size={13} className="text-amber-300 inline" />}
                   </h3>
                   <p className="text-[11px] text-cyan-100/80 leading-relaxed pr-4 line-clamp-2">
                     Must-do 150 interview questions asked at FAANG & top tech companies with solutions.
                   </p>
                   <div className="mt-2 flex items-center gap-1 text-[10px] text-cyan-300 font-medium">
-                    <Sparkles size={11} />
-                    <span>Click to open full 150 questions & solutions →</span>
+                    {isPro ? (
+                      <>
+                        <Sparkles size={11} />
+                        <span>Click to open full 150 questions & solutions →</span>
+                      </>
+                    ) : (
+                      <>
+                        <Lock size={11} className="text-amber-300" />
+                        <span className="text-amber-300 font-bold">Pro Pass Required (₹99/mo) — View Questions & Unlock →</span>
+                      </>
+                    )}
                   </div>
                 </button>
 
