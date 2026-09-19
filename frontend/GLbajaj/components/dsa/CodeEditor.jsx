@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react'
 import Editor from '@monaco-editor/react'
 
-export default function CodeEditor({ value, onChange, readOnly = false, isLight = false }) {
+export default function CodeEditor({ value, onChange, readOnly = false, isLight = false, language = 'java' }) {
   const editorRef = useRef(null)
   const monacoRef = useRef(null)
 
@@ -44,14 +44,6 @@ export default function CodeEditor({ value, onChange, readOnly = false, isLight 
 
     monaco.editor.setTheme(isLight ? 'vs' : 'dsa-dark')
 
-    // Python-specific settings
-    monaco.languages.setLanguageConfiguration('python', {
-      indentationRules: {
-        increaseIndentPattern: /^.*:\s*$/,
-        decreaseIndentPattern: /^\s*(else|elif|except|finally)\b.*:\s*$/
-      }
-    })
-
     editor.focus()
   }
 
@@ -67,7 +59,8 @@ export default function CodeEditor({ value, onChange, readOnly = false, isLight 
     }`}>
       <Editor
         height="100%"
-        defaultLanguage="python"
+        language={language}
+        defaultLanguage={language}
         value={value}
         onChange={onChange}
         onMount={handleEditorDidMount}

@@ -1,10 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   Code2, Search, Trophy, Zap, BookOpen,
   BarChart3, Sparkles, ArrowLeft,
   Target, Flame, Star, CheckCircle2, X, Sun, Moon,
-  ChevronLeft, ChevronRight, Lock, Crown
+  ChevronLeft, ChevronRight, Lock, Crown, Coffee
 } from 'lucide-react'
 import ProblemCard from '../components/dsa/ProblemCard'
 import StatsPanel from '../components/dsa/StatsPanel'
@@ -19,7 +19,8 @@ import { useAuth } from '../context/AuthContext'
 import { syncProgressOnLogin, saveProgressToCloud } from '../utils/dsaSync'
 
 const TOPICS = [
-  'All', 'Arrays', 'Strings', 'Linked List', 'Stack',
+  'All', 'Conditionals', 'Operators', 'Loops',
+  'Arrays', 'Strings', 'Linked List', 'Stack',
   'Hashing', 'Binary Search', 'Backtracking',
   'Trees', 'Graphs', 'Heap', 'Dynamic Programming',
   'Bit Manipulation', 'Sorting', 'Greedy', 'Recursion'
@@ -28,7 +29,7 @@ const DIFFICULTIES = ['All', 'Easy', 'Medium', 'Hard']
 const PHASES = ['All', 'Basic', 'Intermediate', 'Advanced']
 
 function useDSAStorage() {
-  const { user } = useAuth()
+  const { user, openAuthModal } = useAuth()
   const [solved, setSolved] = useState(() => {
     try { return JSON.parse(localStorage.getItem('dsa_solved') || '[]') } catch { return [] }
   })
@@ -49,6 +50,10 @@ function useDSAStorage() {
   }, [user?.id])
 
   const markSolved = (id) => {
+    if (!user) {
+      openAuthModal('signup')
+      return
+    }
     const next = solved.includes(id) ? solved.filter(x => x !== id) : [...solved, id]
     setSolved(next)
     localStorage.setItem('dsa_solved', JSON.stringify(next))
@@ -56,6 +61,10 @@ function useDSAStorage() {
   }
 
   const toggleBookmark = (id) => {
+    if (!user) {
+      openAuthModal('signup')
+      return
+    }
     const next = bookmarks.includes(id) ? bookmarks.filter(x => x !== id) : [...bookmarks, id]
     setBookmarks(next)
     localStorage.setItem('dsa_bookmarks', JSON.stringify(next))
@@ -79,6 +88,16 @@ export default function DSAHub() {
   const { user } = useAuth()
   const [search, setSearch] = useState('')
   const [topic, setTopic] = useState('All')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const initialLang = searchParams.get('lang') || localStorage.getItem('dsa_lang') || 'java'
+  const [activeLang, setActiveLang] = useState(initialLang)
+
+  const handleLangToggle = (lang) => {
+    setActiveLang(lang)
+    localStorage.setItem('dsa_lang', lang)
+    setSearchParams({ lang })
+  }
+
   const [difficulty, setDifficulty] = useState('All')
   const [phase, setPhase] = useState('All')
   const [showBookmarks, setShowBookmarks] = useState(false)
@@ -192,24 +211,59 @@ export default function DSAHub() {
                 <h1 className={`text-base sm:text-lg font-bold tracking-tight leading-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
                   DSA <span className="bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">Practice</span>
                 </h1>
-                <p className={`text-[10px] leading-none ${isLight ? 'text-slate-500' : 'text-white/30'}`}>Python · {total} Problems · Basic to Advanced</p>
+                <p className={`text-[10px] leading-none font-medium flex items-center gap-1 ${
+                  isLight ? 'text-slate-500' : 'text-white/50'
+                }`}>
+                  <span className={activeLang === 'java' ? 'text-amber-500 font-bold' : 'text-cyan-400 font-bold'}>
+                    {activeLang === 'java' ? '☕ Java Track' : '🐍 Python Track'}
+                  </span>
+                  <span>· {total} Problems · Basic to Advanced</span>
+                </p>
               </div>
             </div>
 
-            {/* Theme Toggle — always right */}
-            <div className={`flex items-center p-0.5 rounded-lg border text-xs font-medium shrink-0 ${
-              isLight ? 'bg-slate-200 border-slate-300' : 'bg-white/5 border-white/10'
-            }`}>
-              <button
-                onClick={() => setTheme('light')}
-                title="Light Mode"
-                className={`flex items-center gap-1 px-2 py-1 rounded-md transition-all ${
-                  isLight ? 'bg-white text-amber-600 font-bold shadow-sm' : 'text-white/40 hover:text-white'
-                }`}
-              >
-                <Sun size={12} />
-                <span className="hidden sm:inline text-[10px]">Light</span>
-              </button>
+            <div className="flex items-center gap-2">
+              {/* Language Track Toggle */}
+              <div className={`flex items-center p-0.5 rounded-lg border text-xs font-bold shrink-0 ${
+                isLight ? 'bg-slate-200 border-slate-300' : 'bg-white/5 border-white/10'
+              }`}>
+                <button
+                  onClick={() => handleLangToggle('java')}
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition-all ${
+                    activeLang === 'java'
+                      ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-sm'
+                      : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-white/40 hover:text-white'
+                  }`}
+                >
+                  <Coffee size={12} />
+                  <span>Java</span>
+                </button>
+                <button
+                  onClick={() => handleLangToggle('python')}
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition-all ${
+                    activeLang === 'python'
+                      ? 'bg-gradient-to-r from-blue-500 to-cyan-600 text-white shadow-sm'
+                      : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-white/40 hover:text-white'
+                  }`}
+                >
+                  <span>Python</span>
+                </button>
+              </div>
+
+              {/* Theme Toggle — always right */}
+              <div className={`flex items-center p-0.5 rounded-lg border text-xs font-medium shrink-0 ${
+                isLight ? 'bg-slate-200 border-slate-300' : 'bg-white/5 border-white/10'
+              }`}>
+                <button
+                  onClick={() => setTheme('light')}
+                  title="Light Mode"
+                  className={`flex items-center gap-1 px-2 py-1 rounded-md transition-all ${
+                    isLight ? 'bg-white text-amber-600 font-bold shadow-sm' : 'text-white/40 hover:text-white'
+                  }`}
+                >
+                  <Sun size={12} />
+                  <span className="hidden sm:inline text-[10px]">Light</span>
+                </button>
               <button
                 onClick={() => setTheme('dark')}
                 title="Dark Mode"
@@ -222,6 +276,7 @@ export default function DSAHub() {
               </button>
             </div>
           </div>
+        </div>
 
           {/* Row 2: Action buttons (Sign In + Leaderboard + Saved + Stats) */}
           <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
@@ -232,7 +287,13 @@ export default function DSAHub() {
             {!isPro ? (
               <button
                 type="button"
-                onClick={() => setShowProModal(true)}
+                onClick={() => {
+                  if (!user) {
+                    openAuthModal('signup')
+                    return
+                  }
+                  setShowProModal(true)
+                }}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white shadow-sm shadow-amber-500/25 hover:opacity-95 active:scale-95 transition-all shrink-0 cursor-pointer"
                 title="Unlock Top Interview Questions & Pro Perks for ₹99/mo"
               >
@@ -613,23 +674,36 @@ export default function DSAHub() {
             {/* Topic pills — horizontally scrollable on mobile */}
             <div className="overflow-x-auto pb-2 scrollbar-hide mb-4">
               <div className="flex gap-1.5 min-w-max">
-                {TOPICS.filter(t => t === 'All' || dsaProblems.some(p => p.topic === t)).map(t => (
-                  <button
-                    key={t}
-                    onClick={() => setTopic(t)}
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-all whitespace-nowrap ${
-                      topic === t
-                        ? isLight
-                          ? 'bg-violet-600 border-violet-600 text-white font-bold shadow-md shadow-violet-600/20'
-                          : 'bg-violet-500/25 border-violet-500/50 text-violet-300'
-                        : isLight
-                        ? 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100 hover:border-slate-300 shadow-sm font-semibold'
-                        : 'bg-white/3 border-white/8 text-white/40 hover:text-white/70 hover:border-white/20'
-                    }`}
-                  >
-                    {t}
-                  </button>
-                ))}
+                {TOPICS.filter(t => t === 'All' || dsaProblems.some(p => p.topic === t)).map(t => {
+                  const isBeginner = ['Conditionals', 'Operators', 'Loops'].includes(t)
+                  return (
+                    <button
+                      key={t}
+                      onClick={() => setTopic(t)}
+                      className={`px-3 py-1 rounded-full text-xs font-medium border transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                        topic === t
+                          ? isLight
+                            ? isBeginner
+                              ? 'bg-emerald-600 border-emerald-600 text-white font-bold shadow-md shadow-emerald-600/20'
+                              : 'bg-violet-600 border-violet-600 text-white font-bold shadow-md shadow-violet-600/20'
+                            : isBeginner
+                            ? 'bg-emerald-500/30 border-emerald-500/60 text-emerald-300 font-bold'
+                            : 'bg-violet-500/25 border-violet-500/50 text-violet-300 font-bold'
+                          : isBeginner
+                          ? isLight
+                            ? 'bg-emerald-50/80 border-emerald-200 text-emerald-800 hover:bg-emerald-100 font-semibold'
+                            : 'bg-emerald-500/10 border-emerald-500/25 text-emerald-300/90 hover:text-emerald-200 hover:border-emerald-500/50'
+                          : isLight
+                          ? 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100 hover:border-slate-300 shadow-sm font-semibold'
+                          : 'bg-white/3 border-white/8 text-white/40 hover:text-white/70 hover:border-white/20'
+                      }`}
+                    >
+                      {isBeginner && <Sparkles size={11} className={topic === t ? 'text-white' : 'text-emerald-400'} />}
+                      <span>{t}</span>
+                      {isBeginner && <span className={`text-[10px] px-1 rounded ${topic === t ? 'bg-black/20 text-white' : 'bg-emerald-500/20 text-emerald-300'}`}>Basic</span>}
+                    </button>
+                  )
+                })}
               </div>
             </div>
 

@@ -252,13 +252,19 @@ export default function VideoVariantGenerator() {
 
                 {!file ? (
                   <div
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={() => {
+                      if (!user) {
+                        openAuthModal('signup')
+                        return
+                      }
+                      fileInputRef.current?.click()
+                    }}
                     className="relative aspect-video max-h-64 bg-white/5 rounded-2xl border-2 border-dashed border-white/10 hover:border-violet-500/50 transition-all flex flex-col items-center justify-center cursor-pointer group hover:bg-white/[0.07]"
                   >
                     <div className="w-14 h-14 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                       <Upload className="w-6 h-6 text-violet-400" />
                     </div>
-                    <p className="text-sm font-semibold text-white/80">Click to browse or drop video here</p>
+                    <p className="text-sm font-semibold text-white/80">{!user ? 'Sign up to upload and transform video' : 'Click to browse or drop video here'}</p>
                     <p className="text-xs text-white/40 mt-1">Supports MP4, MOV, WebM, AVI, MKV (Up to 200MB)</p>
                     <input
                       ref={fileInputRef}
@@ -977,10 +983,17 @@ export default function VideoVariantGenerator() {
                 {/* Generate Button */}
                 <button
                   onClick={handleGenerate}
-                  disabled={!file || isLoading}
-                  className="btn-primary w-full text-base py-4"
+                  disabled={user ? (!file || isLoading) : false}
+                  className={`btn-primary w-full text-base py-4 cursor-pointer ${
+                    !user ? 'bg-gradient-to-r from-violet-600 via-pink-600 to-cyan-500 hover:opacity-95 shadow-lg shadow-violet-500/30' : ''
+                  }`}
                 >
-                  {isLoading ? (
+                  {!user ? (
+                    <div className="flex items-center gap-2">
+                      <Sparkles size={18} className="text-amber-300 animate-pulse" />
+                      <span className="font-bold">⚡ Sign Up to Create Video Variant (100% Free)</span>
+                    </div>
+                  ) : isLoading ? (
                     <div className="flex items-center gap-2">
                       <svg className="animate-spin w-5 h-5 text-white" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />

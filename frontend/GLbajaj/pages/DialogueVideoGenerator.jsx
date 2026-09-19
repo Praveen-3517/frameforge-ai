@@ -986,6 +986,11 @@ export default function DialogueVideoGenerator() {
                   <Sparkles size={20} className="animate-spin text-black" />
                   Generating Multi-Voice Video...
                 </>
+              ) : !user ? (
+                <>
+                  <Sparkles size={22} className="text-amber-300 animate-pulse" />
+                  <span>⚡ Sign Up to Generate Video (100% Free)</span>
+                </>
               ) : (
                 <>
                   <Zap size={22} className="fill-black text-black" />

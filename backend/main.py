@@ -1379,6 +1379,78 @@ async def get_payment_status_endpoint(email: Optional[str] = None):
 
 
 # ─────────────────────────────────────────────────────────────
+# 11.1  DSA Java Code Execution Engine (Local JDK)
+# ─────────────────────────────────────────────────────────────
+
+class JavaRunRequest(BaseModel):
+    code: str
+
+@app.post("/api/dsa/run-java", tags=["DSA"])
+async def run_java_code(req: JavaRunRequest):
+    """
+    Safely compiles and runs Java code using JDK with 8s compile & 5s run timeout.
+    """
+    code = req.code.strip()
+    if not code:
+        raise HTTPException(status_code=400, detail="Empty code provided")
+
+    import tempfile
+    import subprocess
+    import re
+
+    # Extract primary class name (default to Solution)
+    match = re.search(r'(?:public\s+)?(?:final\s+)?class\s+(\w+)', code)
+    class_name = match.group(1) if match else "Solution"
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        java_file = Path(tmpdir) / f"{class_name}.java"
+        java_file.write_text(code, encoding="utf-8")
+
+        # Compile
+        try:
+            compile_proc = await asyncio.to_thread(
+                subprocess.run,
+                ["javac", str(java_file)],
+                capture_output=True,
+                text=True,
+                timeout=8,
+                cwd=tmpdir
+            )
+            if compile_proc.returncode != 0:
+                return {
+                    "success": False,
+                    "stage": "compile",
+                    "stdout": "",
+                    "stderr": compile_proc.stderr or compile_proc.stdout or "Compilation error."
+                }
+        except subprocess.TimeoutExpired:
+            return {"success": False, "stage": "compile", "stderr": "Compilation timed out (8s limit)."}
+        except Exception as e:
+            return {"success": False, "stage": "compile", "stderr": f"Compiler error: {str(e)}"}
+
+        # Execute
+        try:
+            run_proc = await asyncio.to_thread(
+                subprocess.run,
+                ["java", "-cp", tmpdir, class_name],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                cwd=tmpdir
+            )
+            return {
+                "success": run_proc.returncode == 0,
+                "stage": "runtime",
+                "stdout": run_proc.stdout,
+                "stderr": run_proc.stderr
+            }
+        except subprocess.TimeoutExpired:
+            return {"success": False, "stage": "runtime", "stderr": "Execution timed out (5s limit, possible infinite loop)."}
+        except Exception as e:
+            return {"success": False, "stage": "runtime", "stderr": f"Execution error: {str(e)}"}
+
+
+# ─────────────────────────────────────────────────────────────
 # 12.  Dev Runner
 # ─────────────────────────────────────────────────────────────
 

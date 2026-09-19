@@ -1,6 +1,7 @@
 //  DSA Interview Solutions & Bilingual (Hindi/English) Knowledge Base
 //  Provides Exam/Interview Question Formatting, Bilingual Statements,
-//  and Step-by-Step Logic with Python Solution Code.
+//  and Step-by-Step Logic with Python & Java Solution Code.
+import { getJavaSolution } from './dsaJavaSolutions'
 
 const COMPANY_POOLS = {
   Arrays: ['Google', 'Amazon', 'Microsoft', 'Meta', 'Adobe', 'Uber'],
@@ -252,9 +253,57 @@ print(solution([-2, 1, -3, 4, -1, 2, 1, -5, 4]))  # Output: 6`,
 export function getProblemInterviewData(problem) {
   if (!problem) return null
 
+  const javaSol = getJavaSolution(problem);
+
+  // Dedicated Handler for Beginner Programming Fundamentals Problems
+  if (problem.javaSolution || problem.pythonSolution) {
+    const enSteps = problem.stepsEn || (problem.hints && problem.hints.length > 0
+      ? problem.hints.map((h, i) => `Step ${i + 1}: ${h}`)
+      : ['Analyze condition / operator / loop boundary.', 'Apply clean syntax logic.', 'Return expected result.']);
+
+    const hiSteps = problem.stepsHi || (problem.hints && problem.hints.length > 0
+      ? problem.hints.map((h, i) => `Kadam ${i + 1}: ${h}`)
+      : ['Condition, operator ya loop boundary ko samjhein.', 'Sidhe if-else ya loop logic implement karein.', 'Final result return karein.']);
+
+    return {
+      companies: ['TCS', 'Infosys', 'Wipro', 'Accenture', 'Cognizant', 'Product Companies'],
+      interviewRound: 'Foundation Assessment / Basic Coding Round',
+      examContext: `${problem.difficulty} — Core Programming Fundamentals (${problem.topic} • ${problem.pattern})`,
+      en: {
+        interviewPrompt: `Solve the problem using fundamental ${problem.topic} concepts. Keep logic simple and correct for all inputs.`,
+        scenario: `Fundamental question testing language basics, logic building, and clean code principles.`,
+        objective: `Implement the logic correctly satisfying all edge cases.`,
+        statement: problem.description,
+      },
+      hi: {
+        title: `${problem.id}. ${problem.title}`,
+        statement: `**प्रश्न विवरण (Hindi):**\nYeh sawal **${problem.topic}** (${problem.pattern}) par aadharit hai.\n\n${problem.description}`,
+        objective: `Sahi result return karein aur basic logic clear rakhein.`,
+        clarifications: `Zero, negative values ya boundary conditions ka dhyan rakhein.`,
+      },
+      solution: {
+        code: problem.pythonSolution || problem.starterCode || '',
+        javaCode: problem.javaSolution || javaSol?.code || '',
+        javaStarterCode: problem.javaStarterCode || javaSol?.starterCode || '',
+        en: {
+          intuition: problem.intuitionEn || problem.approach || `Use simple ${problem.pattern} logic to solve this problem directly.`,
+          steps: enSteps,
+          timeComplexity: `${problem.timeComplexity || 'O(1)'} — Constant / linear time complexity.`,
+          spaceComplexity: `${problem.spaceComplexity || 'O(1)'} — Constant auxiliary space.`
+        },
+        hi: {
+          intuition: problem.intuitionHi || problem.approach || `${problem.pattern} ka upayog karke bina kisi complex data structure ke sidhe solve karein.`,
+          steps: hiSteps,
+          timeComplexity: `${problem.timeComplexity || 'O(1)'} — Bahut tezi se execute hota hai.`,
+          spaceComplexity: `${problem.spaceComplexity || 'O(1)'} — Extra memory ki jarurat nahi hoti.`
+        }
+      }
+    }
+  }
+
   // If canonical data exists, return it merged with problem
-  if (CANONICAL_DATA[problem.id]) {
-    const custom = CANONICAL_DATA[problem.id]
+  const custom = CANONICAL_DATA[problem.slug] || CANONICAL_DATA[problem.id]
+  if (custom) {
     return {
       companies: custom.companies,
       interviewRound: custom.interviewRound,
@@ -273,6 +322,8 @@ export function getProblemInterviewData(problem) {
       },
       solution: {
         code: custom.solution.code,
+        javaCode: javaSol?.code || '',
+        javaStarterCode: javaSol?.starterCode || '',
         en: custom.solution.en,
         hi: custom.solution.hi,
       }
@@ -331,6 +382,8 @@ export function getProblemInterviewData(problem) {
     },
     solution: {
       code: code,
+      javaCode: javaSol?.code || '',
+      javaStarterCode: javaSol?.starterCode || '',
       en: {
         intuition: enIntuition,
         steps: enSteps,

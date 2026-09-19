@@ -1,4 +1,5 @@
-import { Wand2, Lightbulb } from 'lucide-react'
+import { Wand2, Lightbulb, Sparkles, Lock } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
 
 const EXAMPLES = [
   "A lone astronaut discovers a glowing alien artifact buried in the red sands of Mars. She brushes it off carefully and it begins to pulse with golden light.",
@@ -7,11 +8,26 @@ const EXAMPLES = [
 ]
 
 export default function TextInput({ value, onChange, onSubmit, isLoading, charLimit = 2000 }) {
+  const { user, openAuthModal } = useAuth()
   const remaining = charLimit - value.length
   const isOverLimit = remaining < 0
   const isUnderMin = value.trim().length < 10
 
-  const handleExample = (ex) => onChange(ex)
+  const handleExample = (ex) => {
+    if (!user) {
+      openAuthModal('signup')
+      return
+    }
+    onChange(ex)
+  }
+
+  const handleButtonClick = () => {
+    if (!user) {
+      openAuthModal('signup')
+      return
+    }
+    onSubmit()
+  }
 
   return (
     <div className="glass-card p-6 space-y-5 animate-in stagger-2">
@@ -66,11 +82,18 @@ export default function TextInput({ value, onChange, onSubmit, isLoading, charLi
       {/* Generate Button */}
       <button
         id="btn-generate"
-        onClick={onSubmit}
-        disabled={isLoading || isUnderMin || isOverLimit}
-        className="btn-primary w-full text-base"
+        onClick={handleButtonClick}
+        disabled={user ? (isLoading || isUnderMin || isOverLimit) : false}
+        className={`btn-primary w-full text-base cursor-pointer ${
+          !user ? 'bg-gradient-to-r from-violet-600 via-pink-600 to-cyan-500 hover:opacity-95 shadow-lg shadow-violet-500/30' : ''
+        }`}
       >
-        {isLoading ? (
+        {!user ? (
+          <>
+            <Sparkles size={18} className="relative z-10 text-amber-300 animate-pulse" />
+            <span className="relative z-10 font-bold">Sign Up to Generate Video (100% Free)</span>
+          </>
+        ) : isLoading ? (
           <>
             <svg className="animate-spin w-5 h-5 relative z-10" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -89,7 +112,9 @@ export default function TextInput({ value, onChange, onSubmit, isLoading, charLi
 
       {/* Disclaimer */}
       <p className="text-center text-white/20 text-xs">
-        AI video generation takes 3–8 minutes. Please keep this tab open.
+        {!user
+          ? 'Free tier account allows instant, high-speed 1080p AI video creation.'
+          : 'AI video generation takes 3–8 minutes. Please keep this tab open.'}
       </p>
     </div>
   )

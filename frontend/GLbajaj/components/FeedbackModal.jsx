@@ -230,7 +230,7 @@ export default function FeedbackModal() {
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      placeholder="e.g. Rahul Sharma"
+                      placeholder="Enter your name"
                       className="w-full px-3 py-1.5 rounded-lg text-xs bg-white/5 border border-white/10 text-white placeholder-white/30 outline-none focus:border-violet-500 transition-all"
                     />
                   </div>

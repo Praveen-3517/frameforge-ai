@@ -86,16 +86,35 @@ export default function ClothesChanger() {
               {/* Left: Original Image Upload */}
               <div>
                 <label className="block text-sm font-medium text-white/70 mb-2">Original Photo</label>
-                <div className="relative aspect-[3/4] bg-black/20 rounded-2xl border-2 border-dashed border-white/10 hover:border-cyan-500/50 transition-colors flex flex-col items-center justify-center overflow-hidden group">
+                <div
+                  onClick={(e) => {
+                    if (!user) {
+                      e.preventDefault()
+                      openAuthModal('signup')
+                    }
+                  }}
+                  className="relative aspect-[3/4] bg-black/20 rounded-2xl border-2 border-dashed border-white/10 hover:border-cyan-500/50 transition-colors flex flex-col items-center justify-center overflow-hidden group cursor-pointer"
+                >
                   {preview ? (
                     <img src={preview} alt="Upload preview" className="w-full h-full object-cover" />
                   ) : (
                     <div className="text-center p-4">
                       <Upload className="w-8 h-8 text-white/30 mx-auto mb-2" />
-                      <p className="text-xs text-white/40">Click to upload photo</p>
+                      <p className="text-xs text-white/40">{!user ? 'Sign up to upload photo' : 'Click to upload photo'}</p>
                     </div>
                   )}
-                  <input type="file" accept="image/*" onChange={handleImageChange} className="absolute inset-0 opacity-0 cursor-pointer" />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onClick={(e) => {
+                      if (!user) {
+                        e.preventDefault()
+                        openAuthModal('signup')
+                      }
+                    }}
+                    onChange={handleImageChange}
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                  />
                 </div>
               </div>
 
@@ -134,10 +153,23 @@ export default function ClothesChanger() {
 
               <button
                 onClick={handleGenerate}
-                disabled={!image || !prompt || isLoading}
-                className="w-full bg-cyan-500 hover:bg-cyan-400 disabled:bg-cyan-500/20 disabled:text-white/30 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-cyan-500/20 transition-all flex items-center justify-center gap-2"
+                disabled={user ? (!image || !prompt || isLoading) : false}
+                className={`w-full font-bold py-3.5 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  !user
+                    ? 'bg-gradient-to-r from-pink-500 via-fuchsia-600 to-cyan-500 text-white shadow-pink-500/25 hover:opacity-95 active:scale-[0.99]'
+                    : 'bg-cyan-500 hover:bg-cyan-400 disabled:bg-cyan-500/20 disabled:text-white/30 text-white shadow-cyan-500/20'
+                }`}
               >
-                {isLoading ? 'Processing...' : 'Change Clothes'}
+                {!user ? (
+                  <>
+                    <Shirt size={18} className="text-amber-300 animate-pulse" />
+                    <span>⚡ Sign Up to Change Clothes (100% Free)</span>
+                  </>
+                ) : isLoading ? (
+                  'Processing...'
+                ) : (
+                  'Change Clothes'
+                )}
               </button>
               
               {result && (

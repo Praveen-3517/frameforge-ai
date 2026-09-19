@@ -1,8 +1,18 @@
 import React from 'react'
-import { Lightbulb, ChevronRight, Code2, Clock, Database } from 'lucide-react'
+import { Lightbulb, ChevronRight, Code2, Clock, Database, Lock } from 'lucide-react'
+import { useAuth } from '../../context/AuthContext'
 
 export default function HintPanel({ problem, hintsRevealed, onRevealHint, isLight = false }) {
+  const { user, openAuthModal } = useAuth()
   const totalHints = problem.hints?.length || 0
+
+  const handleUnlockHint = (idx) => {
+    if (!user) {
+      openAuthModal('signup')
+      return
+    }
+    onRevealHint(idx + 1)
+  }
 
   return (
     <div className="space-y-4">
@@ -41,10 +51,14 @@ export default function HintPanel({ problem, hintsRevealed, onRevealHint, isLigh
                 </div>
               ) : (
                 <button
-                  onClick={() => onRevealHint(idx + 1)}
-                  disabled={hintsRevealed < idx}
-                  className={`w-full text-left px-3.5 py-3 rounded-xl border text-xs font-bold transition-all duration-200 flex items-center gap-2.5 ${
-                    hintsRevealed < idx
+                  onClick={() => handleUnlockHint(idx)}
+                  disabled={user ? hintsRevealed < idx : false}
+                  className={`w-full text-left px-3.5 py-3 rounded-xl border text-xs font-bold transition-all duration-200 flex items-center gap-2.5 cursor-pointer ${
+                    !user
+                      ? isLight
+                        ? 'border-amber-400 bg-amber-50 text-amber-950 hover:bg-amber-100 shadow-sm'
+                        : 'border-yellow-500/40 text-yellow-300 bg-yellow-500/15 hover:bg-yellow-500/25'
+                      : hintsRevealed < idx
                       ? isLight
                         ? 'border-slate-200 text-slate-400 bg-slate-100/70 cursor-not-allowed'
                         : 'border-white/5 text-white/20 cursor-not-allowed bg-white/2'
@@ -53,11 +67,11 @@ export default function HintPanel({ problem, hintsRevealed, onRevealHint, isLigh
                       : 'border-yellow-500/30 text-yellow-300 bg-yellow-500/10 hover:bg-yellow-500/20 hover:border-yellow-500/50'
                   }`}
                 >
-                  <Lightbulb size={14} className={hintsRevealed === idx ? (isLight ? 'text-amber-600' : 'text-yellow-400') : 'opacity-40'} />
+                  <Lightbulb size={14} className={hintsRevealed === idx || !user ? (isLight ? 'text-amber-600' : 'text-yellow-400') : 'opacity-40'} />
                   <span className="flex-1">
-                    {hintsRevealed < idx ? `Hint #${idx + 1} (Unlock Hint #${idx} first)` : `Unlock Hint #${idx + 1}`}
+                    {!user ? `🔒 Sign Up to Unlock Hint #${idx + 1}` : hintsRevealed < idx ? `Hint #${idx + 1} (Unlock Hint #${idx} first)` : `Unlock Hint #${idx + 1}`}
                   </span>
-                  {hintsRevealed === idx && <ChevronRight size={14} className="ml-auto" />}
+                  {(hintsRevealed === idx || !user) && <ChevronRight size={14} className="ml-auto" />}
                 </button>
               )}
             </div>

@@ -32,8 +32,10 @@ import axios from 'axios'
 import StarField from '../components/StarField'
 import { getApiUrl, getFullMediaUrl } from '../utils/apiUrl'
 import UserNav from '../components/auth/UserNav'
+import { useAuth } from '../context/AuthContext'
 
 export default function FingerprintAnalyzer() {
+  const { user, openAuthModal } = useAuth()
   const [activeTab, setActiveTab] = useState('single') // 'single' | 'compare'
   
   // Single Analysis State
@@ -106,6 +108,10 @@ export default function FingerprintAnalyzer() {
 
   // Single File Analysis Handler
   const handleSingleAnalyze = async () => {
+    if (!user) {
+      openAuthModal('signup')
+      return
+    }
     if (!singleFile) return
     setSingleLoading(true)
     setSingleProgress(0)
@@ -145,6 +151,10 @@ export default function FingerprintAnalyzer() {
 
   // ⚡ 1-Click Fast Direct Transform Handler (Bypasses slow full-file forensic analysis)
   const handleFastDirectTransform = async (mode) => {
+    if (!user) {
+      openAuthModal('signup')
+      return
+    }
     if (!singleFile) return
     setSelectedShieldMode(mode)
     setSmartLoading(true)
@@ -188,6 +198,10 @@ export default function FingerprintAnalyzer() {
 
   // Smart Auto-Transform Handler (uses current singleFile + cached fingerprint)
   const handleSmartTransform = async () => {
+    if (!user) {
+      openAuthModal('signup')
+      return
+    }
     if (!singleFile && !singleResult?.job_id) return
     setSmartLoading(true)
     setSmartProgress(0)
@@ -260,6 +274,10 @@ export default function FingerprintAnalyzer() {
 
   // Dual File Compare Handler
   const handleCompare = async () => {
+    if (!user) {
+      openAuthModal('signup')
+      return
+    }
     if (!fileA || !fileB) return
     setCompareLoading(true)
     setCompareProgress(0)
@@ -397,13 +415,19 @@ export default function FingerprintAnalyzer() {
 
                   {!singleFile ? (
                     <div
-                      onClick={() => singleInputRef.current?.click()}
+                      onClick={() => {
+                        if (!user) {
+                          openAuthModal('signup')
+                          return
+                        }
+                        singleInputRef.current?.click()
+                      }}
                       className="relative aspect-video max-h-56 bg-white/5 rounded-2xl border-2 border-dashed border-white/10 hover:border-cyan-500/50 transition-all flex flex-col items-center justify-center cursor-pointer group hover:bg-white/[0.07]"
                     >
                       <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                         <Upload className="w-6 h-6 text-cyan-400" />
                       </div>
-                      <p className="text-sm font-semibold text-white/80">Click or drop audio/video file here</p>
+                      <p className="text-sm font-semibold text-white/80">{!user ? 'Sign up to analyze and protect media' : 'Click or drop audio/video file here'}</p>
                       <p className="text-xs text-white/40 mt-1">Supports MP4, WebM, MOV, AVI, MP3, WAV, M4A (Up to 200MB)</p>
                       <input
                         ref={singleInputRef}
@@ -1418,11 +1442,17 @@ export default function FingerprintAnalyzer() {
                       </label>
                       {!fileA ? (
                         <div
-                          onClick={() => fileAInputRef.current?.click()}
+                          onClick={() => {
+                            if (!user) {
+                              openAuthModal('signup')
+                              return
+                            }
+                            fileAInputRef.current?.click()
+                          }}
                           className="aspect-video max-h-44 bg-white/5 rounded-2xl border-2 border-dashed border-white/10 hover:border-cyan-500/50 transition-all flex flex-col items-center justify-center cursor-pointer group"
                         >
                           <Upload className="w-6 h-6 text-cyan-400 mb-2 group-hover:scale-110 transition-transform" />
-                          <p className="text-xs font-semibold text-white/80">Upload Reference Media A</p>
+                          <p className="text-xs font-semibold text-white/80">{!user ? 'Sign up to upload media A' : 'Upload Reference Media A'}</p>
                           <input
                             ref={fileAInputRef}
                             type="file"
@@ -1465,11 +1495,17 @@ export default function FingerprintAnalyzer() {
                       </label>
                       {!fileB ? (
                         <div
-                          onClick={() => fileBInputRef.current?.click()}
+                          onClick={() => {
+                            if (!user) {
+                              openAuthModal('signup')
+                              return
+                            }
+                            fileBInputRef.current?.click()
+                          }}
                           className="aspect-video max-h-44 bg-white/5 rounded-2xl border-2 border-dashed border-white/10 hover:border-violet-500/50 transition-all flex flex-col items-center justify-center cursor-pointer group"
                         >
                           <Upload className="w-6 h-6 text-violet-400 mb-2 group-hover:scale-110 transition-transform" />
-                          <p className="text-xs font-semibold text-white/80">Upload Target Media B</p>
+                          <p className="text-xs font-semibold text-white/80">{!user ? 'Sign up to upload media B' : 'Upload Target Media B'}</p>
                           <input
                             ref={fileBInputRef}
                             type="file"
@@ -1507,8 +1543,8 @@ export default function FingerprintAnalyzer() {
 
                   <button
                     onClick={handleCompare}
-                    disabled={!fileA || !fileB || compareLoading}
-                    className="btn-primary w-full py-4 text-sm"
+                    disabled={user ? (!fileA || !fileB || compareLoading) : false}
+                    className="btn-primary w-full py-4 text-sm cursor-pointer"
                   >
                     {compareLoading ? (
                       <div className="flex items-center justify-center gap-2">

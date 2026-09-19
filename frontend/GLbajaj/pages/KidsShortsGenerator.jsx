@@ -85,6 +85,10 @@ export default function KidsShortsGenerator() {
 
   // 1-Click AI Sparker
   const handleFetchAiIdeas = async (cat = category) => {
+    if (!user) {
+      openAuthModal('signup')
+      return
+    }
     setLoadingIdeas(true)
     setError(null)
     try {
@@ -595,6 +599,11 @@ export default function KidsShortsGenerator() {
                 <>
                   <Sparkles size={20} className="animate-spin text-black" />
                   Generating 3D Kids Video...
+                </>
+              ) : !user ? (
+                <>
+                  <Sparkles size={22} className="text-amber-300 animate-pulse" />
+                  <span>⚡ Sign Up to Generate Video (100% Free)</span>
                 </>
               ) : (
                 <>

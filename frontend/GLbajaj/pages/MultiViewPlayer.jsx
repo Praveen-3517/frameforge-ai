@@ -36,6 +36,7 @@ import {
 } from 'lucide-react'
 import StarField from '../components/StarField'
 import UserNav from '../components/auth/UserNav'
+import { useAuth } from '../context/AuthContext'
 
 /**
  * Enhanced YouTube URL Parser:
@@ -92,6 +93,7 @@ function parseYouTubeUrls(input) {
 }
 
 export default function MultiViewPlayer() {
+  const { user, openAuthModal } = useAuth()
   // Input State
   const [inputUrl, setInputUrl] = useState('')
   const [showBulkModal, setShowBulkModal] = useState(false)
@@ -400,6 +402,10 @@ export default function MultiViewPlayer() {
 
   // ── 9. Start Playback Handler ────────────────────────────────
   const handleStartPlayback = () => {
+    if (!user) {
+      openAuthModal('signup')
+      return
+    }
     const { videoIds, playlistId } = parsedData
     if ((!videoIds || videoIds.length === 0) && !playlistId) return
 
@@ -539,6 +545,10 @@ export default function MultiViewPlayer() {
 
   // ── 16. Generate & Download Windows Guest Profile Script (.bat) ──
   const handleDownloadWindowsScript = () => {
+    if (!user) {
+      openAuthModal('signup')
+      return
+    }
     const { videoIds, playlistId } = parsedData
     const vids = videoIds && videoIds.length > 0 ? videoIds.join(',') : ''
     const loopUrl = vids
@@ -714,10 +724,14 @@ pause
             <button
               type="button"
               onClick={() => {
+                if (!user) {
+                  openAuthModal('signup')
+                  return
+                }
                 setBulkText(inputUrl)
                 setShowBulkModal(true)
               }}
-              className="px-4 py-3.5 rounded-2xl bg-violet-500/15 hover:bg-violet-500/25 border border-violet-500/30 text-violet-300 font-bold text-xs flex items-center justify-center gap-1.5 transition-all whitespace-nowrap"
+              className="px-4 py-3.5 rounded-2xl bg-violet-500/15 hover:bg-violet-500/25 border border-violet-500/30 text-violet-300 font-bold text-xs flex items-center justify-center gap-1.5 transition-all whitespace-nowrap cursor-pointer"
             >
               <ListVideo size={16} /> 20-Videos Bulk Box
             </button>
@@ -727,10 +741,10 @@ pause
               {!isPlaying ? (
                 <button
                   onClick={handleStartPlayback}
-                  disabled={(!parsedData.videoIds || parsedData.videoIds.length === 0) && !parsedData.playlistId}
-                  className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 font-display uppercase tracking-wider whitespace-nowrap"
+                  disabled={user ? ((!parsedData.videoIds || parsedData.videoIds.length === 0) && !parsedData.playlistId) : false}
+                  className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 font-display uppercase tracking-wider whitespace-nowrap cursor-pointer"
                 >
-                  <Play size={16} fill="black" /> Launch 24/7 Engine
+                  <Play size={16} fill="black" /> {!user ? '⚡ Sign Up to Launch Engine' : 'Launch 24/7 Engine'}
                 </button>
               ) : (
                 <button

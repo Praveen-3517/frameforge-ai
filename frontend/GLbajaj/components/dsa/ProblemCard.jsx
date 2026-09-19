@@ -1,8 +1,29 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { CheckCircle2, Circle, Bookmark, BookmarkCheck, ChevronRight, Tag, Zap } from 'lucide-react'
+import { CheckCircle2, Circle, Bookmark, BookmarkCheck, ChevronRight, Tag, Zap, Lock } from 'lucide-react'
+import { useAuth } from '../../context/AuthContext'
 
 export default function ProblemCard({ problem, isSolved, isBookmarked, onBookmark, isLight = false }) {
+  const { user, openAuthModal } = useAuth()
+
+  const handleCardClick = (e) => {
+    if (!user) {
+      e.preventDefault()
+      e.stopPropagation()
+      openAuthModal('signup')
+    }
+  }
+
+  const handleBookmarkClick = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!user) {
+      openAuthModal('signup')
+      return
+    }
+    onBookmark(problem.id)
+  }
+
   // Difficulty styling
   const diffConfig = {
     Easy: {
@@ -54,6 +75,7 @@ export default function ProblemCard({ problem, isSolved, isBookmarked, onBookmar
 
   return (
     <div
+      onClick={handleCardClick}
       className={`group relative flex items-center gap-3 px-4 py-3.5 rounded-xl border transition-all duration-200 cursor-pointer ${
         isLight
           ? isSolved
@@ -75,7 +97,8 @@ export default function ProblemCard({ problem, isSolved, isBookmarked, onBookmar
 
       {/* Main content */}
       <Link
-        to={`/dsa/${problem.id}`}
+        to={`/dsa/${problem.id}?lang=${localStorage.getItem('dsa_lang') || 'java'}`}
+        onClick={handleCardClick}
         className="flex-1 min-w-0 flex flex-col gap-1.5"
       >
         <div className="flex items-center gap-2 flex-wrap">
@@ -86,6 +109,13 @@ export default function ProblemCard({ problem, isSolved, isBookmarked, onBookmar
           }`}>
             {problem.id}. {problem.title}
           </span>
+          {!user && (
+            <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[9px] font-mono font-bold ${
+              isLight ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-amber-400/15 text-amber-300 border border-amber-400/30'
+            }`}>
+              <Lock size={9} /> Free (Sign Up)
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
@@ -121,7 +151,7 @@ export default function ProblemCard({ problem, isSolved, isBookmarked, onBookmar
 
       {/* Bookmark */}
       <button
-        onClick={(e) => { e.preventDefault(); onBookmark(problem.id) }}
+        onClick={handleBookmarkClick}
         className={`shrink-0 p-1.5 rounded-lg transition-all opacity-0 group-hover:opacity-100 ${
           isLight ? 'hover:bg-slate-100 text-slate-400 hover:text-slate-700' : 'hover:bg-white/8 text-white/30'
         }`}
@@ -135,7 +165,7 @@ export default function ProblemCard({ problem, isSolved, isBookmarked, onBookmar
       </button>
 
       {/* Arrow */}
-      <Link to={`/dsa/${problem.id}`} className="shrink-0">
+      <Link to={`/dsa/${problem.id}`} onClick={handleCardClick} className="shrink-0">
         <ChevronRight
           size={18}
           className={`${

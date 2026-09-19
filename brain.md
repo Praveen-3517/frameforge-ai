@@ -3,6 +3,24 @@
 
 ---
 
+## 🔜 NEXT SESSION — Upcoming Work (Queued by User: 2026-09-19)
+
+> **📌 Task:** Build **DSA with C Language** repository — same structure as `dsa-java/` (20 topics, Easy/Medium/Hard, README.md per topic, descriptive `.c` filenames, problem statement comment + approach + complexity + runnable `main`).
+
+### Plan for `dsa-c/` Repository
+- **Location:** `f:\AI tool\dsa-c\`
+- **Structure:** Mirror `dsa-java/` exactly — 20 topics, 3 difficulty folders each, README.md per topic
+- **Topics Order:** Same roadmap as Java (Variables → Pointers → Conditionals → Loops → Arrays → Strings → Functions/Recursion → Structs → File I/O → Linked List → Stacks/Queues → Trees → Graphs → Sorting/Searching → Dynamic Memory → Recursion/Backtracking → DP → Bit Manipulation → Sliding Window → Advanced Pointers)
+- **C-Specific Focus:** Pointers & pointer arithmetic, `malloc`/`free`/`calloc`/`realloc`, struct-based data structures, manual memory management, `typedef`, function pointers, file I/O (`fopen`/`fclose`), `#define` macros
+- **File Pattern:** `01_ProblemName.c` → class-equivalent = `int main()` entry point
+- **Compile command:** `gcc filename.c -o filename && ./filename`
+- **Dashboard:** DSA with C card on Dashboard is already present — currently shows "Under Development". Update it to LIVE once the repo is done (same as was done for Java today).
+- **Status:** ⏳ PENDING — User will resume this session in a few hours.
+
+---
+
+
+
 ## 1. 📌 Project Identity
 
 - **Project / Game Title:** Bittu AI — One-Click AI Tools Suite

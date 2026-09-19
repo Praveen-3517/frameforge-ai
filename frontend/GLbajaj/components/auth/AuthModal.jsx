@@ -21,7 +21,7 @@ const BLOCKED_DOMAINS = new Set([
 function validateEmail(email) {
   const trimmed = email.trim().toLowerCase()
   if (!trimmed) return 'Email address is required.'
-  if (!EMAIL_RE.test(trimmed)) return 'Please enter a valid email address (e.g. name@gmail.com).'
+  if (!EMAIL_RE.test(trimmed)) return 'Please enter a valid email address.'
   const domain = trimmed.split('@')[1]
   if (BLOCKED_DOMAINS.has(domain)) return 'Temporary/disposable email addresses are not allowed.'
   if (!domain.includes('.')) return 'Email domain is invalid.'
@@ -351,7 +351,7 @@ export default function AuthModal({ isLight = false }) {
                       required
                       minLength={2}
                       maxLength={60}
-                      placeholder="e.g. Rahul Sharma"
+                      placeholder="Enter your full name"
                       value={fullName}
                       onChange={(e) => { setFullName(e.target.value); if (error) setError(null); }}
                       className={`w-full pl-9 pr-4 py-2.5 rounded-xl text-xs border outline-none transition-all ${inputBase}`}
@@ -371,7 +371,7 @@ export default function AuthModal({ isLight = false }) {
                     type="email"
                     required
                     autoComplete="email"
-                    placeholder="you@gmail.com"
+                    placeholder="name@example.com"
                     value={email}
                     onChange={(e) => {
                       setEmail(e.target.value)

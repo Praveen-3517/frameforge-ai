@@ -13,7 +13,7 @@ import ProPaymentModal from '../components/dsa/ProPaymentModal'
 
 export default function TopInterview150() {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, openAuthModal } = useAuth()
 
   // Pro Subscription State
   const [isPro, setIsPro] = useState(() => getCachedProStatus(user?.email).isPro)
@@ -56,6 +56,10 @@ export default function TopInterview150() {
 
   // Guarded Solution opener: Only Pro subscribers can open solutions or problem details!
   const handleOpenSolution = (problem) => {
+    if (!user) {
+      openAuthModal('signup')
+      return
+    }
     if (!isPro) {
       setShowProModal(true)
       return
@@ -66,6 +70,10 @@ export default function TopInterview150() {
   // Toggle problem solved
   const toggleSolved = (id, e) => {
     e.stopPropagation()
+    if (!user) {
+      openAuthModal('signup')
+      return
+    }
     const next = solvedIds.includes(id)
       ? solvedIds.filter(x => x !== id)
       : [...solvedIds, id]
@@ -282,7 +290,13 @@ export default function TopInterview150() {
               </div>
               <button
                 type="button"
-                onClick={() => setShowProModal(true)}
+                onClick={() => {
+                  if (!user) {
+                    openAuthModal('signup')
+                    return
+                  }
+                  setShowProModal(true)
+                }}
                 className="shrink-0 w-full sm:w-auto px-6 py-3 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-wider bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-slate-950 shadow-xl shadow-amber-500/30 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Crown size={16} className="fill-slate-950" />

@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
-import { Link, useParams, useNavigate } from 'react-router-dom'
+import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   ArrowLeft, ChevronLeft, ChevronRight, Code2, BookOpen,
   Lightbulb, CheckCircle2, Circle, Bookmark, BookmarkCheck,
   RotateCcw, Tag, Clock, Play, Trophy, Zap, Share2, Check,
   Sun, Moon, Unlock, Building2, Sparkles, HelpCircle, Languages,
-  ArrowRightLeft
+  ArrowRightLeft, Coffee
 } from 'lucide-react'
 import CodeEditor from '../components/dsa/CodeEditor'
 import TestRunner from '../components/dsa/TestRunner'
@@ -16,6 +16,8 @@ import InterviewTimer from '../components/dsa/InterviewTimer'
 import { dsaProblems } from '../data/dsaProblems'
 import { onProblemSolved, XP_MAP } from '../utils/dsaStats'
 import { getProblemInterviewData } from '../data/dsaInterviewSolutions'
+import { useAuth } from '../context/AuthContext'
+import UserNav from '../components/auth/UserNav'
 
 const difficultyConfig = {
   Easy:   { color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/25', dot: 'bg-emerald-400' },
@@ -23,7 +25,8 @@ const difficultyConfig = {
   Hard:   { color: 'text-red-400',     bg: 'bg-red-500/10',     border: 'border-red-500/25',     dot: 'bg-red-400' },
 }
 
-function useProblemStorage(problemId) {
+function useProblemStorage(problemId, selectedLang, defaultStarterCode) {
+  const { user, openAuthModal } = useAuth()
   const [code, setCode] = useState('')
   const [solved, setSolved] = useState([])
   const [bookmarks, setBookmarks] = useState([])
@@ -31,7 +34,8 @@ function useProblemStorage(problemId) {
 
   useEffect(() => {
     try {
-      const savedCode      = localStorage.getItem(`dsa_code_${problemId}`)
+      const storageKey = `dsa_code_${selectedLang}_${problemId}`
+      const savedCode      = localStorage.getItem(storageKey)
       const savedSolved    = JSON.parse(localStorage.getItem('dsa_solved') || '[]')
       const savedBookmarks = JSON.parse(localStorage.getItem('dsa_bookmarks') || '[]')
       const savedHints     = parseInt(localStorage.getItem(`dsa_hints_${problemId}`) || '0')
@@ -40,40 +44,48 @@ function useProblemStorage(problemId) {
       setBookmarks(savedBookmarks)
       setHintsRevealed(savedHints)
 
-      const problem = dsaProblems.find(p => p.id === parseInt(problemId))
-      if (problem) setCode(savedCode || problem.starterCode)
+      setCode(savedCode || defaultStarterCode)
     } catch {}
-  }, [problemId])
+  }, [problemId, selectedLang, defaultStarterCode])
 
   const updateCode = useCallback((val) => {
     setCode(val)
-    localStorage.setItem(`dsa_code_${problemId}`, val)
-  }, [problemId])
+    localStorage.setItem(`dsa_code_${selectedLang}_${problemId}`, val)
+  }, [problemId, selectedLang])
 
   const markSolved = useCallback((id) => {
+    if (!user) {
+      openAuthModal('signup')
+      return
+    }
     const next = solved.includes(id) ? solved.filter(x => x !== id) : [...solved, id]
     setSolved(next)
     localStorage.setItem('dsa_solved', JSON.stringify(next))
-  }, [solved])
+  }, [solved, user, openAuthModal])
 
   const toggleBookmark = useCallback((id) => {
+    if (!user) {
+      openAuthModal('signup')
+      return
+    }
     const next = bookmarks.includes(id) ? bookmarks.filter(x => x !== id) : [...bookmarks, id]
     setBookmarks(next)
     localStorage.setItem('dsa_bookmarks', JSON.stringify(next))
-  }, [bookmarks])
+  }, [bookmarks, user, openAuthModal])
 
   const revealHint = useCallback((level) => {
+    if (!user) {
+      openAuthModal('signup')
+      return
+    }
     setHintsRevealed(level)
     localStorage.setItem(`dsa_hints_${problemId}`, level.toString())
-  }, [problemId])
+  }, [problemId, user, openAuthModal])
 
   const resetCode = useCallback(() => {
-    const problem = dsaProblems.find(p => p.id === parseInt(problemId))
-    if (problem) {
-      setCode(problem.starterCode)
-      localStorage.removeItem(`dsa_code_${problemId}`)
-    }
-  }, [problemId])
+    setCode(defaultStarterCode)
+    localStorage.removeItem(`dsa_code_${selectedLang}_${problemId}`)
+  }, [problemId, selectedLang, defaultStarterCode])
 
   return { code, updateCode, solved, markSolved, bookmarks, toggleBookmark, hintsRevealed, revealHint, resetCode }
 }
@@ -103,14 +115,28 @@ function MarkdownRenderer({ text, isLight = false }) {
 export default function DSASolver() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const { user, openAuthModal } = useAuth()
   const problemId = parseInt(id)
+
+  const initialLang = searchParams.get('lang') || localStorage.getItem('dsa_lang') || 'java'
+  const [selectedLang, setSelectedLang] = useState(initialLang)
 
   const problem      = dsaProblems.find(p => p.id === problemId)
   const problemIndex = dsaProblems.findIndex(p => p.id === problemId)
   const prevProblem  = problemIndex > 0 ? dsaProblems[problemIndex - 1] : null
   const nextProblem  = problemIndex < dsaProblems.length - 1 ? dsaProblems[problemIndex + 1] : null
 
-  const { code, updateCode, solved, markSolved, bookmarks, toggleBookmark, hintsRevealed, revealHint, resetCode } = useProblemStorage(id)
+  const interviewData = useMemo(() => getProblemInterviewData(problem), [problem])
+
+  const defaultStarterCode = useMemo(() => {
+    if (selectedLang === 'java') {
+      return interviewData?.solution?.javaStarterCode || interviewData?.solution?.javaCode || ''
+    }
+    return problem?.starterCode || ''
+  }, [selectedLang, interviewData, problem])
+
+  const { code, updateCode, solved, markSolved, bookmarks, toggleBookmark, hintsRevealed, revealHint, resetCode } = useProblemStorage(id, selectedLang, defaultStarterCode)
 
   const [activeTab, setActiveTab]       = useState('description')
   const [mobileTab, setMobileTab]       = useState('problem') // 'problem' | 'editor'
@@ -123,7 +149,11 @@ export default function DSASolver() {
   const [theme, setTheme]               = useState(() => localStorage.getItem('dsa_theme') || 'dark')
   const [interviewMode, setInterviewMode] = useState(false)
 
-  const interviewData = useMemo(() => getProblemInterviewData(problem), [problem])
+  const handleLanguageChange = (newLang) => {
+    setSelectedLang(newLang)
+    localStorage.setItem('dsa_lang', newLang)
+    setSearchParams({ lang: newLang })
+  }
 
   useEffect(() => {
     localStorage.setItem('dsa_theme', theme)
@@ -167,14 +197,22 @@ export default function DSASolver() {
     })
   }, [])
 
-  const handleLoadCode = useCallback((solCode) => {
+  const handleLoadCode = useCallback((solCode, codeLang) => {
+    if (!user) {
+      openAuthModal('signup')
+      return
+    }
+    if (codeLang && codeLang !== selectedLang) {
+      setSelectedLang(codeLang)
+      localStorage.setItem('dsa_lang', codeLang)
+    }
     updateCode(solCode)
     setSolutionToast(true)
     setTimeout(() => setSolutionToast(false), 3000)
     if (typeof window !== 'undefined' && window.innerWidth < 1024) {
       setMobileTab('editor')
     }
-  }, [updateCode])
+  }, [updateCode, user, openAuthModal, selectedLang])
 
   if (!problem) {
     return (
@@ -192,6 +230,21 @@ export default function DSASolver() {
     <div className={`flex flex-col h-screen overflow-hidden transition-colors duration-300 ${
       isLight ? 'bg-[#F4F6FB] text-slate-900' : 'bg-[#020008] text-white'
     }`}>
+      {/* ── Preview Mode Banner for Unauthenticated Users ── */}
+      {!user && (
+        <div className="bg-gradient-to-r from-violet-600 via-fuchsia-600 to-cyan-600 text-white px-4 py-2 flex items-center justify-between text-xs font-semibold shrink-0 shadow-md">
+          <div className="flex items-center gap-2">
+            <span className="bg-white/20 px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider">🔒 Preview Mode</span>
+            <span>Sign up free to execute Python code, unlock interview hints, and save progress!</span>
+          </div>
+          <button
+            onClick={() => openAuthModal('signup')}
+            className="bg-white text-slate-950 hover:bg-white/90 px-3 py-1 rounded-lg text-xs font-bold shadow-sm transition-transform active:scale-95 cursor-pointer whitespace-nowrap"
+          >
+            Sign Up Free
+          </button>
+        </div>
+      )}
 
       {/* ── Top Bar ── */}
       <div className={`flex items-center justify-between gap-2 px-3 sm:px-4 py-2 sm:py-2.5 border-b shrink-0 ${
@@ -229,6 +282,35 @@ export default function DSASolver() {
         {/* ── Actions ── */}
         <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 overflow-x-auto scrollbar-none py-0.5">
 
+          {/* Language Selector: Java ☕ / Python 🐍 */}
+          <div className={`flex items-center p-0.5 rounded-lg border text-xs font-bold shrink-0 ${
+            isLight ? 'bg-slate-100 border-slate-300' : 'bg-white/5 border-white/10'
+          }`}>
+            <button
+              onClick={() => handleLanguageChange('java')}
+              title="Switch to Java 21 Track"
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition-all ${
+                selectedLang === 'java'
+                  ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-sm'
+                  : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-white/50 hover:text-white'
+              }`}
+            >
+              <Coffee size={12} />
+              <span>Java</span>
+            </button>
+            <button
+              onClick={() => handleLanguageChange('python')}
+              title="Switch to Python 3.11 Track"
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition-all ${
+                selectedLang === 'python'
+                  ? 'bg-gradient-to-r from-blue-500 to-cyan-600 text-white shadow-sm'
+                  : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-white/50 hover:text-white'
+              }`}
+            >
+              <span>Python</span>
+            </button>
+          </div>
+
           {/* Theme Toggle Button */}
           <button
             onClick={() => setTheme(isLight ? 'dark' : 'light')}
@@ -248,7 +330,13 @@ export default function DSASolver() {
 
           {/* Interview Mode Toggle */}
           <button
-            onClick={() => setInterviewMode(m => !m)}
+            onClick={() => {
+              if (!user) {
+                openAuthModal('signup')
+                return
+              }
+              setInterviewMode(m => !m)
+            }}
             title={interviewMode ? "Exit Interview Simulation" : "Start FAANG Interview Simulation"}
             className={`flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
               interviewMode
@@ -338,6 +426,9 @@ export default function DSASolver() {
               <ChevronRight size={15} />
             </button>
           </div>
+
+          {/* User Nav */}
+          <UserNav isLight={isLight} />
         </div>
       </div>
 
@@ -701,6 +792,7 @@ export default function DSASolver() {
                     isLight={isLight}
                     onLoadCodeIntoEditor={handleLoadCode}
                     userCode={code}
+                    activeLang={selectedLang}
                   />
                 )}
 
@@ -753,14 +845,21 @@ export default function DSASolver() {
                 <span className="w-3 h-3 rounded-full bg-yellow-500/60" />
                 <span className="w-3 h-3 rounded-full bg-emerald-500/60" />
               </div>
-              <span className="text-white/30 text-xs font-mono ml-1">solution.py</span>
+              <span className={`text-xs font-mono font-semibold ml-1 flex items-center gap-1 ${
+                selectedLang === 'java' ? 'text-amber-400' : 'text-emerald-400'
+              }`}>
+                {selectedLang === 'java' ? <Coffee size={12} /> : null}
+                {selectedLang === 'java' ? 'Solution.java' : 'solution.py'}
+              </span>
             </div>
-            <span className="text-white/20 text-xs font-mono">Python 3.11 · Pyodide</span>
+            <span className="text-white/40 text-xs font-mono font-medium">
+              {selectedLang === 'java' ? '☕ Java 21 · SE' : '🐍 Python 3.11 · Pyodide'}
+            </span>
           </div>
 
           {/* Editor */}
           <div className="flex-1 min-h-0" style={{ flex: editorHeight }}>
-            <CodeEditor value={code} onChange={updateCode} isLight={isLight} />
+            <CodeEditor language={selectedLang} value={code} onChange={updateCode} isLight={isLight} />
           </div>
 
           {/* Drag handle */}
@@ -788,7 +887,7 @@ export default function DSASolver() {
 
           {/* Console / Test Runner */}
           <div className="min-h-0" style={{ flex: 100 - editorHeight }}>
-            <TestRunner problem={problem} code={code} onSuccess={handleSuccess} isLight={isLight} />
+            <TestRunner language={selectedLang} problem={problem} code={code} onSuccess={handleSuccess} isLight={isLight} />
           </div>
         </div>
       </div>

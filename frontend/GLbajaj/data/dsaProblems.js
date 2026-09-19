@@ -1,7 +1,10 @@
 //  DSA Problems Database — Basic to Advanced
-//  Complete 1,800 Curated Problems (15 Topics x 40 Easy, 40 Medium, 40 Hard)
+//  Foundation Topics (Conditionals, Operators, Loops) + Curated DSA Problems
+import { BEGINNER_PROBLEMS } from './beginnerProblems.js';
+
 export const TOPICS = [
-  'All', 'Arrays', 'Strings', 'Linked List', 'Stack',
+  'All', 'Conditionals', 'Operators', 'Loops',
+  'Arrays', 'Strings', 'Linked List', 'Stack',
   'Hashing', 'Binary Search', 'Backtracking',
   'Trees', 'Graphs', 'Heap', 'Dynamic Programming',
   'Bit Manipulation', 'Sorting', 'Greedy', 'Recursion'
@@ -10,6 +13,8 @@ export const TOPICS = [
 export const DIFFICULTIES = ['All', 'Easy', 'Medium', 'Hard'];
 
 export const PATTERNS = [
+  'if-else', 'nested if', 'switch-case', 'for loop', 'while loop', 'do-while loop',
+  'Arithmetic', 'Relational', 'Logical', 'Bitwise',
   'Two Pointers', 'Sliding Window', 'Prefix Sum', 'HashMap',
   'Fast & Slow Pointer', 'Monotonic Stack', 'BFS', 'DFS',
   'Binary Search', 'Backtracking', 'Dynamic Programming',
@@ -17,7 +22,7 @@ export const PATTERNS = [
   'Greedy', 'Bit Manipulation', 'Heap'
 ];
 
-export const dsaProblems = [
+const rawDSAProblems = [
   {
     "id": 1,
     "slug": "two-sum",
@@ -72018,6 +72023,17 @@ export const dsaProblems = [
     "timeComplexity": "O(n)",
     "spaceComplexity": "O(n)"
   }
+];
+
+// Combine beginner programming fundamentals (IDs 1 to 44) first, then offset remaining questions
+const rawProblemsWithOffset = rawDSAProblems.map((p, idx) => ({
+  ...p,
+  id: BEGINNER_PROBLEMS.length + idx + 1
+}));
+
+export const dsaProblems = [
+  ...BEGINNER_PROBLEMS,
+  ...rawProblemsWithOffset
 ];
 
 export const getTopics = () => [...new Set(dsaProblems.map(p => p.topic))];
