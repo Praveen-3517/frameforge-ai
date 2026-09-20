@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import { getApiUrl } from './utils/apiUrl'
 import AuthModal from './components/auth/AuthModal'
 import EarlyBirdModal from './components/EarlyBirdModal'
 import FeedbackModal from './components/FeedbackModal'
@@ -18,6 +19,20 @@ import DSASolver from './pages/DSASolver'
 import TopInterview150 from './pages/TopInterview150'
 
 export default function App() {
+  // Silent background pre-warm of Render cloud backend on site load
+  useEffect(() => {
+    const prewarm = () => {
+      const base = getApiUrl()
+      if (base) {
+        fetch(`${base}/health`, { method: 'GET', keepalive: true }).catch(() => {})
+      }
+    }
+    // Fire immediately on mount
+    prewarm()
+    // Heartbeat every 10 minutes to keep Render alive while user is active
+    const timer = setInterval(prewarm, 10 * 60 * 1000)
+    return () => clearInterval(timer)
+  }, [])
   return (
     <AuthProvider>
       <BrowserRouter>

@@ -76,7 +76,21 @@ export default function AuthModal({ isLight = false }) {
   const [devOtpHint,   setDevOtpHint]   = useState(null)
   const [resending,    setResending]    = useState(false)
 
-  const otpInputRef = useRef(null)
+  const [loadingElapsed, setLoadingElapsed] = useState(0)
+
+  // Track elapsed seconds while waiting for cloud server to wake up
+  useEffect(() => {
+    let interval = null
+    if (loading) {
+      setLoadingElapsed(0)
+      interval = setInterval(() => {
+        setLoadingElapsed(s => s + 1)
+      }, 1000)
+    } else {
+      setLoadingElapsed(0)
+    }
+    return () => clearInterval(interval)
+  }, [loading])
 
   // Countdown timer for OTP resend
   useEffect(() => {
@@ -507,6 +521,16 @@ export default function AuthModal({ isLight = false }) {
                   </>
                 )}
               </button>
+
+              {/* Server waking up reassurance note if cold start */}
+              {loading && loadingElapsed >= 3 && (
+                <div className="mt-2.5 p-2 rounded-xl bg-violet-500/10 border border-violet-500/20 text-center animate-fadeIn">
+                  <p className="text-[11px] text-violet-300 flex items-center justify-center gap-1.5 font-medium">
+                    <Sparkles size={13} className="text-cyan-400 animate-pulse shrink-0" />
+                    <span>Cloud server waking up ({loadingElapsed}s)... please hold on</span>
+                  </p>
+                </div>
+              )}
             </form>
 
             {/* Footer Notice */}

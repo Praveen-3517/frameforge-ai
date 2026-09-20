@@ -221,31 +221,55 @@ export function AuthProvider({ children }) {
   // Request Email Verification OTP
   const sendOtp = async (email) => {
     const base = getApiUrl()
-    const res = await fetch(`${base}/api/auth/send-otp`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email.trim().toLowerCase() }),
-    })
-    const data = await res.json().catch(() => ({}))
-    if (!res.ok) {
-      throw new Error(data.detail || data.error || 'Failed to send verification code.')
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 45000)
+    try {
+      const res = await fetch(`${base}/api/auth/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
+        signal: controller.signal,
+      })
+      clearTimeout(timeoutId)
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        throw new Error(data.detail || data.error || 'Failed to send verification code.')
+      }
+      return data
+    } catch (err) {
+      clearTimeout(timeoutId)
+      if (err.name === 'AbortError') {
+        throw new Error('Connection timed out while waking server. Please click retry.')
+      }
+      throw err
     }
-    return data
   }
 
   // Verify Email OTP Code
   const verifyOtp = async (email, otp) => {
     const base = getApiUrl()
-    const res = await fetch(`${base}/api/auth/verify-otp`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email.trim().toLowerCase(), otp: otp.trim() }),
-    })
-    const data = await res.json().catch(() => ({}))
-    if (!res.ok) {
-      throw new Error(data.detail || data.error || 'Invalid verification code.')
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 30000)
+    try {
+      const res = await fetch(`${base}/api/auth/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim().toLowerCase(), otp: otp.trim() }),
+        signal: controller.signal,
+      })
+      clearTimeout(timeoutId)
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        throw new Error(data.detail || data.error || 'Invalid verification code.')
+      }
+      return data
+    } catch (err) {
+      clearTimeout(timeoutId)
+      if (err.name === 'AbortError') {
+        throw new Error('Verification timed out. Please try again.')
+      }
+      throw err
     }
-    return data
   }
 
   const value = {
