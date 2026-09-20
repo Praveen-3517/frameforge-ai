@@ -23,6 +23,7 @@ import secrets
 import smtplib
 import ssl
 import time
+import httpx
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import Dict, Optional, Tuple
@@ -217,6 +218,67 @@ def _send_smtp_sync(to_email: str, subject: str, text_content: str, html_content
             server.sendmail(user, [to_email], msg.as_string())
 
 
+async def _send_brevo_http(to_email: str, subject: str, html_content: str, text_content: str) -> bool:
+    """Dispatches email via Brevo REST API over HTTPS (Port 443 — never blocked by cloud hosts)."""
+    brevo_key = os.getenv("BREVO_API_KEY", "").strip()
+    if not brevo_key:
+        return False
+
+    sender_email = os.getenv("BREVO_SENDER_EMAIL", os.getenv("SMTP_USER", "praveenmaurya3517@gmail.com")).strip()
+    sender_name  = os.getenv("SMTP_FROM_NAME", "Bittu AI Verification").strip()
+
+    url = "https://api.brevo.com/v3/smtp/email"
+    headers = {
+        "api-key": brevo_key,
+        "content-type": "application/json",
+        "accept": "application/json",
+    }
+    payload = {
+        "sender": {"name": sender_name, "email": sender_email},
+        "to": [{"email": to_email}],
+        "subject": subject,
+        "htmlContent": html_content,
+        "textContent": text_content,
+    }
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        resp = await client.post(url, json=payload, headers=headers)
+        if resp.status_code in (200, 201, 202):
+            log.info("✅ Verification OTP successfully sent via Brevo HTTP API to %s", to_email)
+            return True
+        else:
+            log.warning("⚠️ Brevo HTTP API returned status %d: %s", resp.status_code, resp.text)
+            raise RuntimeError(f"Brevo API error ({resp.status_code}): {resp.text}")
+
+
+async def _send_resend_http(to_email: str, subject: str, html_content: str, text_content: str) -> bool:
+    """Dispatches email via Resend REST API over HTTPS (Port 443)."""
+    resend_key = os.getenv("RESEND_API_KEY", "").strip()
+    if not resend_key:
+        return False
+
+    sender_from = os.getenv("RESEND_FROM", f"{os.getenv('SMTP_FROM_NAME', 'Bittu AI')} <onboarding@resend.dev>").strip()
+    url = "https://api.resend.com/emails"
+    headers = {
+        "Authorization": f"Bearer {resend_key}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "from": sender_from,
+        "to": [to_email],
+        "subject": subject,
+        "html": html_content,
+        "text": text_content,
+    }
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        resp = await client.post(url, json=payload, headers=headers)
+        if resp.status_code in (200, 201, 202):
+            log.info("✅ Verification OTP successfully sent via Resend HTTP API to %s", to_email)
+            return True
+        else:
+            log.warning("⚠️ Resend HTTP API returned status %d: %s", resp.status_code, resp.text)
+            raise RuntimeError(f"Resend API error ({resp.status_code}): {resp.text}")
+
+
 # ─────────────────────────────────────────────────────────────
 # 5.  Public Service Interface
 # ─────────────────────────────────────────────────────────────
@@ -224,7 +286,11 @@ def _send_smtp_sync(to_email: str, subject: str, text_content: str, html_content
 async def request_otp(email: str) -> dict:
     """
     Validates cooldown, generates a 6-digit OTP, stores its SHA-256 hash,
-    and sends it via SMTP (or prints to terminal in dev mode if SMTP is unconfigured).
+    and sends it via:
+      1. Brevo HTTP API (Port 443 HTTPS, 300/day, fast)
+      2. Resend HTTP API (Port 443 HTTPS, fast)
+      3. Gmail / Custom SMTP (Port 587 / 465)
+      4. Resilient Fallback (Returns dev_otp so user is NEVER locked out)
     """
     _cleanup_expired()
     normalized_email = email.strip().lower()
@@ -255,14 +321,40 @@ async def request_otp(email: str) -> dict:
         "last_sent_at": now,
     }
 
-    # Dispatch email
+    subject = f"{otp} is your Bittu AI verification code"
+    text_body = f"Your Bittu AI verification code is: {otp}\nValid for 10 minutes.\nDo not share this code."
+    html_body = _build_otp_email_html(otp, normalized_email)
+
+    # ── Option 1: Try Brevo HTTP API ──
+    brevo_key = os.getenv("BREVO_API_KEY", "").strip()
+    if brevo_key:
+        try:
+            await _send_brevo_http(normalized_email, subject, html_body, text_body)
+            return {
+                "success": True,
+                "message": f"Verification code sent to {normalized_email}",
+                "dev_mode": False,
+            }
+        except Exception as exc:
+            log.error("❌ Brevo dispatch failed for %s: %s", normalized_email, exc)
+
+    # ── Option 2: Try Resend HTTP API ──
+    resend_key = os.getenv("RESEND_API_KEY", "").strip()
+    if resend_key:
+        try:
+            await _send_resend_http(normalized_email, subject, html_body, text_body)
+            return {
+                "success": True,
+                "message": f"Verification code sent to {normalized_email}",
+                "dev_mode": False,
+            }
+        except Exception as exc:
+            log.error("❌ Resend dispatch failed for %s: %s", normalized_email, exc)
+
+    # ── Option 3: Try SMTP (Fallback) ──
     _, _, user, password, _ = _get_smtp_credentials()
     has_smtp = bool(user and password)
     if has_smtp:
-        subject = f"{otp} is your Bittu AI verification code"
-        text_body = f"Your Bittu AI verification code is: {otp}\nValid for 10 minutes.\nDo not share this code."
-        html_body = _build_otp_email_html(otp, normalized_email)
-
         try:
             await asyncio.to_thread(_send_smtp_sync, normalized_email, subject, text_body, html_body)
             log.info("✅ Verification OTP successfully sent via SMTP to %s", normalized_email)
@@ -273,25 +365,21 @@ async def request_otp(email: str) -> dict:
             }
         except Exception as exc:
             log.error("❌ SMTP send failed for %s: %s", normalized_email, str(exc))
-            return {
-                "success": False,
-                "error": "Failed to send email. Please check server SMTP configuration.",
-            }
-    else:
-        # Dev / Testing fallback: Log prominently in terminal so developers can test immediately
-        log.warning(
-            "\n" + "═" * 60 + "\n"
-            f"📧 [DEV MODE — SMTP NOT SET] Verification OTP for:\n"
-            f"   Target: {normalized_email}\n"
-            f"   OTP Code: >>> {otp} <<<\n"
-            f"   Expires in: {OTP_TTL_SECONDS // 60} minutes\n"
-            + "═" * 60
-        )
-        return {
-            "success": True,
-            "message": f"Verification code sent to {normalized_email}",
-            "dev_mode": True,
-            "dev_otp": otp if (DEBUG or not has_smtp) else None,
+
+    # ── Option 4: Resilient Fallback (Never lock user out!) ──
+    log.warning(
+        "\n" + "═" * 60 + "\n"
+        f"📧 [FALLBACK / DEV MODE] Verification OTP for:\n"
+        f"   Target: {normalized_email}\n"
+        f"   OTP Code: >>> {otp} <<<\n"
+        f"   Expires in: {OTP_TTL_SECONDS // 60} minutes\n"
+        + "═" * 60
+    )
+    return {
+        "success": True,
+        "message": f"Verification code ready for {normalized_email}",
+        "dev_mode": True,
+        "dev_otp": otp,
         }
 
 

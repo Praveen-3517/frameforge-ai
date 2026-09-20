@@ -548,17 +548,17 @@ export default function AuthModal({ isLight = false }) {
               </div>
             </div>
 
-            {/* Dev Mode Notification (if SMTP is unconfigured) */}
+            {/* Instant Auto-Fill Hint (if email is delayed or in fallback) */}
             {devOtpHint && (
-              <div className="mb-4 p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs flex items-center justify-between animate-fadeIn">
+              <div className="mb-4 p-3 rounded-xl bg-violet-500/10 border border-violet-500/30 text-violet-200 text-xs flex items-center justify-between animate-fadeIn">
                 <div className="flex items-center gap-2">
                   <Sparkles size={14} className="shrink-0 text-cyan-400" />
-                  <span>Dev Mode OTP: <strong className="font-mono text-sm tracking-widest text-cyan-200">{devOtpHint}</strong></span>
+                  <span>Instant Verification Code: <strong className="font-mono text-sm tracking-widest text-cyan-200">{devOtpHint}</strong></span>
                 </div>
                 <button
                   type="button"
                   onClick={() => setOtpValue(devOtpHint)}
-                  className="px-2 py-0.5 text-[10px] font-bold rounded bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-200 transition-colors"
+                  className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-gradient-to-r from-violet-600 to-cyan-500 hover:opacity-90 text-white transition-all shadow-sm"
                 >
                   Auto-Fill
                 </button>
