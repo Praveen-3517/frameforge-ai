@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F0826"/>
+      <stop offset="50%" stop-color="#0B0D17"/>
+      <stop offset="100%" stop-color="#061224"/>
+    </linearGradient>
+
+    <!-- Vibrant Cyber Gradient -->
+    <linearGradient id="cyberGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A855F7"/>
+      <stop offset="35%" stop-color="#7C3AED"/>
+      <stop offset="70%" stop-color="#2563EB"/>
+      <stop offset="100%" stop-color="#06B6D4"/>
+    </linearGradient>
+
+    <!-- Neon Glow Gradient -->
+    <linearGradient id="accentGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#EC4899"/>
+      <stop offset="50%" stop-color="#8B5CF6"/>
+      <stop offset="100%" stop-color="#38BDF8"/>
+    </linearGradient>
+
+    <!-- Border Glow Gradient -->
+    <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#C084FC" stop-opacity="0.8"/>
+      <stop offset="50%" stop-color="#6366F1" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#22D3EE" stop-opacity="0.9"/>
+    </linearGradient>
+
+    <!-- Drop Shadow & Glow Filter -->
+    <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="16" result="blur1"/>
+      <feGaussianBlur stdDeviation="28" result="blur2"/>
+      <feMerge>
+        <feMergeNode in="blur2"/>
+        <feMergeNode in="blur1"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="softShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#7C3AED" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+
+  <!-- Squircle Base -->
+  <rect x="24" y="24" width="464" height="464" rx="128" fill="url(#bgGrad)" stroke="url(#borderGrad)" stroke-width="8"/>
+
+  <!-- Ambient Internal Glow Circles -->
+  <circle cx="160" cy="160" r="140" fill="#7C3AED" opacity="0.15" filter="blur(40px)"/>
+  <circle cx="360" cy="360" r="130" fill="#06B6D4" opacity="0.15" filter="blur(40px)"/>
+
+  <!-- Futuristic Cybernetic "B" Glyph -->
+  <g filter="url(#neonGlow)">
+    <!-- Vertical Spine with Tech Cuts -->
+    <rect x="138" y="112" width="46" height="288" rx="23" fill="url(#cyberGrad)"/>
+    
+    <!-- Top Loop -->
+    <path d="M160 112 H270 C330 112 368 145 368 198 C368 245 330 268 280 268 H160" 
+          fill="none" stroke="url(#cyberGrad)" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- Bottom Loop (Slightly wider for balance) -->
+    <path d="M160 268 H292 C356 268 398 304 398 358 C398 412 352 448 288 448 H160" 
+          fill="none" stroke="url(#accentGrad)" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Inner Circuit Energy Nodes -->
+    <circle cx="260" cy="190" r="16" fill="#38BDF8"/>
+    <circle cx="274" cy="358" r="18" fill="#F472B6"/>
+
+    <!-- Circuit Connection Traces -->
+    <path d="M260 190 L184 190" stroke="#38BDF8" stroke-width="6" stroke-linecap="round" stroke-dasharray="8 6"/>
+    <path d="M274 358 L184 358" stroke="#F472B6" stroke-width="6" stroke-linecap="round" stroke-dasharray="8 6"/>
+  </g>
+
+  <!-- Top-Right AI Sparkle Star -->
+  <g transform="translate(378, 100) scale(1.1)">
+    <path d="M0 -32 Q0 0 32 0 Q0 0 0 32 Q0 0 -32 0 Q0 0 0 -32 Z" fill="#38BDF8"/>
+    <circle cx="0" cy="0" r="6" fill="#FFFFFF"/>
+  </g>
+</svg>
