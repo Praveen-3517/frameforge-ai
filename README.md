@@ -1,6 +1,6 @@
 # 🎬 Bittu AI — One-Click AI Tools, DSA Platform & Media Forensics Suite
 
-> Multi-modal AI media engine featuring Text-to-Video synthesis, AI Virtual Try-On, Video Variant Generator & Perceptual Forensic Fingerprint Suite. 100% Free-Tier Architecture.
+> Multi-modal AI media engine featuring Text-to-Video synthesis, AI Virtual Try-On, Multi-Character AI Dialogue Studio, Kids 3D Shorts & Perceptual Forensic Fingerprint Suite. 100% Free-Tier Architecture.
 
 ---
 
@@ -9,8 +9,7 @@
 1. **Kids 3D Shorts & Phonics Engine (`/kids`)**: Create viral YouTube Shorts & Reels in the Krishna VFX style featuring 3D Donut / Candy letter spelling rush, character jumping animations, phonics voiceovers, missing letter quizzes, animal morph guessing, and procedural cartoon sound effects.
 2. **Text-to-Video Engine (`/video`)**: Turn any text story into a cinematic, fully narrated MP4 video using Gemini Flash, Pollinations FLUX, Microsoft Edge-TTS, and MoviePy.
 3. **AI Virtual Try-On (`/clothes`)**: Swap garments and virtual outfits on full-body photos while preserving pose and lighting via Hugging Face IDM-VTON.
-4. **Create New Video Variant (`/variant`)**: Re-encode, re-scale, color grade, normalize (EBU R128), and apply Deep Perceptual Transforms (zoom+crop, hue rotation, film grain, pitch shift, time stretch) for legitimate cross-platform re-purposing of user-owned media.
-5. **Audio & Video Fingerprint Analyzer (`/fingerprint`)**: Forensic media analysis extracting PCM waveforms, 7-band FFT spectrums, BPM tempo, perceptual dHash streams, dominant color palettes, scene cuts, and dual-media cross-correlation matching with One-Click Smart Auto-Transform.
+4. **Audio & Video Fingerprint Analyzer (`/fingerprint`)**: Forensic media analysis extracting PCM waveforms, 7-band FFT spectrums, BPM tempo, perceptual dHash streams, dominant color palettes, scene cuts, and dual-media cross-correlation matching with One-Click Smart Auto-Transform.
 
 ---
 

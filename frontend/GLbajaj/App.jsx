@@ -9,7 +9,6 @@ import ErrorBoundary from './components/ErrorBoundary'
 import Dashboard from './pages/Dashboard'
 import TextToVideo from './pages/TextToVideo'
 import ClothesChanger from './pages/ClothesChanger'
-import VideoVariantGenerator from './pages/VideoVariantGenerator'
 import FingerprintAnalyzer from './pages/FingerprintAnalyzer'
 import MultiViewPlayer from './pages/MultiViewPlayer'
 import KidsShortsGenerator from './pages/KidsShortsGenerator'
@@ -45,7 +44,6 @@ export default function App() {
           <Route path="/video" element={<ErrorBoundary><TextToVideo /></ErrorBoundary>} />
           <Route path="/kids" element={<ErrorBoundary><KidsShortsGenerator /></ErrorBoundary>} />
           <Route path="/clothes" element={<ErrorBoundary><ClothesChanger /></ErrorBoundary>} />
-          <Route path="/variant" element={<ErrorBoundary><VideoVariantGenerator /></ErrorBoundary>} />
           <Route path="/fingerprint" element={<ErrorBoundary><FingerprintAnalyzer /></ErrorBoundary>} />
           <Route path="/multiview" element={<ErrorBoundary><MultiViewPlayer /></ErrorBoundary>} />
           <Route path="/dsa" element={<ErrorBoundary><DSAHub /></ErrorBoundary>} />

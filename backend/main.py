@@ -624,7 +624,7 @@ async def change_clothes(
 
 
 # ─────────────────────────────────────────────────────────────
-# 12.  Video Variant Generator Endpoints
+# 12.  Audio & Video Fingerprint Analyzer Endpoints
 # ─────────────────────────────────────────────────────────────
 
 from services.variant_generator import generate_video_variant_sync, probe_media_metadata
@@ -634,135 +634,6 @@ from services.fingerprint_analyzer import (
     compare_media_fingerprints,
 )
 from services.smart_transform import derive_transform_params
-
-@app.post("/api/variants/create", tags=["Media Variants"])
-async def create_video_variant(
-    request: Request,
-    file: UploadFile = File(...),
-    resolution: str = Form("original"),
-    fit_mode: str = Form("fit"),
-    fps: str = Form("original"),
-    quality: str = Form("balanced"),
-    brightness: float = Form(0.0),
-    contrast: float = Form(1.0),
-    saturation: float = Form(1.0),
-    gamma: float = Form(1.0),
-    normalize_audio: bool = Form(True),
-    audio_sample_rate: int = Form(48000),
-    strip_metadata: bool = Form(True),
-    deep_visual: bool = Form(False),
-    zoom_pct: float = Form(2.0),
-    hue_shift_deg: float = Form(0.0),
-    add_grain: bool = Form(False),
-    flip_horizontal: bool = Form(False),
-    speed_multiplier: float = Form(1.0),
-    add_vignette: bool = Form(False),
-    audio_mode: str = Form("max_protection"),
-    pitch_shift_semitones: float = Form(0.0),
-    time_stretch_pct: float = Form(0.0),
-    mute_audio: bool = Form(False),
-    audio_eq_filter: bool = Form(False),
-    watermark_cleaner: bool = Form(True),
-    stereo_decorrelate: bool = Form(True),
-    tuning_432hz: bool = Form(False),
-    temple_reverb: bool = Form(False),
-    om_drone_resonance: bool = Form(False),
-    loop_count: int = Form(1),
-    preserve_formants: bool = Form(False),
-    sacred_bed_layer: bool = Form(False),
-):
-    # ── Security: rate limit, file validation, parameter clamping ──────────
-    rate_limit(request, max_requests=3, window_sec=60)
-    validate_upload_file(file, allowed_extensions=ALLOWED_MEDIA_EXTENSIONS)
-    # Clamp all numeric params to safe ranges — prevents resource exhaustion
-    brightness     = clamp(brightness,     -1.0, 1.0)
-    contrast       = clamp(contrast,        0.1, 3.0)
-    saturation     = clamp(saturation,      0.0, 3.0)
-    gamma          = clamp(gamma,           0.1, 3.0)
-    speed_multiplier = clamp(speed_multiplier, 0.5, 2.0)
-    zoom_pct       = clamp(zoom_pct,        0.0, 10.0)
-    hue_shift_deg  = clamp(hue_shift_deg, -180.0, 180.0)
-    pitch_shift_semitones = clamp(pitch_shift_semitones, -6.0, 6.0)
-    time_stretch_pct      = clamp(time_stretch_pct,       0.0, 10.0)
-    loop_count     = max(1, min(3, loop_count))   # Hard cap: 3 loops max
-    audio_sample_rate = 48000 if audio_sample_rate not in (22050, 44100, 48000) else audio_sample_rate
-
-    job_id = uuid.uuid4().hex[:12]
-    ext = Path(file.filename or "video.mp4").suffix.lower() or ".mp4"
-    input_path = TEMP_DIR / f"{job_id}_orig{ext}"
-    output_path = OUTPUT_DIR / f"variant_{job_id}.mp4"
-
-    log.info("🎥 Variant request: %s [%s] (mode=%s 432Hz=%s loop=%dx)",
-             file.filename, job_id, audio_mode, tuning_432hz, loop_count)
-
-    try:
-        # Stream upload enforcing 500 MB size cap mid-stream
-        await stream_upload_to_disk(file, input_path)
-
-        # Offload CPU-bound FFmpeg rendering to worker thread
-        loop = asyncio.get_event_loop()
-        result = await loop.run_in_executor(
-            None,
-            lambda: generate_video_variant_sync(
-                input_file=input_path,
-                output_file=output_path,
-                resolution=resolution,
-                fit_mode=fit_mode,
-                fps=fps,
-                quality=quality,
-                brightness=brightness,
-                contrast=contrast,
-                saturation=saturation,
-                gamma=gamma,
-                normalize_audio=normalize_audio,
-                audio_sample_rate=audio_sample_rate,
-                strip_metadata=strip_metadata,
-                deep_visual=deep_visual,
-                zoom_pct=zoom_pct,
-                hue_shift_deg=hue_shift_deg,
-                add_grain=add_grain,
-                flip_horizontal=flip_horizontal,
-                speed_multiplier=speed_multiplier,
-                add_vignette=add_vignette,
-                audio_mode=audio_mode,
-                pitch_shift_semitones=pitch_shift_semitones,
-                time_stretch_pct=time_stretch_pct,
-                mute_audio=mute_audio,
-                audio_eq_filter=audio_eq_filter,
-                watermark_cleaner=watermark_cleaner,
-                stereo_decorrelate=stereo_decorrelate,
-                tuning_432hz=tuning_432hz,
-                temple_reverb=temple_reverb,
-                om_drone_resonance=om_drone_resonance,
-                loop_count=loop_count,
-                preserve_formants=preserve_formants,
-                sacred_bed_layer=sacred_bed_layer,
-            )
-        )
-
-        result["job_id"] = job_id
-        result["variant_url"] = f"/api/media/{output_path.name}"
-        result["download_url"] = f"/api/media/{output_path.name}"
-
-        return JSONResponse(content=result)
-
-    except HTTPException:
-        raise
-    except Exception as exc:
-        log.exception("❌ Variant generation failed: %s", exc)
-        raise HTTPException(status_code=500, detail="Variant generation failed. Please try again.")
-    finally:
-        # Cleanup original upload in temp directory after processing
-        if input_path.exists():
-            try:
-                input_path.unlink()
-            except Exception:
-                pass
-
-
-# ─────────────────────────────────────────────────────────────
-# 13.  Audio & Video Fingerprint Analyzer Endpoints
-# ─────────────────────────────────────────────────────────────
 
 @app.post("/api/fingerprints/analyze", tags=["Media Forensics"])
 async def analyze_media_fingerprint(request: Request, file: UploadFile = File(...)):

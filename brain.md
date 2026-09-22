@@ -25,7 +25,7 @@
 
 - **Project / Game Title:** Bittu AI — One-Click AI Tools Suite
 - **Internal Codename:** `bittu-ai` / `one-click-ai-hub`
-- **Primary Genre / Category:** Generative AI Media Suite + DSA Learning Platform (Multi-Character AI Dialogue Studio, Kids 3D Shorts Generator, Text-to-Video Engine, AI Virtual Try-On, Video Variant Generator, Audio/Video Forensics Fingerprint Suite, **DSA Python Practice Platform**)
+- **Primary Genre / Category:** Generative AI Media Suite + DSA Learning Platform (Multi-Character AI Dialogue Studio, Kids 3D Shorts Generator, Text-to-Video Engine, AI Virtual Try-On, Audio/Video Forensics Fingerprint Suite, **DSA Python Practice Platform**)
 - **Theme:** Futuristic, Cyberpunk-Cosmic, Hyper-Automated Media Synthesis & Signal Forensics
 - **Core Vision:** Democratize AI multimedia production, forensics, and organic audience growth by providing 100% free-tier, fast, zero-friction generative pipelines for automated cinematic storytelling, multi-character dialogue podcasts, kids 3D phonics animations, virtual fashion try-on, legitimate media transformation, deep acoustic/visual perceptual fingerprinting, and safe 4,000-hour multi-view stream boosting without mandatory paid API subscriptions.
 - **Design Philosophy:** 
@@ -38,8 +38,7 @@
   1. Automated 4-stage pipeline producing fully narrated, styled, multi-scene MP4 videos with Ken Burns motion.
   2. Built-in multi-aspect ratio rendering (16:9 YouTube, 9:16 Shorts/Reels/TikTok, 1:1 Square, 4:5 Portrait).
   3. Integrated Virtual Try-On tool preserving human pose and background while swapping garments.
-  4. **Create New Video Variant**: Legitimate media transformation suite (audio normalization, color/lighting grading, FPS resampling, metadata stripping, before/after technical comparison matrix, distinct SHA-256 hash generation).
-  5. **Audio & Video Fingerprint Analyzer & Anti-Detection Shield**: Media forensics engine featuring time-domain RMS waveforms, 7-band FFT spectrum, BPM detection, perceptual dHash stream, dominant color K-Means clustering, scene cut markers, and multi-shield modes (Cartoon Dubbing, Bhakti 432Hz+1.5st Sacred Shield, Songs Harmonic Scrambler).
+  4. **Audio & Video Fingerprint Analyzer & Anti-Detection Shield**: Media forensics engine featuring time-domain RMS waveforms, 7-band FFT spectrum, BPM detection, perceptual dHash stream, dominant color K-Means clustering, scene cut markers, and multi-shield modes (Cartoon Dubbing, Bhakti 432Hz+1.5st Sacred Shield, Songs Harmonic Scrambler).
   6. **Multi-View Smart Stream & Watch-Time Booster (`/multiview`)**: Algorithmic-safe 4x/8x/12x/16x multi-screen video and playlist streamer featuring staggered anti-spike launch delays, 80-minute channel playlist looping, auto-sleep timers, low RAM data-saver, and live watch-time odometers for 3-day 4,000-hour monetization milestones.
   7. **Kids 3D Shorts & Phonics Generator (`/kids`)**: 1-click viral 3D candy/donut letter spelling rush (Krishna VFX format), phonics quizzes, animal morph guessing games, and mini moral stories with Edge-TTS high-pitch child voiceovers, procedural bounce SFX, and FLUX 3D CGI backgrounds.
   8. **Multi-Character AI Dialogue & Podcast Studio (`/dialogue`)**: Turn-by-turn multi-speaker conversation video creator with dedicated smooth neural voices (Hindi, Hinglish, English, Urdu), in-memory SciPy audio mastering, expressive character face avatars, active speaker neon glow halos, animated sound equalizers, dynamic speech bubbles, and 1-click Gemini AI auto-script sparker.
@@ -393,16 +392,15 @@ f:\AI tool\
     │
     └── GLbajaj/                  # Core Frontend Source Directory
         ├── main.jsx              # React DOM bootstrap
-        ├── App.jsx               # React Router config (/, /video, /clothes, /variant, /fingerprint, /multiview, /kids, /dialogue)
+        ├── App.jsx               # React Router config (/, /video, /clothes, /fingerprint, /multiview, /kids, /dialogue, /dsa)
         ├── index.css             # Design tokens, keyframe animations, glassmorphism
         │
         ├── pages/                # High-Level Page Views
-        │   ├── Dashboard.jsx     # Navigation hub for 7 AI media tools
+        │   ├── Dashboard.jsx     # Navigation hub for AI media tools
         │   ├── DialogueVideoGenerator.jsx # Multi-character AI conversation & podcast studio
         │   ├── KidsShortsGenerator.jsx    # Kids 3D candy letter & phonics shorts generator
         │   ├── TextToVideo.jsx   # Text-to-Video generation interface & pipeline state
         │   ├── ClothesChanger.jsx# Virtual Try-On photo upload and outfit swap view
-        │   ├── VideoVariantGenerator.jsx # Re-encoding & technical Before/After comparison
         │   ├── FingerprintAnalyzer.jsx   # Acoustic waveform, dHash & dual-media matcher
         │   └── MultiViewPlayer.jsx       # Multi-screen playlist streamer & watch-time booster
         │
@@ -589,6 +587,11 @@ f:\AI tool\
 ---
 
 ## 15. 📜 Changelog & Version History
+
+- **2026-09-22 (v4.9.1 — Deprecation & Removal of Standalone Video Variant Generator):**
+  - **Removed Video Variant Generator (`/variant`):** Removed standalone Video Variant Generator tool card from Dashboard (`Dashboard.jsx`), removed `/variant` route and import from `App.jsx`, removed `VideoVariantGenerator.jsx` component, and pruned `/api/variants/create` endpoint from `backend/main.py`.
+  - **Retained Core Re-Encoding Engine:** Maintained `variant_generator.py` service in the backend for use by `FingerprintAnalyzer` and `smart_transform.py` (Bhakti Ultra-Armor, Bollywood Turbo, Lo-Fi Shield transforms).
+  - **Cleaned Generator Handoff Links:** Updated `KidsShortsGenerator.jsx` and `DialogueVideoGenerator.jsx` to remove links pointing to `/variant`.
 
 - **2026-09-20 (v4.9.0 — Brevo HTTP Email API, 24/7 Uptime Keep-Alive & Universal Favicon Suite):**
   - **Render Outbound SMTP Bypass via Brevo REST API (`BUG-029`):** Render Free Tier permanently drops outbound SMTP ports (25, 465, 587). Replaced raw socket SMTP with Brevo HTTP REST API (`https://api.brevo.com/v3/smtp/email`) over standard HTTPS Port 443, delivering verification OTPs to users in ~1.14 seconds.

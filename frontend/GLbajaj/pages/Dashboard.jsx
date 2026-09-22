@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  Video, Shirt, Layers, Fingerprint, Tv,
+  Video, Shirt, Fingerprint, Tv,
   MessageSquare, MessageSquarePlus, Sparkles, Code2, Zap, Github,
   ChevronRight, BrainCircuit, Crown, Sun, Moon,
   Trophy, ArrowRightLeft, Timer, Flame, CheckCircle2,
@@ -66,17 +66,6 @@ const STANDARD_TOOLS = [
     label: 'Watch-Time Booster',
     desc: '4x/8x/16x multi-screen YouTube player for 4,000-hour monetization',
     badge: '4,000 Hr Engine',
-  },
-  {
-    to: '/variant',
-    icon: <Layers size={22} />,
-    iconBg: 'from-cyan-500 to-teal-600',
-    glow: 'hover:shadow-cyan-500/20',
-    borderDark: 'hover:border-teal-500/50 border-white/8',
-    borderLight: 'hover:border-teal-400 border-slate-200/80',
-    label: 'Video Variant Generator',
-    desc: 'Re-encode videos with color grading, FPS resampling & audio normalization',
-    badge: 'Transformer',
   },
   {
     to: '/fingerprint',

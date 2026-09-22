@@ -70,6 +70,12 @@ export default function FingerprintAnalyzer() {
   const fileBInputRef = useRef(null)
   const waveformCanvasRef = useRef(null)
 
+  // Media tools strictly operate in dark cosmic mode
+  useEffect(() => {
+    document.documentElement.classList.add('dark')
+    document.documentElement.classList.remove('light')
+  }, [])
+
   // Copy Helper
   const handleCopy = (text, label) => {
     navigator.clipboard.writeText(text)
@@ -422,13 +428,13 @@ export default function FingerprintAnalyzer() {
                         }
                         singleInputRef.current?.click()
                       }}
-                      className="relative aspect-video max-h-56 bg-white/5 rounded-2xl border-2 border-dashed border-white/10 hover:border-cyan-500/50 transition-all flex flex-col items-center justify-center cursor-pointer group hover:bg-white/[0.07]"
+                      className="relative aspect-video max-h-56 bg-black/40 rounded-2xl border-2 border-dashed border-white/20 hover:border-cyan-400 transition-all flex flex-col items-center justify-center cursor-pointer group hover:bg-black/60 shadow-inner"
                     >
-                      <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                      <div className="w-14 h-14 rounded-2xl bg-cyan-500/15 border border-cyan-400/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-lg shadow-cyan-500/10">
                         <Upload className="w-6 h-6 text-cyan-400" />
                       </div>
-                      <p className="text-sm font-semibold text-white/80">{!user ? 'Sign up to analyze and protect media' : 'Click or drop audio/video file here'}</p>
-                      <p className="text-xs text-white/40 mt-1">Supports MP4, WebM, MOV, AVI, MP3, WAV, M4A (Up to 200MB)</p>
+                      <p className="text-sm font-semibold text-white tracking-wide">{!user ? 'Sign up to analyze and protect media' : 'Click or drop audio/video file here'}</p>
+                      <p className="text-xs text-slate-300 mt-1.5 font-medium">Supports MP4, WebM, MOV, AVI, MP3, WAV, M4A (Up to 200MB)</p>
                       <input
                         ref={singleInputRef}
                         type="file"
@@ -1449,10 +1455,10 @@ export default function FingerprintAnalyzer() {
                             }
                             fileAInputRef.current?.click()
                           }}
-                          className="aspect-video max-h-44 bg-white/5 rounded-2xl border-2 border-dashed border-white/10 hover:border-cyan-500/50 transition-all flex flex-col items-center justify-center cursor-pointer group"
+                          className="aspect-video max-h-44 bg-black/40 rounded-2xl border-2 border-dashed border-white/20 hover:border-cyan-400 transition-all flex flex-col items-center justify-center cursor-pointer group hover:bg-black/60"
                         >
                           <Upload className="w-6 h-6 text-cyan-400 mb-2 group-hover:scale-110 transition-transform" />
-                          <p className="text-xs font-semibold text-white/80">{!user ? 'Sign up to upload media A' : 'Upload Reference Media A'}</p>
+                          <p className="text-xs font-semibold text-white">{!user ? 'Sign up to upload media A' : 'Upload Reference Media A'}</p>
                           <input
                             ref={fileAInputRef}
                             type="file"
@@ -1502,10 +1508,10 @@ export default function FingerprintAnalyzer() {
                             }
                             fileBInputRef.current?.click()
                           }}
-                          className="aspect-video max-h-44 bg-white/5 rounded-2xl border-2 border-dashed border-white/10 hover:border-violet-500/50 transition-all flex flex-col items-center justify-center cursor-pointer group"
+                          className="aspect-video max-h-44 bg-black/40 rounded-2xl border-2 border-dashed border-white/20 hover:border-violet-400 transition-all flex flex-col items-center justify-center cursor-pointer group hover:bg-black/60"
                         >
                           <Upload className="w-6 h-6 text-violet-400 mb-2 group-hover:scale-110 transition-transform" />
-                          <p className="text-xs font-semibold text-white/80">{!user ? 'Sign up to upload media B' : 'Upload Target Media B'}</p>
+                          <p className="text-xs font-semibold text-white">{!user ? 'Sign up to upload media B' : 'Upload Target Media B'}</p>
                           <input
                             ref={fileBInputRef}
                             type="file"

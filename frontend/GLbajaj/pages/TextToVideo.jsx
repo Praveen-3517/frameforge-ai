@@ -49,8 +49,10 @@ export default function App() {
 
   const stepTimers = useRef([])
 
-  /* Clean up step timers on unmount */
+  /* Clean up step timers on unmount & enforce dark mode */
   useEffect(() => {
+    document.documentElement.classList.add('dark')
+    document.documentElement.classList.remove('light')
     return () => stepTimers.current.forEach(clearTimeout)
   }, [])
 

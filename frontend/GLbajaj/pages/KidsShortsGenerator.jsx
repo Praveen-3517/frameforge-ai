@@ -10,7 +10,6 @@ import {
   RotateCcw,
   Volume2,
   Tv,
-  Layers,
   Wand2,
   CheckCircle2,
   Copy,
@@ -67,8 +66,10 @@ export default function KidsShortsGenerator() {
     { title: 'Stitching 9:16 Short & Sound FX', desc: 'Mixing boing pops, correct ding chimes & final MP4 encode' }
   ]
 
-  // Fetch presets on load
+  // Fetch presets on load & enforce dark cosmic mode
   useEffect(() => {
+    document.documentElement.classList.add('dark')
+    document.documentElement.classList.remove('light')
     async function loadPresets() {
       try {
         const base = getApiUrl()
@@ -777,22 +778,13 @@ export default function KidsShortsGenerator() {
                     <Download size={16} /> Download 9:16 MP4 (Shorts Ready)
                   </a>
 
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={() => handleCopyLink(getFullMediaUrl(resultVideo.video_url))}
-                      className="py-2.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-mono text-white/80 flex items-center justify-center gap-1.5 transition-colors"
-                    >
-                      {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
-                      {copied ? 'Copied URL!' : 'Copy URL'}
-                    </button>
-
-                    <Link
-                      to="/variant"
-                      className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-violet-500/20 to-pink-500/20 hover:bg-violet-500/30 border border-violet-500/30 text-xs font-mono text-violet-300 flex items-center justify-center gap-1.5 transition-colors"
-                    >
-                      <Layers size={14} /> Multi-Variant
-                    </Link>
-                  </div>
+                  <button
+                    onClick={() => handleCopyLink(getFullMediaUrl(resultVideo.video_url))}
+                    className="w-full py-2.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-mono text-white/80 flex items-center justify-center gap-1.5 transition-colors"
+                  >
+                    {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
+                    {copied ? 'Copied URL!' : 'Copy URL'}
+                  </button>
                 </div>
 
               </div>
