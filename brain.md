@@ -3,19 +3,30 @@
 
 ---
 
-## 🔜 NEXT SESSION — Upcoming Work (Queued by User: 2026-09-19)
+## 🔜 NEXT SESSION — Upcoming Work (Queued: 2026-09-22)
 
-> **📌 Task:** Build **DSA with C Language** repository — same structure as `dsa-java/` (20 topics, Easy/Medium/Hard, README.md per topic, descriptive `.c` filenames, problem statement comment + approach + complexity + runnable `main`).
+> **📌 Priority Task 1: Real Supabase Cloud Database & Universal Cross-Device Auth Integration**
+- **Problem Statement (Discovered 2026-09-22):** User signed up with email, but next-day login failed. Root cause analysis confirmed that `frontend/.env` contains a non-existent dummy Supabase URL (`https://vgiwwjfgujbkeovwwvcv.supabase.co`). Consequently, `AuthContext.jsx` (`isPlaceholderSupabase()`) explicitly bypasses cloud auth and saves accounts inside browser `localStorage` (`bittu_ai_local_users`). This causes login failures whenever the user changes device (Mobile vs PC), browser (Chrome vs Edge), uses Incognito mode, clears cache, or visits via a different domain (`bittuai.online` vs `www.bittuai.online`).
+- **Plan for Tomorrow:**
+  1. User creates/provides a real Supabase project at [supabase.com](https://supabase.com).
+  2. Obtain real `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
+  3. Update `frontend/.env` and Vercel environment variables with production keys.
+  4. Run `supabase_schema.sql` (already present in workspace root) in Supabase SQL Editor to set up `users`, `profiles`, and `subscribers` tables.
+  5. In `AuthContext.jsx`, remove the placeholder bypass and switch to native Supabase Cloud Auth with local failover.
+  6. Test cross-device registration, Brevo OTP verification, cross-browser session persistence, and Pro Pass status sync.
+- **Status:** ⏳ PENDING — Scheduled for tomorrow's session.
 
-### Plan for `dsa-c/` Repository
+---
+
+> **📌 Priority Task 2: Build DSA with C Language (`dsa-c/`) Repository**
 - **Location:** `f:\AI tool\dsa-c\`
 - **Structure:** Mirror `dsa-java/` exactly — 20 topics, 3 difficulty folders each, README.md per topic
 - **Topics Order:** Same roadmap as Java (Variables → Pointers → Conditionals → Loops → Arrays → Strings → Functions/Recursion → Structs → File I/O → Linked List → Stacks/Queues → Trees → Graphs → Sorting/Searching → Dynamic Memory → Recursion/Backtracking → DP → Bit Manipulation → Sliding Window → Advanced Pointers)
 - **C-Specific Focus:** Pointers & pointer arithmetic, `malloc`/`free`/`calloc`/`realloc`, struct-based data structures, manual memory management, `typedef`, function pointers, file I/O (`fopen`/`fclose`), `#define` macros
 - **File Pattern:** `01_ProblemName.c` → class-equivalent = `int main()` entry point
 - **Compile command:** `gcc filename.c -o filename && ./filename`
-- **Dashboard:** DSA with C card on Dashboard is already present — currently shows "Under Development". Update it to LIVE once the repo is done (same as was done for Java today).
-- **Status:** ⏳ PENDING — User will resume this session in a few hours.
+- **Dashboard:** DSA with C card on Dashboard will be switched from "Under Development" to LIVE once complete.
+- **Status:** ⏳ PENDING — Queued after Supabase integration.
 
 ---
 
@@ -58,8 +69,8 @@
 - **Current Milestone:** `Milestone 13: High-Availability Auth & SEO Discovery Suite (COMPLETED)`
 - **Current Sprint:** `Sprint 16: Brevo REST API Email OTP + 24/7 Keep-Alive Uptime + Universal Favicon Suite`
 - **Current Objective:** High-speed cloud auth with sub-second OTP delivery, 24/7 warm backend availability, zero-failure registration, and high-visibility Google search favicon branding.
-- **Current Task:** ✅ Complete: Brevo HTTP API integration, 24/7 uptime keep-alive setup, live waking timer feedback, and Google Search Console indexing submission.
-- **Next Task:** DSA with C Language (`dsa-c/`) repository (20 topics, Easy/Medium/Hard, runnable main).
+- **Current Task:** ✅ Complete: Removed Video Variant Generator, fixed light-mode glass card contrast visibility, and audited auth persistence.
+- **Next Task:** 1) Real Supabase Cloud DB integration for cross-device authentication; 2) Build DSA with C Language (`dsa-c/`) repository.
 - **Previous Completed Tasks:**
   - ✅ **Render Outbound SMTP Bypass via Brevo HTTP API (`BUG-029`)**: Render Free Tier blocks SMTP ports (25, 465, 587). Integrated Brevo REST API over HTTPS (Port 443), achieving 1.14s inbox OTP delivery.
   - ✅ **Multi-Tier Resilient Registration Guard**: Brevo HTTP → Resend HTTP → SMTP → Dev fallback (`dev_otp` with 1-click Auto-Fill). Zero registration failures.
