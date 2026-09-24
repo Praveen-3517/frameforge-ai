@@ -1,9 +1,11 @@
 import React, { useState } from 'react'
+import axios from 'axios'
 import {
   MessageSquarePlus, Star, X, CheckCircle2,
   Send, Sparkles, AlertCircle, MessageCircle
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { getApiUrl } from '../utils/apiUrl'
 
 const FEEDBACK_STORAGE_KEY = 'bittu_ai_user_feedback'
 
@@ -54,27 +56,39 @@ export default function FeedbackModal() {
     }
   }, [user, isOpen])
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (!message.trim()) {
       setError('Please enter your feedback message.')
       return
     }
 
-    try {
-      const existing = JSON.parse(localStorage.getItem(FEEDBACK_STORAGE_KEY) || '[]')
-      const newFeedback = {
-        id: 'fb_' + Date.now().toString(36),
-        rating,
-        category,
-        message: message.trim(),
-        name: name.trim() || (user ? user.user_metadata?.full_name || 'Anonymous User' : 'Anonymous User'),
-        email: email.trim() || (user ? user.email : ''),
-        createdAt: new Date().toISOString()
-      }
+    const payload = {
+      rating,
+      category,
+      message: message.trim(),
+      name: name.trim() || (user ? user.user_metadata?.full_name || 'Anonymous User' : 'Anonymous User'),
+      email: email.trim() || (user ? user.email : ''),
+    }
 
-      existing.unshift(newFeedback)
-      localStorage.setItem(FEEDBACK_STORAGE_KEY, JSON.stringify(existing))
+    try {
+      // 1. Send to Backend Server
+      const API_URL = getApiUrl()
+      await axios.post(`${API_URL}/api/feedback`, payload).catch(() => {})
+
+      // 2. Dispatch event for live Admin viewer refresh
+      window.dispatchEvent(new CustomEvent('feedback-updated'))
+
+      // 3. LocalStorage fallback
+      try {
+        const existing = JSON.parse(localStorage.getItem(FEEDBACK_STORAGE_KEY) || '[]')
+        existing.unshift({
+          id: 'fb_' + Date.now().toString(36),
+          ...payload,
+          createdAt: new Date().toISOString()
+        })
+        localStorage.setItem(FEEDBACK_STORAGE_KEY, JSON.stringify(existing))
+      } catch (e) {}
 
       setSubmitted(true)
       setError(null)

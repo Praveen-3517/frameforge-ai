@@ -77,14 +77,28 @@ export default function UserNav({ isLight = false }) {
           {/* User Info Header */}
           <div className={`p-2.5 border-b mb-1.5 ${activeIsLight ? 'border-slate-100' : 'border-white/8'}`}>
             <p className="text-xs font-bold truncate">{displayName}</p>
-            <p className={`text-[11px] truncate ${activeIsLight ? 'text-slate-500' : 'text-white/40'}`}>
-              {user.email}
-            </p>
             <div className="mt-2 flex items-center gap-1.5 text-[10px] text-emerald-500 font-semibold">
               <Cloud size={11} />
               <span>Cloud Sync Active</span>
             </div>
           </div>
+
+          {/* Admin Feedback Notifications */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              window.dispatchEvent(new CustomEvent('open-admin-feedback'))
+              setDropdownOpen(false)
+            }}
+            className={`w-full flex items-center gap-2 px-3 py-2 mb-1 rounded-xl text-xs font-semibold text-amber-400 hover:text-amber-300 transition-colors cursor-pointer ${
+              activeIsLight ? 'hover:bg-amber-50' : 'hover:bg-amber-500/10'
+            }`}
+          >
+            <span className="text-sm">🔔</span>
+            <span>User Feedbacks & Alerts</span>
+          </button>
 
           {/* Sign Out Button */}
           <button

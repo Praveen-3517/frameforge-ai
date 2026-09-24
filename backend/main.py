@@ -1483,8 +1483,84 @@ async def run_c_code(req: CRunRequest):
             }
         except subprocess.TimeoutExpired:
             return {"success": False, "stage": "runtime", "stderr": "Execution timed out (5s limit, possible infinite loop)."}
-        except Exception as e:
-            return {"success": False, "stage": "runtime", "stderr": f"Execution error: {str(e)}"}
+# ─────────────────────────────────────────────────────────────
+# 11.5  Feedback & Admin Notification Endpoints
+# ─────────────────────────────────────────────────────────────
+
+FEEDBACK_FILE = Path(__file__).resolve().parent / "data" / "feedbacks.json"
+
+class FeedbackPayload(BaseModel):
+    rating: int = 5
+    category: str = "general"
+    message: str
+    name: Optional[str] = "Anonymous User"
+    email: Optional[str] = ""
+
+def _load_feedbacks() -> list:
+    if not FEEDBACK_FILE.exists():
+        return []
+    try:
+        with open(FEEDBACK_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+def _save_feedbacks(feedbacks: list):
+    try:
+        FEEDBACK_FILE.parent.mkdir(parents=True, exist_ok=True)
+        with open(FEEDBACK_FILE, "w", encoding="utf-8") as f:
+            json.dump(feedbacks, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        logger.error(f"Error saving feedbacks: {e}")
+
+@app.post("/api/feedback")
+async def submit_feedback(payload: FeedbackPayload):
+    feedbacks = _load_feedbacks()
+    entry = {
+        "id": f"fb_{int(datetime.now(timezone.utc).timestamp() * 1000)}",
+        "rating": payload.rating,
+        "category": payload.category,
+        "message": payload.message,
+        "name": payload.name or "Anonymous User",
+        "email": payload.email or "",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "is_read": False
+    }
+    feedbacks.insert(0, entry)
+    _save_feedbacks(feedbacks)
+    return {"success": True, "feedback": entry, "unread_count": sum(1 for f in feedbacks if not f.get("is_read"))}
+
+@app.get("/api/feedback/all")
+async def get_all_feedbacks():
+    feedbacks = _load_feedbacks()
+    unread_count = sum(1 for f in feedbacks if not f.get("is_read"))
+    avg_rating = round(sum(f.get("rating", 5) for f in feedbacks) / len(feedbacks), 1) if feedbacks else 5.0
+    return {
+        "success": True,
+        "feedbacks": feedbacks,
+        "total_count": len(feedbacks),
+        "unread_count": unread_count,
+        "average_rating": avg_rating
+    }
+
+class MarkReadPayload(BaseModel):
+    ids: Optional[list[str]] = None
+
+@app.post("/api/feedback/mark-read")
+async def mark_feedbacks_read(payload: MarkReadPayload = MarkReadPayload()):
+    feedbacks = _load_feedbacks()
+    for f in feedbacks:
+        if payload.ids is None or f.get("id") in payload.ids:
+            f["is_read"] = True
+    _save_feedbacks(feedbacks)
+    return {"success": True, "unread_count": sum(1 for f in feedbacks if not f.get("is_read"))}
+
+@app.delete("/api/feedback/{feedback_id}")
+async def delete_feedback(feedback_id: str):
+    feedbacks = _load_feedbacks()
+    feedbacks = [f for f in feedbacks if f.get("id") != feedback_id]
+    _save_feedbacks(feedbacks)
+    return {"success": True, "total_count": len(feedbacks)}
 
 
 # ─────────────────────────────────────────────────────────────

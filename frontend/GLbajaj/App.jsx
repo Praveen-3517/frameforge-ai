@@ -5,6 +5,7 @@ import { getApiUrl } from './utils/apiUrl'
 import AuthModal from './components/auth/AuthModal'
 import EarlyBirdModal from './components/EarlyBirdModal'
 import FeedbackModal from './components/FeedbackModal'
+import AdminFeedbackViewer from './components/AdminFeedbackViewer'
 import ErrorBoundary from './components/ErrorBoundary'
 import Dashboard from './pages/Dashboard'
 import TextToVideo from './pages/TextToVideo'
@@ -38,6 +39,7 @@ export default function App() {
         <AuthModal />
         <EarlyBirdModal />
         <FeedbackModal />
+        <AdminFeedbackViewer />
         <Routes>
           <Route path="/" element={<ErrorBoundary><Dashboard /></ErrorBoundary>} />
           <Route path="/dialogue" element={<ErrorBoundary><DialogueVideoGenerator /></ErrorBoundary>} />
