@@ -486,15 +486,15 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Box 2: DSA with C (THE NEW BOX!) */}
-            <div className={`rounded-2xl border transition-all duration-300 backdrop-blur-sm relative overflow-hidden p-4 sm:p-5 ${
+            {/* Box 2: DSA with C — LIVE */}
+            <div className={`rounded-2xl border transition-all duration-300 backdrop-blur-sm relative overflow-hidden p-4 sm:p-5 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-cyan-500/10 ${
               isLight
-                ? 'bg-gradient-to-br from-cyan-50/70 via-white to-blue-50/60 border-cyan-200/90 shadow-sm'
-                : 'bg-gradient-to-br from-cyan-950/20 via-[#090e18] to-blue-950/15 border-cyan-500/20 shadow-md shadow-cyan-950/10'
+                ? 'bg-gradient-to-br from-cyan-50/70 via-white to-blue-50/60 border-cyan-300/90 shadow-sm'
+                : 'bg-gradient-to-br from-cyan-950/30 via-[#080d1a] to-blue-950/20 border-cyan-500/30 shadow-md shadow-cyan-950/10'
             }`}>
-              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-70" />
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-90" />
               <div className="flex items-start gap-3.5">
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-cyan-500 via-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-cyan-500/25 text-white shrink-0 font-black text-lg font-mono">
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-cyan-500 via-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-cyan-500/30 text-white shrink-0 font-black text-lg font-mono">
                   C
                 </div>
                 <div className="flex-1 min-w-0">
@@ -503,21 +503,29 @@ export default function Dashboard() {
                       DSA with C
                     </h3>
                     <span className={`px-2 py-0.5 rounded-full border text-[9px] font-mono font-bold tracking-wider flex items-center gap-1 ${
-                      isLight ? 'bg-cyan-100 border-cyan-300 text-cyan-900' : 'bg-cyan-400/15 border-cyan-400/30 text-cyan-300'
+                      isLight ? 'bg-emerald-100 border-emerald-300 text-emerald-800' : 'bg-emerald-400/15 border-emerald-400/40 text-emerald-300'
                     }`}>
-                      <Clock size={10} />
-                      COMING SOON
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      LIVE
                     </span>
                   </div>
-                  <p className={`text-[11px] leading-relaxed mb-2.5 ${isLight ? 'text-slate-600' : 'text-white/50'}`}>
-                    Data Structures & Algorithms in C is currently in active development. Master pointers, dynamic memory management, structs, and low-level algorithmic problem solving.
+                  <p className={`text-[11px] leading-relaxed mb-2.5 ${isLight ? 'text-slate-600' : 'text-white/55'}`}>
+                    20 topics · 554 problems — Pointers, Dynamic Memory, Structs, Linked Lists, Trees, Graphs, DP &amp; Bit Twiddling. Production-grade low-level systems solutions.
                   </p>
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-semibold ${
-                    isLight ? 'bg-cyan-50 border-cyan-200 text-cyan-900' : 'bg-white/5 border-white/10 text-white/40'
-                  }`}>
-                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
-                    Under Development
-                  </span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Link
+                      to="/dsa?lang=c"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 text-white shadow-sm hover:opacity-90 transition-all"
+                    >
+                      <span>Open C DSA</span>
+                      <ArrowRight size={12} />
+                    </Link>
+                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg border text-[10px] font-mono font-semibold ${
+                      isLight ? 'bg-cyan-50 border-cyan-200 text-cyan-800' : 'bg-cyan-400/10 border-cyan-400/20 text-cyan-300'
+                    }`}>
+                      Easy · Medium · Hard
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>

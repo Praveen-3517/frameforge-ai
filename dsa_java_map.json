@@ -1,0 +1,716 @@
+{
+  "01-variables-and-data-types": {
+    "easy": [
+      "01_PrimitiveDataTypesDemo.java",
+      "02_SwapTwoNumbersWithoutThird.java",
+      "03_ImplicitAndExplicitCasting.java",
+      "04_CharToAsciiAndViceVersa.java",
+      "05_TemperatureConverter.java",
+      "06_SimpleInterestCalculator.java",
+      "07_CheckEvenOrOddBitwise.java",
+      "08_FindRangeOfPrimitives.java",
+      "09_DaysToYearsWeeksDays.java",
+      "10_SumOfFirstNNaturalNumbers.java"
+    ],
+    "medium": [
+      "01_IntegerCachePitfall.java",
+      "02_DetectIntegerOverflow.java",
+      "03_DoublePrecisionIssueAndBigDecimal.java",
+      "04_BinaryToDecimalAndDecimalToBinary.java",
+      "05_CountSetBitsBrianKernighan.java",
+      "06_Reverse32BitSignedInteger.java",
+      "07_UnsignedIntComparison.java",
+      "08_FastExponentiation.java",
+      "09_ParseStringToIntegerManual.java",
+      "10_SquareRootWithoutBuiltin.java"
+    ],
+    "hard": [
+      "01_DivideTwoIntegersWithoutOperators.java",
+      "02_SingleNumberTwoUniqueElements.java",
+      "03_SingleNumberThreeAppearances.java",
+      "04_IEEE754FloatBitInspector.java",
+      "05_BigIntegerFactorial.java",
+      "06_MultiplyTwoLargeStrings.java",
+      "07_AddBinaryStrings.java",
+      "08_BitwiseAndOfNumbersRange.java"
+    ]
+  },
+  "02-operators": {
+    "easy": [
+      "01_ArithmeticOperationsAndModDemo.java",
+      "02_PrePostIncrementPitfalls.java",
+      "03_RelationalAndLogicalDemo.java",
+      "04_TernaryMaxOfThree.java",
+      "05_CompoundAssignmentImplicitCast.java",
+      "06_BitwiseBasicOperations.java",
+      "07_CheckPowerOfTwo.java",
+      "08_SwapOddEvenBits.java",
+      "09_CheckOppositeSigns.java",
+      "10_MultiplyBySevenBitwise.java"
+    ],
+    "medium": [
+      "01_AddWithoutPlusOperator.java",
+      "02_SubtractWithoutMinusOperator.java",
+      "03_MultiplyWithoutMultiplicationOperator.java",
+      "04_MinMaxWithoutBranching.java",
+      "05_PowerOfFourBitwise.java",
+      "06_ReverseBits32BitInteger.java",
+      "07_BitwiseHammingDistance.java",
+      "08_TotalHammingDistance.java",
+      "09_ModuloWithoutModOperator.java",
+      "10_NextHigherPowerOfTwo.java"
+    ],
+    "hard": [
+      "01_BitwiseSubsetsPowerSet.java",
+      "02_BitwiseMaximumXOROfTwoNumbers.java",
+      "03_NumberOfValidWordsForPuzzle.java",
+      "04_SubmaskEnumerationBitwise.java",
+      "05_MissingTwoNumbersBitwise.java",
+      "06_SmallestSufficientTeamBitmaskDP.java",
+      "07_BitwiseOperatorPrecedenceTrapEvaluator.java",
+      "08_CountTripletsEqualXOR.java"
+    ]
+  },
+  "03-conditionals": {
+    "easy": [
+      "01_CheckLeapYear.java",
+      "02_GradeCalculatorSwitch.java",
+      "03_VowelOrConsonant.java",
+      "04_QuadrantOfCoordinate.java",
+      "05_TriangleValidityAndType.java",
+      "06_SimpleCalculatorSwitch.java",
+      "07_DaysInMonthCalculator.java",
+      "08_TrafficLightStateSwitch.java",
+      "09_TaxBracketCalculator.java",
+      "10_ElectricityBillSlabRate.java"
+    ],
+    "medium": [
+      "01_RockPaperScissorsExtended.java",
+      "02_RomanToInteger.java",
+      "03_IntegerToRoman.java",
+      "04_ValidParenthesesSimpleSwitch.java",
+      "05_NextPermutationConditionals.java",
+      "06_TimeInWordsClock.java",
+      "07_FindClosestValidDate.java",
+      "08_ATMDispenserGreedy.java",
+      "09_EvaluateReversePolishNotation.java",
+      "10_GameOfLifeTransitionRules.java"
+    ],
+    "hard": [
+      "01_ValidNumberRegexState.java",
+      "02_BasicCalculatorWithParentheses.java",
+      "03_ExpressionAddOperators.java",
+      "04_TextJustificationConditionals.java",
+      "05_ParseLispExpression.java",
+      "06_OptimalAccountBalancing.java",
+      "07_IntegerToEnglishWords.java",
+      "08_ShortestPathWithObstaclesElimination.java"
+    ]
+  },
+  "04-loops": {
+    "easy": [
+      "01_PrintNumberPatterns.java",
+      "02_ReverseNumberAndPalindrome.java",
+      "03_FibonacciSeriesUpToN.java",
+      "04_GCDAndLCMUsingEuclid.java",
+      "05_ArmstrongNumberChecker.java",
+      "06_LabeledBreakAndContinue.java",
+      "07_CountDigitsAndSumOfDigits.java",
+      "08_CollatzConjectureHailstone.java",
+      "09_MultiplicationTableGrid.java",
+      "10_DoWhileInputValidationSimulation.java"
+    ],
+    "medium": [
+      "01_SpiralMatrixTraversal.java",
+      "02_SpiralMatrixTwoGeneration.java",
+      "03_PascalsTriangleGeneration.java",
+      "04_RotateImage90Degrees.java",
+      "05_LongestConsecutiveSequenceLoop.java",
+      "06_SetMatrixZeroes.java",
+      "07_GameOfLifeLoopSimulation.java",
+      "08_DiagonalTraverseMatrix.java",
+      "09_IntegerBreakMaxProduct.java",
+      "10_FindDuplicateNumberFloydCycle.java"
+    ],
+    "hard": [
+      "01_SudokuSolverBacktrackLoop.java",
+      "02_NQueensPuzzleBacktrack.java",
+      "03_TrappingRainWaterTwoPointers.java",
+      "04_LargestRectangleInHistogramLoop.java",
+      "05_SlidingWindowMaximumLoop.java",
+      "06_FirstMissingPositiveLoop.java",
+      "07_BasicCalculatorThreeAllOperators.java",
+      "08_MaxPointsOnALineGCDLoop.java"
+    ]
+  },
+  "05-arrays": {
+    "easy": [
+      "01_LinearAndBinarySearchArray.java",
+      "02_FindMaxAndMinInArray.java",
+      "03_ReverseArrayInPlace.java",
+      "04_CheckSortedArray.java",
+      "05_RemoveDuplicatesSortedArray.java",
+      "06_MoveZeroesToEnd.java",
+      "07_RunningSumOf1DArray.java",
+      "08_TwoSumBruteAndHash.java",
+      "09_MatrixRowAndColumnSum.java",
+      "10_JaggedArrayDemo.java"
+    ],
+    "medium": [
+      "01_KadanesMaxSubarraySum.java",
+      "02_SortColorsDutchNationalFlag.java",
+      "03_MajorityElementMooresVoting.java",
+      "04_SubarraySumEqualsK.java",
+      "05_RotateArrayByKPlaces.java",
+      "06_ProductOfArrayExceptSelf.java",
+      "07_MergeIntervalsArray.java",
+      "08_ContinuousSubarraySumModuloK.java",
+      "09_SearchA2DMatrixTwo.java",
+      "10_NextGreaterElementCircular.java"
+    ],
+    "hard": [
+      "01_FirstMissingPositiveArray.java",
+      "02_LargestRectangleInHistogramArray.java",
+      "03_TrappingRainWaterArray.java",
+      "04_MedianOfTwoSortedArrays.java",
+      "05_SlidingWindowMaximumArray.java",
+      "06_MaximalRectangleInBinaryMatrix.java",
+      "07_CountSubarraysWithMedianK.java",
+      "08_SubarrayWithKDifferentIntegers.java"
+    ]
+  },
+  "06-strings": {
+    "easy": [
+      "01_StringPoolAndImmutabilityDemo.java",
+      "02_ReverseStringAndWords.java",
+      "03_ValidPalindromeSimple.java",
+      "04_ValidAnagramFrequency.java",
+      "05_LongestCommonPrefixHorizontal.java",
+      "06_FirstUniqueCharacterInString.java",
+      "07_IsomorphicStringsMapping.java",
+      "08_LengthOfLastWord.java",
+      "09_AddStringsWithoutBigInt.java",
+      "10_DefangingAnIPAddress.java"
+    ],
+    "medium": [
+      "01_LongestSubstringWithoutRepeating.java",
+      "02_GroupAnagramsCanonical.java",
+      "03_LongestPalindromicSubstringExpand.java",
+      "04_StringToIntegerAtoi.java",
+      "05_CompareVersionNumbers.java",
+      "06_CountAndSayRLE.java",
+      "07_RepeatedDnaSequencesRollingHash.java",
+      "08_MultiplyStringsElementary.java",
+      "09_SimplifyPathCanonical.java",
+      "10_DecodeStringNestedStack.java"
+    ],
+    "hard": [
+      "01_KMPStringMatchingAlgorithm.java",
+      "02_RabinKarpRollingHash.java",
+      "03_MinimumWindowSubstring.java",
+      "04_WildcardMatchingDP.java",
+      "05_RegularExpressionMatchingDP.java",
+      "06_ManachersLongestPalindrome.java",
+      "07_WordBreakTwoBacktracking.java",
+      "08_ShortestPalindromeKMP.java"
+    ]
+  },
+  "07-methods-and-recursion-basics": {
+    "easy": [
+      "01_PassByValueDemonstration.java",
+      "02_MethodOverloadingRules.java",
+      "03_VarargsSumAndAverage.java",
+      "04_RecursiveFactorialAndStack.java",
+      "05_RecursiveSumOfDigits.java",
+      "06_RecursivePowerCalculation.java",
+      "07_RecursivePrint1ToN.java",
+      "08_RecursiveArraySumAndMax.java",
+      "09_CheckArraySortedRecursion.java",
+      "10_DecimalToBinaryRecursion.java"
+    ],
+    "medium": [
+      "01_TowerOfHanoiClassic.java",
+      "02_PowXNFastDivideConquer.java",
+      "03_SubsetsRecursiveGeneration.java",
+      "04_PermutationsRecursive.java",
+      "05_CombinationSumRecursive.java",
+      "06_LetterCombinationsPhoneKeypad.java",
+      "07_GenerateParenthesesRecursion.java",
+      "08_JosephusProblemRecursion.java",
+      "09_WordSearchGridRecursion.java",
+      "10_FlattenNestedListIteratorRecursion.java"
+    ],
+    "hard": [
+      "01_PermutationsTwoWithDuplicates.java",
+      "02_NQueensPuzzleSolver.java",
+      "03_SudokuSolverRecursion.java",
+      "04_PalindromePartitioningMinCuts.java",
+      "05_ExpressionAddOperatorsRecursion.java",
+      "06_ParseLispExpressionRecursion.java",
+      "07_KthSymbolInGrammarRecursion.java",
+      "08_SpecialBinaryStringRecursion.java"
+    ]
+  },
+  "08-oop": {
+    "easy": [
+      "01_ClassAndObjectBasics.java",
+      "02_ConstructorTypesAndChaining.java",
+      "03_EncapsulationWithValidation.java",
+      "04_SingleAndMultilevelInheritance.java",
+      "05_MethodOverridingAndSuper.java",
+      "06_StaticKeywordDeepDive.java",
+      "07_FinalKeywordUseCases.java",
+      "08_AbstractClassAnimalHierarchy.java",
+      "09_InterfaceMultipleInheritance.java",
+      "10_ShallowVsDeepCopy.java"
+    ],
+    "medium": [
+      "01_ParkingLotSystemDesign.java",
+      "02_LRUCacheOOPDesign.java",
+      "03_BankManagementSystem.java",
+      "04_ShapeHierarchyPolymorphism.java",
+      "05_EmployeePayrollSystem.java",
+      "06_OnlineShoppingCartSystem.java",
+      "07_LibraryManagementSystem.java",
+      "08_DeckOfCardsBlackjack.java",
+      "09_CoffeeVendingMachineOOP.java",
+      "10_GenericRepositoryPattern.java"
+    ],
+    "hard": [
+      "01_ThreadSafeSingletonPattern.java",
+      "02_PubSubObserverPattern.java",
+      "03_FactoryAndBuilderDesignPattern.java",
+      "04_InMemoryFileSystemOOP.java",
+      "05_TokenBucketRateLimiterOOP.java",
+      "06_CompositeAndDecoratorPattern.java",
+      "07_StateDesignPatternVendingMachine.java",
+      "08_CommandAndUndoRedoManager.java"
+    ]
+  },
+  "09-exception-handling": {
+    "easy": [
+      "01_ArithmeticAndNullPointerHandling.java",
+      "02_ArrayIndexAndStringBoundsExceptions.java",
+      "03_FinallyBlockExecutionRules.java",
+      "04_MultipleCatchAndPrecedenceOrder.java",
+      "05_Java7MultiCatchSyntax.java",
+      "06_TryWithResourcesAutoCloseable.java",
+      "07_ThrowVsThrowsDifference.java",
+      "08_CustomCheckedException.java",
+      "09_CustomUncheckedException.java",
+      "10_ExceptionChainingAndRootCause.java"
+    ],
+    "medium": [
+      "01_RobustConfigFileParser.java",
+      "02_DatabaseConnectionPoolResilience.java",
+      "03_TransactionRollbackOnException.java",
+      "04_CsvDataValidatorWithSummaryReport.java",
+      "05_CustomExceptionHierarchy.java",
+      "06_SafeResourceLeakPrevention.java",
+      "07_ApiPayloadValidationPipeline.java",
+      "08_GracefulDegradationFallback.java",
+      "09_UncheckedExceptionPropagationThread.java",
+      "10_BatchTaskExecutionErrorAccumulator.java"
+    ],
+    "hard": [
+      "01_ExponentialBackoffRetryExecutor.java",
+      "02_CircuitBreakerStatePattern.java",
+      "03_DistributedSagaCompensationCoordinator.java",
+      "04_ThreadSafeDeadlockDetection.java",
+      "05_RateLimitExceededHandlerWithHeaders.java",
+      "06_CascadingFailureBulkheadIsolation.java",
+      "07_SafeDynamicClassLoadingExceptionHandler.java",
+      "08_MemoryLeakOutOfMemoryDiagnostics.java"
+    ]
+  },
+  "10-collections-framework": {
+    "easy": [
+      "01_ArrayListOperationsAndTraversal.java",
+      "02_LinkedListAsDequeAndQueue.java",
+      "03_HashSetUniqueElements.java",
+      "04_LinkedHashSetPreserveOrder.java",
+      "05_TreeSetNaturalAndCustomOrder.java",
+      "06_HashMapFrequencyCounter.java",
+      "07_LinkedHashMapAccessOrder.java",
+      "08_TreeMapNavigableKeyLookups.java",
+      "09_ArrayDequeAsStackAndQueue.java",
+      "10_PriorityQueueMinAndMaxHeap.java"
+    ],
+    "medium": [
+      "01_TwoSumHashMapLookup.java",
+      "02_GroupAnagramsCategorization.java",
+      "03_TopKFrequentElements.java",
+      "04_KthLargestElementInArray.java",
+      "05_ValidParenthesesStackEvaluation.java",
+      "06_LRUCacheLinkedHashMap.java",
+      "07_SubarraySumEqualsK.java",
+      "08_SortCharactersByFrequency.java",
+      "09_FindAllDuplicatesInArray.java",
+      "10_DesignUndergroundSystem.java"
+    ],
+    "hard": [
+      "01_FindMedianFromDataStream.java",
+      "02_SlidingWindowMaximumDeque.java",
+      "03_LFUCacheDesign.java",
+      "04_AllOOneDataStructure.java",
+      "05_FirstMissingPositiveArrayMap.java",
+      "06_DesignTwitterFeedSystem.java",
+      "07_MyCalendarThreeKBooking.java",
+      "08_MergeKSortedListsPriorityQueue.java"
+    ]
+  },
+  "11-searching-and-sorting": {
+    "easy": [
+      "01_LinearSearchAllOccurrences.java",
+      "02_BinarySearchIterativeAndRecursive.java",
+      "03_OrderAgnosticBinarySearch.java",
+      "04_BubbleSortOptimized.java",
+      "05_SelectionSortStepByStep.java",
+      "06_InsertionSortArray.java",
+      "07_CountingSortNonNegative.java",
+      "08_SquareRootBinarySearch.java",
+      "09_SearchInsertPosition.java",
+      "10_MergeTwoSortedArraysInPlace.java"
+    ],
+    "medium": [
+      "01_SearchInRotatedSortedArray.java",
+      "02_FindFirstAndLastPositionInSortedArray.java",
+      "03_MergeSortImplementation.java",
+      "04_QuickSortLomutoAndHoare.java",
+      "05_SortColorsDutchNationalFlag.java",
+      "06_MergeIntervalsOverlapping.java",
+      "07_FindPeakElementBinarySearch.java",
+      "08_KokoEatingBananasBinarySearchOnAnswer.java",
+      "09_QuickSelectKthSmallestElement.java",
+      "10_SearchA2DMatrixBinarySearch.java"
+    ],
+    "hard": [
+      "01_MedianOfTwoSortedArraysBinarySearch.java",
+      "02_CountInversionsMergeSort.java",
+      "03_SplitArrayLargestSum.java",
+      "04_MaximumGapBucketSort.java",
+      "05_RussianDollEnvelopes.java",
+      "06_FindKthSmallestPairDistance.java",
+      "07_CountOfSmallerNumbersAfterSelf.java",
+      "08_AggressiveCowsBinarySearch.java"
+    ]
+  },
+  "12-recursion-and-backtracking": {
+    "easy": [
+      "01_PrintAllSubsequencesString.java",
+      "02_BinaryWatchCombinations.java",
+      "03_FactorialAndFibonacciMemoized.java",
+      "04_SumOfSubsetsEqualsTarget.java",
+      "05_GenerateAllBinaryStringsLengthN.java",
+      "06_CountPathsInGridSimpleRecursion.java",
+      "07_ReverseStringRecursively.java",
+      "08_RecursivelyCheckPalindrome.java",
+      "09_CombinationsOfSizeK.java",
+      "10_ClimbingStairsWaysRecursion.java"
+    ],
+    "medium": [
+      "01_SubsetsTwoWithDuplicates.java",
+      "02_CombinationSumTwoUnique.java",
+      "03_CombinationSumThreeFixedK.java",
+      "04_RatInAMazeAllPaths.java",
+      "05_PalindromePartitioningAllCuts.java",
+      "06_TargetSumExpressionWays.java",
+      "07_PartitionToKEqualSumSubsets.java",
+      "08_RestoreIPAddressesBacktracking.java",
+      "09_BeautifulArrangementBacktracking.java",
+      "10_KnightTourProblemWarnsdorff.java"
+    ],
+    "hard": [
+      "01_WordSearchTwoTrieBacktracking.java",
+      "02_NQueensTwoDistinctSolutionsCount.java",
+      "03_SudokuSolverBitmaskOptimized.java",
+      "04_MColoringGraphBacktracking.java",
+      "05_HamiltonianCycleBacktracking.java",
+      "06_OptimalAccountBalancingDebt.java",
+      "07_WordBreakTwoSentenceGeneration.java",
+      "08_RemoveInvalidParenthesesBFSDFS.java"
+    ]
+  },
+  "13-linked-list": {
+    "easy": [
+      "01_DesignSinglyLinkedList.java",
+      "02_ReverseSinglyLinkedList.java",
+      "03_MiddleOfLinkedList.java",
+      "04_MergeTwoSortedLists.java",
+      "05_LinkedListCycleDetection.java",
+      "06_PalindromeLinkedList.java",
+      "07_RemoveLinkedListElements.java",
+      "08_DeleteNodeWithoutHeadPointer.java",
+      "09_IntersectionOfTwoLinkedLists.java",
+      "10_DesignDoublyLinkedList.java"
+    ],
+    "medium": [
+      "01_AddTwoNumbersReversedList.java",
+      "02_RemoveNthNodeFromEndOfList.java",
+      "03_LinkedListCycleTwoFindStart.java",
+      "04_ReorderListHalfFold.java",
+      "05_OddEvenLinkedList.java",
+      "06_SortListMergeSort.java",
+      "07_CopyListWithRandomPointer.java",
+      "08_RotateListByKPlaces.java",
+      "09_PartitionListAroundX.java",
+      "10_SwapNodesInPairs.java"
+    ],
+    "hard": [
+      "01_ReverseNodesInKGroup.java",
+      "02_MergeKSortedListsDivideConquer.java",
+      "03_FlattenMultilevelDoublyLinkedList.java",
+      "04_LRUCacheCustomDoublyList.java",
+      "05_ReverseLinkedListBetweenPositions.java",
+      "06_SplitLinkedListInParts.java",
+      "07_RemoveDuplicatesFromSortedListTwo.java",
+      "08_LFUCacheDoublyListArchitecture.java"
+    ]
+  },
+  "14-stack-and-queue": {
+    "easy": [
+      "01_CustomArrayStack.java",
+      "02_CustomArrayQueue.java",
+      "03_MinStackConstantTime.java",
+      "04_ImplementQueueUsingStacks.java",
+      "05_ImplementStackUsingQueues.java",
+      "06_BackspaceStringCompare.java",
+      "07_MakeStringGreatAdjacentRemoval.java",
+      "08_CrawlerLogFolderDepth.java",
+      "09_BaseballGameRecordStack.java",
+      "10_FinalPricesSpecialDiscount.java"
+    ],
+    "medium": [
+      "01_NextGreaterElementMonotonicStack.java",
+      "02_DailyTemperaturesMonotonicStack.java",
+      "03_EvaluateReversePolishNotation.java",
+      "04_DesignCircularQueueArray.java",
+      "05_AsteroidCollisionStack.java",
+      "06_DecodeStringNestedStack.java",
+      "07_SimplifyFilePathUnixStack.java",
+      "08_RemoveAllAdjacentDuplicatesTwo.java",
+      "09_OnlineStockSpanMonotonicStack.java",
+      "10_DesignCircularDeque.java"
+    ],
+    "hard": [
+      "01_LargestRectangleInHistogramMonotonicStack.java",
+      "02_MaximalRectangleInBinaryMatrix.java",
+      "03_TrappingRainWaterTwoPointersAndStack.java",
+      "04_BasicCalculatorParenthesesExpressions.java",
+      "05_SlidingWindowMaximumMonotonicDeque.java",
+      "06_ShortestSubarrayWithSumAtLeastK.java",
+      "07_ConstrainedSubsequenceSumDeque.java",
+      "08_MaxChunksToMakeSortedTwo.java"
+    ]
+  },
+  "15-trees": {
+    "easy": [
+      "01_BinaryTreePreorderTraversal.java",
+      "02_BinaryTreeInorderTraversal.java",
+      "03_BinaryTreePostorderTraversal.java",
+      "04_MaximumDepthOfBinaryTree.java",
+      "05_MinimumDepthOfBinaryTree.java",
+      "06_InvertBinaryTree.java",
+      "07_SameTree.java",
+      "08_SymmetricTree.java",
+      "09_PathSumRootToLeaf.java",
+      "10_SearchInBinarySearchTree.java"
+    ],
+    "medium": [
+      "01_BinaryTreeLevelOrderTraversal.java",
+      "02_BinaryTreeZigzagLevelOrder.java",
+      "03_LowestCommonAncestorBT.java",
+      "04_ValidateBinarySearchTree.java",
+      "05_ConstructTreeFromPreorderInorder.java",
+      "06_BinaryTreeRightSideView.java",
+      "07_DiameterOfBinaryTree.java",
+      "08_KthSmallestElementInBST.java",
+      "09_FlattenBinaryTreeToLinkedList.java",
+      "10_ImplementTriePrefixTree.java"
+    ],
+    "hard": [
+      "01_BinaryTreeMaximumPathSum.java",
+      "02_SerializeAndDeserializeBinaryTree.java",
+      "03_VerticalOrderTraversalBinaryTree.java",
+      "04_BinaryTreeCameras.java",
+      "05_AllNodesDistanceKInBinaryTree.java",
+      "06_MorrisTraversalInorderO1Space.java",
+      "07_AVLTreeSelfBalancing.java",
+      "08_WordSearchTwoTrieBacktracking.java"
+    ]
+  },
+  "16-graphs": {
+    "easy": [
+      "01_GraphAdjacencyListRepresentation.java",
+      "02_FindIfPathExistsInGraph.java",
+      "03_FloodFillAlgorithm.java",
+      "04_NumberOfIslandsBFS.java",
+      "05_MaxAreaOfIslandDFS.java",
+      "06_FindCenterOfStarGraph.java",
+      "07_FindJudgeInTown.java",
+      "08_DisjointSetUnionFindBasic.java",
+      "09_CloneGraphBFS.java",
+      "10_IslandPerimeter.java"
+    ],
+    "medium": [
+      "01_CourseScheduleCycleDetectionKahn.java",
+      "02_CourseScheduleTwoTopologicalOrder.java",
+      "03_NumberOfProvincesUnionFind.java",
+      "04_RottingOrangesMultiSourceBFS.java",
+      "05_DijkstraShortestPathAlgorithm.java",
+      "06_SurroundedRegionsDFS.java",
+      "07_PacificAtlanticWaterFlow.java",
+      "08_WordLadderShortestTransformation.java",
+      "09_CheapestFlightsWithinKStops.java",
+      "10_RedundantConnectionUnionFind.java"
+    ],
+    "hard": [
+      "01_CriticalConnectionsBridgesTarjan.java",
+      "02_AlienDictionaryTopologicalSort.java",
+      "03_WordLadderTwoAllShortestPaths.java",
+      "04_KruskalMinimumSpanningTree.java",
+      "05_PrimMinimumSpanningTree.java",
+      "06_BellmanFordNegativeCycleDetection.java",
+      "07_FloydWarshallAllPairsShortestPath.java",
+      "08_StronglyConnectedComponentsKosaraju.java"
+    ]
+  },
+  "17-dynamic-programming": {
+    "easy": [
+      "01_ClimbingStairsMemoAndTab.java",
+      "02_FibonacciNumberOptimized.java",
+      "03_MinCostClimbingStairs.java",
+      "04_TribonacciNumber.java",
+      "05_HouseRobberOneLinear.java",
+      "06_PascalsTriangleGenerate.java",
+      "07_DivisorGameMathAndDP.java",
+      "08_CountingBitsDP.java",
+      "09_BestTimeToBuySellStockOne.java",
+      "10_MaximumSubarrayKadaneDP.java"
+    ],
+    "medium": [
+      "01_CoinChangeMinimumCoins.java",
+      "02_LongestIncreasingSubsequence.java",
+      "03_LongestCommonSubsequence.java",
+      "04_PartitionEqualSubsetSum.java",
+      "05_UniquePathsGridDP.java",
+      "06_MinimumPathSumGrid.java",
+      "07_HouseRobberTwoCircular.java",
+      "08_WordBreakDP.java",
+      "09_DecodeWaysDP.java",
+      "10_TargetSumDP.java"
+    ],
+    "hard": [
+      "01_EditDistanceLevenshtein.java",
+      "02_TrappingRainWaterDP.java",
+      "03_BurstBalloonsMCMIntervalDP.java",
+      "04_RegularExpressionMatchingDP.java",
+      "05_DungeonGameKnightMinHealth.java",
+      "06_BestTimeToBuySellStockFourKTransactions.java",
+      "07_PalindromePartitioningTwoMinCuts.java",
+      "08_DistinctSubsequencesDP.java"
+    ]
+  },
+  "18-heaps-and-greedy": {
+    "easy": [
+      "01_CustomMinHeapArrayImplementation.java",
+      "02_KthLargestElementInStream.java",
+      "03_LastStoneWeight.java",
+      "04_AssignCookiesGreedy.java",
+      "05_LemonadeChangeGreedy.java",
+      "06_MaximumUnitsOnTruck.java",
+      "07_CanPlaceFlowersGreedy.java",
+      "08_MinimumCostToConnectSticks.java",
+      "09_RelativeRanksPriorityQueue.java",
+      "10_SplitArrayIntoConsecutiveSubsequences.java"
+    ],
+    "medium": [
+      "01_KthLargestElementInArray.java",
+      "02_TopKFrequentElements.java",
+      "03_KClosestPointsToOrigin.java",
+      "04_TaskSchedulerIntervals.java",
+      "05_ReorganizeStringGreedyHeap.java",
+      "06_GasStationGreedyCircular.java",
+      "07_JumpGameOneGreedy.java",
+      "08_JumpGameTwoGreedyMinJumps.java",
+      "09_NonOverlappingIntervals.java",
+      "10_MergeIntervalsGreedySort.java"
+    ],
+    "hard": [
+      "01_FindMedianFromDataStreamTwoHeaps.java",
+      "02_MergeKSortedListsMinHeap.java",
+      "03_SlidingWindowMedianDualHeaps.java",
+      "04_TrappingRainWaterTwo3DHeap.java",
+      "05_IPOProjectSelectionMaxHeap.java",
+      "06_RearrangeStringKDistanceApart.java",
+      "07_HuffmanCodingLosslessCompression.java",
+      "08_CourseScheduleThreeGreedyMaxHeap.java"
+    ]
+  },
+  "19-bit-manipulation": {
+    "easy": [
+      "01_SingleNumberXOR.java",
+      "02_NumberOfOneBitsKernighan.java",
+      "03_PowerOfTwoBitCheck.java",
+      "04_CountingBitsBitmask.java",
+      "05_ReverseBits32BitInteger.java",
+      "06_MissingNumberXOR.java",
+      "07_AddBinaryStrings.java",
+      "08_HammingDistanceBits.java",
+      "09_BinaryNumberWithAlternatingBits.java",
+      "10_PowerOfFourBitwise.java"
+    ],
+    "medium": [
+      "01_SubsetsBitmaskGeneration.java",
+      "02_SingleNumberTwoEveryElementThreeTimes.java",
+      "03_SingleNumberThreeTwoUniqueElements.java",
+      "04_BitwiseANDOfNumbersRange.java",
+      "05_DivideTwoIntegersBitShift.java",
+      "06_SumOfTwoIntegersWithoutPlusMinus.java",
+      "07_MaximumXOROfTwoNumbersInArray.java",
+      "08_TotalHammingDistanceAllPairs.java",
+      "09_GrayCodeSequenceGeneration.java",
+      "10_RepeatedDNASequencesBitmask.java"
+    ],
+    "hard": [
+      "01_TravelingSalesmanBitmaskDP.java",
+      "02_NumberOfValidWordsForEveryPuzzle.java",
+      "03_MaximumScoreWordsFormedByLetters.java",
+      "04_SmallestSufficientTeamBitmaskDP.java",
+      "05_CampusBikesIIMinCostAssignment.java"
+    ]
+  },
+  "20-sliding-window-two-pointers": {
+    "easy": [
+      "01_MaxSumSubarraySizeK.java",
+      "02_ContainsDuplicateIISlidingWindow.java",
+      "03_TwoSumIISortedArrayTwoPointer.java",
+      "04_MinSizeSubarraySum.java",
+      "05_MoveZeroesToEnd.java",
+      "06_RemoveDuplicatesSortedArrayTwoPointer.java",
+      "07_SquaresOfSortedArrayTwoPointer.java",
+      "08_ValidPalindromeTwoPointer.java",
+      "09_AverageOfSubarraysSizeK.java",
+      "10_ReverseStringInPlaceTwoPointer.java"
+    ],
+    "medium": [
+      "01_LongestSubstringWithoutRepeatingChars.java",
+      "02_LongestRepeatingCharacterReplacement.java",
+      "03_PermutationInStringFixedWindow.java",
+      "04_ThreeSumSortedTwoPointer.java",
+      "05_ContainerWithMostWaterTwoPointer.java",
+      "06_SubarrayProductLessThanK.java",
+      "07_MaxConsecutiveOnesIIIAtMostKZeros.java",
+      "08_FindAllAnagramsInString.java",
+      "09_MinimumWindowSubstringVariableWindow.java",
+      "10_LongestSubarrayOnesAfterDeletingOne.java"
+    ],
+    "hard": [
+      "01_SlidingWindowMaximumMonotonicDeque.java",
+      "02_SubstringConcatenationAllWords.java",
+      "03_MinimumKConsecutiveBitFlips.java",
+      "04_CountSubarraysWithBoundedMaximum.java",
+      "05_JumpGameVIMaxScoreMonotonicDeque.java"
+    ]
+  }
+}

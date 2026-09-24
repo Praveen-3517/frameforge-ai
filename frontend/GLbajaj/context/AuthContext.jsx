@@ -21,10 +21,11 @@ async function hashPassword(password) {
     .join('')
 }
 
-// Check if Supabase URL is a real configured project (not the placeholder)
+// Check if Supabase URL is a real configured project (not a placeholder)
 function isPlaceholderSupabase() {
   const url = import.meta.env.VITE_SUPABASE_URL || ''
-  return !url || !url.startsWith('https://') || url.includes('vgiwwjfgujbkeovwwvcv')
+  const key = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+  return !url || !url.startsWith('https://') || !key || key.includes('placeholder')
 }
 
 export function AuthProvider({ children }) {

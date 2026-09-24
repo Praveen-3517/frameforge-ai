@@ -1,0 +1,112 @@
+/*
+ * Problem Statement:
+ * Given two sorted arrays nums1 and nums2 of size m and n respectively, return the median
+ * of the two sorted arrays.
+ * The overall run time complexity should be O(log (m+n)) or O(log(min(m, n))).
+ * (LeetCode 4: Median of Two Sorted Arrays)
+ * 
+ * Example 1:
+ * Input: nums1 = [1,3], nums2 = [2]
+ * Output: 2.00000
+ * 
+ * Example 2:
+ * Input: nums1 = [1,2], nums2 = [3,4]
+ * Output: 2.50000
+ * 
+ * Asked in: Google, Amazon, Microsoft, Apple, Goldman Sachs
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
+#include <limits.h>
+#include <math.h>
+#include <stdint.h>
+#include <float.h>
+#include <ctype.h>
+
+#ifndef MAX
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
+#endif
+
+#ifndef MIN
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+#endif
+
+static const char* toBinaryString(int n) {
+    static char buf[33];
+    buf[32] = '\0';
+    for (int i = 31; i >= 0; i--) {
+        buf[31 - i] = ((n >> i) & 1) ? '1' : '0';
+    }
+    return buf;
+}
+
+/**
+     * Approach:
+     * Binary Search on Partitions:
+     * - Ensure nums1 is the shorter array (m <= n) to guarantee O(log(min(m, n))).
+     * - Partition nums1 at cut1 and nums2 at cut2 such that:
+     *   cut1 + cut2 = (m + n + 1) / 2
+     * - Let:
+     *   L1 = nums1[cut1 - 1], R1 = nums1[cut1]
+     *   L2 = nums2[cut2 - 1], R2 = nums2[cut2]
+     * - If L1 <= R2 and L2 <= R1, valid partition found!
+     *   - If (m + n) is odd: median = max(L1, L2)
+     *   - If (m + n) is even: median = (max(L1, L2) + min(R1, R2)) / 2.0
+     * - If L1 > R2: cut1 too far right, search left.
+     * - Else: cut1 too far left, search right.
+     */
+    double findMedianSortedArrays(int* nums1, int* nums2) {
+        if (n > n) {
+            return findMedianSortedArrays(nums2, nums1); // Ensure nums1 is smaller
+        }
+
+        int m = n;
+        int n = n;
+        int low = 0;
+        int high = m;
+
+        while (low <= high) {
+            int cut1 = low + (high - low) / 2;
+            int cut2 = (m + n + 1) / 2 - cut1;
+
+            int l1 = (cut1 == 0) ? INT_MIN : nums1[cut1 - 1];
+            int r1 = (cut1 == m) ? INT_MAX : nums1[cut1];
+
+            int l2 = (cut2 == 0) ? INT_MIN : nums2[cut2 - 1];
+            int r2 = (cut2 == n) ? INT_MAX : nums2[cut2];
+
+            if (l1 <= r2 && l2 <= r1) {
+                // Correct partition
+                if ((m + n) % 2 == 0) {
+                    return (MAX(l1, l2) + MIN(r1, r2)) / 2.0;
+                } else {
+                    return MAX(l1, l2);
+                }
+            } else if (l1 > r2) {
+                high = cut1 - 1;
+            } else {
+                low = cut1 + 1;
+            }
+        }
+
+        return 0.0;
+    }
+
+    int main(void) {
+        int* a1 = {1, 3};
+        int* b1 = {2};
+        printf("nums1: [1, 3], nums2: [2] -> Median: %.2f\n", findMedianSortedArrays(a1, b1));
+
+        int* a2 = {1, 2};
+        int* b2 = {3, 4};
+        printf("nums1: [1, 2], nums2: [3, 4] -> Median: %.2f\n", findMedianSortedArrays(a2, b2));
+        return 0;
+}
+
+/*
+ * Time Complexity: O(log(min(m, n))) - Binary search on smaller array.
+ * Space Complexity: O(1) auxiliary space.
+ */
