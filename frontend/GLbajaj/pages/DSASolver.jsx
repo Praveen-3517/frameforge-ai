@@ -422,7 +422,7 @@ export default function DSASolver() {
             isLight ? 'border-slate-200 bg-white' : 'border-white/8'
           }`}>
             <button
-              onClick={() => prevProblem && navigate(`/dsa/${prevProblem.id}`)}
+              onClick={() => prevProblem && navigate(`/dsa/${prevProblem.id}?lang=${selectedLang}`)}
               disabled={!prevProblem}
               title="Previous Problem"
               className={`p-1.5 border-r transition-all disabled:opacity-20 disabled:cursor-not-allowed ${
@@ -432,7 +432,7 @@ export default function DSASolver() {
               <ChevronLeft size={15} />
             </button>
             <button
-              onClick={() => nextProblem && navigate(`/dsa/${nextProblem.id}`)}
+              onClick={() => nextProblem && navigate(`/dsa/${nextProblem.id}?lang=${selectedLang}`)}
               disabled={!nextProblem}
               title="Next Problem"
               className={`p-1.5 transition-all disabled:opacity-20 disabled:cursor-not-allowed ${
