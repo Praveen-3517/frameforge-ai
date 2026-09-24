@@ -81,146 +81,41 @@ export default function ProPaymentModal({ isOpen, onClose, onSuccess, isLight = 
     }
 
     setLoading(true)
-    setStatusMsg('Connecting to secure payment gateway...')
+    setStatusMsg('Opening secure Razorpay UPI & Card checkout...')
 
     try {
-      // 1. Check if Razorpay SDK modal is available
-      const isLoaded = await loadRazorpayScript()
       const apiUrl = getApiUrl()
 
-      if (!isLoaded || !window.Razorpay) {
-        // AdBlock detected — Fallback to Razorpay Official Hosted Payment Link
-        setStatusMsg('AdBlock detected. Opening secure Razorpay UPI checkout...')
-        const linkRes = await fetch(`${apiUrl}/api/payment/create-payment-link`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            amount: 99,
-            email: trimmedEmail,
-            name: name.trim() || 'Student Coder',
-            plan_name: 'DSA Pro Pass (1 Month)'
-          })
-        })
-
-        if (linkRes.ok) {
-          const linkData = await linkRes.json()
-          if (linkData.payment_link) {
-            window.location.href = linkData.payment_link
-            return
-          }
-        }
-        throw new Error('Payment gateway blocked by browser extension. Please temporarily pause AdBlock/Brave Shields on this site.')
-      }
-
-      // 2. Create Order on Backend for standard modal
-      setStatusMsg('Creating your ₹99 Pro Pass order...')
-      const orderRes = await fetch(`${apiUrl}/api/payment/create-order`, {
+      // Create official Razorpay checkout link (100% AdBlock-proof, works on all devices)
+      const linkRes = await fetch(`${apiUrl}/api/payment/create-payment-link`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           amount: 99,
           email: trimmedEmail,
+          name: name.trim() || 'Student Coder',
           plan_name: 'DSA Pro Pass (1 Month)'
         })
       })
 
-      if (!orderRes.ok) {
-        const errData = await orderRes.json().catch(() => ({}))
-        throw new Error(errData.detail || errData.error || 'Failed to initialize payment order.')
+      if (!linkRes.ok) {
+        const errData = await linkRes.json().catch(() => ({}))
+        throw new Error(errData.detail || errData.error || 'Failed to initialize payment gateway.')
       }
 
-      const orderData = await orderRes.json()
-      if (!orderData.order_id) {
-        throw new Error('Invalid order response from payment server.')
+      const linkData = await linkRes.json()
+      if (linkData.payment_link) {
+        // Save user email to localStorage so status syncs immediately on return
+        localStorage.setItem('user_email', trimmedEmail)
+        setStatusMsg('Redirecting to official Razorpay payment page...')
+        window.location.href = linkData.payment_link
+        return
       }
 
-      // 3. Launch Razorpay Checkout Modal
-      setStatusMsg('Opening UPI & Card checkout...')
-      const keyId = orderData.key_id || import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_live_TdAIqK8iA6DzsG'
-
-      const options = {
-        key: keyId,
-        amount: orderData.amount, // in paise (9900)
-        currency: orderData.currency || 'INR',
-        name: 'Bittu AI',
-        description: 'DSA Pro Pass (30 Days Unlimited Access)',
-        image: 'https://bittuai.online/bittu-logo.jpg',
-        order_id: orderData.order_id,
-        prefill: {
-          name: name.trim() || 'Student Coder',
-          email: trimmedEmail,
-          contact: phone.trim() || '',
-        },
-        theme: {
-          color: '#7c3aed', // Vibrant violet brand color
-        },
-        modal: {
-          backdropclose: false,
-          ondismiss: () => {
-            setLoading(false)
-            setStatusMsg('')
-          }
-        },
-        handler: async function (response) {
-          // Response from Razorpay on success:
-          // { razorpay_payment_id, razorpay_order_id, razorpay_signature }
-          try {
-            setLoading(true)
-            setStatusMsg('Verifying payment signature securely...')
-
-            const verifyRes = await fetch(`${apiUrl}/api/payment/verify-payment`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                email: trimmedEmail,
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-              })
-            })
-
-            const verifyData = await verifyRes.json()
-            if (!verifyRes.ok || !verifyData.success) {
-              throw new Error(verifyData.detail || verifyData.error || 'Payment verification failed.')
-            }
-
-            // Successfully verified! Save Pro status locally
-            saveProStatus({
-              email: trimmedEmail,
-              expiresAt: verifyData.expires_at,
-              plan: 'DSA_PRO_MONTHLY'
-            })
-
-            setSuccessData(verifyData)
-            setLoading(false)
-            setStatusMsg('')
-
-            if (onSuccess) {
-              onSuccess(verifyData)
-            }
-          } catch (verifyErr) {
-            console.error('[Payment] Verification error:', verifyErr)
-            setErrorMsg(verifyErr.message || 'Payment verification could not be confirmed.')
-            setLoading(false)
-            setStatusMsg('')
-          }
-        }
-      }
-
-      const rzpInstance = new window.Razorpay(options)
-      rzpInstance.on('payment.failed', function (response) {
-        console.error('[Payment] Payment Failed:', response.error)
-        setErrorMsg(response.error.description || 'Payment was declined or cancelled.')
-        setLoading(false)
-        setStatusMsg('')
-      })
-
-      rzpInstance.open()
-      setLoading(false)
-
+      throw new Error('Could not generate payment link. Please try again.')
     } catch (err) {
-      console.error('[Payment] Setup error:', err)
-      setErrorMsg(err.message || 'Unable to open payment modal. Please try again.')
+      console.error('[Payment] Error:', err)
+      setErrorMsg(err.message || 'Unable to open payment checkout. Please try again.')
       setLoading(false)
       setStatusMsg('')
     }

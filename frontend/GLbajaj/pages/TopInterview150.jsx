@@ -40,13 +40,24 @@ export default function TopInterview150() {
   const [theme] = useState(() => sessionStorage.getItem('dsa_theme') || 'light')
   const isLight = theme === 'light'
 
-  // Sync and Listen for Pro status updates
+  // Sync and Listen for Pro status updates + Handle return from Razorpay
   useEffect(() => {
-    if (user?.email) {
-      fetchRemoteProStatus(user.email).then(status => {
+    const params = new URLSearchParams(window.location.search)
+    const paymentStatus = params.get('payment') || params.get('razorpay_payment_link_status')
+    const activeEmail = user?.email || localStorage.getItem('user_email') || ''
+
+    if (paymentStatus === 'success' || paymentStatus === 'paid') {
+      if (activeEmail) {
+        saveProStatus({ email: activeEmail, expiresAt: new Date(Date.now() + 30 * 86400000).toISOString() })
+        setIsPro(true)
+        window.history.replaceState({}, document.title, window.location.pathname)
+      }
+    } else if (activeEmail) {
+      fetchRemoteProStatus(activeEmail).then(status => {
         if (status?.isPro) setIsPro(true)
       })
     }
+
     const handleProUpdate = (e) => {
       if (e.detail?.isPro) setIsPro(true)
     }
