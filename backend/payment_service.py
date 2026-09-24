@@ -138,6 +138,71 @@ async def create_razorpay_order(
         return {"success": False, "error": f"Payment service connection error: {str(e)}"}
 
 
+async def create_razorpay_payment_link(
+    amount_in_inr: int = 99,
+    email: Optional[str] = None,
+    name: Optional[str] = None,
+    plan_name: str = "DSA Pro Pass (1 Month)",
+) -> Dict[str, Any]:
+    """
+    Creates a Razorpay Hosted Payment Link (e.g. https://rzp.io/l/xxxxx)
+    which works 100% reliably even if client-side adblockers block standard modals.
+    """
+    if not RAZORPAY_KEY_ID or not RAZORPAY_KEY_SECRET:
+        return {"success": False, "error": "Payment gateway credentials not configured."}
+
+    amount_paise = int(amount_in_inr * 100)
+    ref_id = f"plink_{int(time.time())}_{secrets.token_hex(3)}"
+    user_email = (email or "").strip().lower()
+
+    payload = {
+        "amount": amount_paise,
+        "currency": "INR",
+        "accept_partial": False,
+        "reference_id": ref_id,
+        "description": f"Bittu AI — {plan_name}",
+        "customer": {
+            "name": name or "Student Coder",
+            "email": user_email or "student@bittuai.online",
+        },
+        "notify": {
+            "sms": False,
+            "email": bool(user_email)
+        },
+        "reminder_enable": False,
+        "notes": {
+            "platform": "Bittu AI",
+            "plan": plan_name,
+            "user_email": user_email,
+        },
+        "callback_url": "https://www.bittuai.online/dsa/top-interview-150?payment=success",
+        "callback_method": "get"
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            response = await client.post(
+                "https://api.razorpay.com/v1/payment_links",
+                auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET),
+                json=payload,
+            )
+
+        if response.status_code in (200, 201):
+            data = response.json()
+            return {
+                "success": True,
+                "payment_link": data.get("short_url") or data.get("url"),
+                "link_id": data.get("id"),
+                "amount_inr": amount_in_inr,
+                "plan_name": plan_name,
+            }
+        else:
+            log.error("[PAYMENT] Payment link creation failed [%s]: %s", response.status_code, response.text)
+            return {"success": False, "error": f"Failed to create payment link: {response.text}"}
+    except Exception as e:
+        return {"success": False, "error": f"Payment link error: {str(e)}"}
+
+
 # ─────────────────────────────────────────────────────────────
 # 3.  Cryptographic HMAC-SHA256 Payment Verification
 # ─────────────────────────────────────────────────────────────

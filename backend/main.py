@@ -142,6 +142,7 @@ class VerifyOtpRequest(BaseModel):
 # ── Razorpay Payment Gateway Service ──────────────────────────────────────────
 from payment_service import (
     create_razorpay_order,
+    create_razorpay_payment_link,
     verify_razorpay_signature,
     activate_user_pro,
     get_user_pro_status,
@@ -150,6 +151,7 @@ from payment_service import (
 class CreateOrderRequest(BaseModel):
     amount: int = Field(default=99, ge=1, le=100000)
     email: Optional[str] = Field(default=None, max_length=255)
+    name: Optional[str] = Field(default=None, max_length=255)
     plan_name: Optional[str] = Field(default="DSA Pro Pass (1 Month)", max_length=100)
 
 class VerifyPaymentRequest(BaseModel):
@@ -1207,6 +1209,27 @@ async def create_payment_order_endpoint(req: CreateOrderRequest, request: Reques
     )
     if not res.get("success"):
         raise HTTPException(status_code=500, detail=res.get("error", "Failed to initialize payment order."))
+
+    return JSONResponse(content=res)
+
+
+@app.post("/api/payment/create-payment-link", tags=["Payment"])
+async def create_payment_link_endpoint(req: CreateOrderRequest, request: Request):
+    """
+    Creates an official Razorpay Hosted Payment Link (UPI / Cards / Netbanking)
+    that works 100% reliably even when browser ad-blockers block client-side scripts.
+    """
+    rate_limit(request, max_requests=10, window_sec=60)
+    email = req.email.strip().lower() if req.email else None
+    
+    res = await create_razorpay_payment_link(
+        amount_in_inr=req.amount,
+        email=email,
+        name=req.name,
+        plan_name=req.plan_name or "DSA Pro Pass (1 Month)",
+    )
+    if not res.get("success"):
+        raise HTTPException(status_code=500, detail=res.get("error", "Failed to create payment link."))
 
     return JSONResponse(content=res)
 

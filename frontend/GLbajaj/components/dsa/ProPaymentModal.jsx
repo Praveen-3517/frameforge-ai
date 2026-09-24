@@ -84,15 +84,36 @@ export default function ProPaymentModal({ isOpen, onClose, onSuccess, isLight = 
     setStatusMsg('Connecting to secure payment gateway...')
 
     try {
-      // 1. Ensure Razorpay SDK is loaded
+      // 1. Check if Razorpay SDK modal is available
       const isLoaded = await loadRazorpayScript()
+      const apiUrl = getApiUrl()
+
       if (!isLoaded || !window.Razorpay) {
-        throw new Error('Could not load Razorpay payment window. Please check your internet connection.')
+        // AdBlock detected — Fallback to Razorpay Official Hosted Payment Link
+        setStatusMsg('AdBlock detected. Opening secure Razorpay UPI checkout...')
+        const linkRes = await fetch(`${apiUrl}/api/payment/create-payment-link`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amount: 99,
+            email: trimmedEmail,
+            name: name.trim() || 'Student Coder',
+            plan_name: 'DSA Pro Pass (1 Month)'
+          })
+        })
+
+        if (linkRes.ok) {
+          const linkData = await linkRes.json()
+          if (linkData.payment_link) {
+            window.location.href = linkData.payment_link
+            return
+          }
+        }
+        throw new Error('Payment gateway blocked by browser extension. Please temporarily pause AdBlock/Brave Shields on this site.')
       }
 
-      // 2. Create Order on Backend
+      // 2. Create Order on Backend for standard modal
       setStatusMsg('Creating your ₹99 Pro Pass order...')
-      const apiUrl = getApiUrl()
       const orderRes = await fetch(`${apiUrl}/api/payment/create-order`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
