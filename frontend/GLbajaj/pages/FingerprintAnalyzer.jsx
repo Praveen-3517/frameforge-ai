@@ -32,6 +32,8 @@ import axios from 'axios'
 import StarField from '../components/StarField'
 import { getApiUrl, getFullMediaUrl } from '../utils/apiUrl'
 import UserNav from '../components/auth/UserNav'
+import TokenBadge from '../components/TokenBadge'
+import { fetchUserTokens } from '../utils/tokenUsage'
 import { useAuth } from '../context/AuthContext'
 
 export default function FingerprintAnalyzer() {
@@ -173,9 +175,13 @@ export default function FingerprintAnalyzer() {
     formData.append('file', singleFile)
     formData.append('mode', mode)
 
+    const userEmail = user?.email || localStorage.getItem('user_email') || ''
     try {
       const res = await axios.post(`${API_URL}/api/fingerprints/smart-transform`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+        headers: { 
+          'Content-Type': 'multipart/form-data',
+          'X-User-Email': userEmail
+        },
         timeout: 25 * 60 * 1000,
         onUploadProgress: (progressEvent) => {
           if (progressEvent.total) {
@@ -185,6 +191,7 @@ export default function FingerprintAnalyzer() {
         },
       })
       setSmartResult(res.data)
+      if (userEmail) fetchUserTokens(userEmail)
       setTimeout(() => {
         const el = document.getElementById('smart-result-card')
         if (el) el.scrollIntoView({ behavior: 'smooth' })
@@ -215,6 +222,7 @@ export default function FingerprintAnalyzer() {
     setSmartResult(null)
 
     const API_URL = getApiUrl()
+    const userEmail = user?.email || localStorage.getItem('user_email') || ''
 
     const attemptTransform = async (useExistingId = true) => {
       const formData = new FormData()
@@ -238,7 +246,10 @@ export default function FingerprintAnalyzer() {
       }
 
       return await axios.post(`${API_URL}/api/fingerprints/smart-transform`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+        headers: { 
+          'Content-Type': 'multipart/form-data',
+          'X-User-Email': userEmail
+        },
         timeout: 20 * 60 * 1000,
         onUploadProgress: (progressEvent) => {
           if (progressEvent.total) {
@@ -254,11 +265,13 @@ export default function FingerprintAnalyzer() {
         // Try instant zero-byte transform using existing server media first
         const res = await attemptTransform(Boolean(singleResult?.job_id))
         setSmartResult(res.data)
+        if (userEmail) fetchUserTokens(userEmail)
       } catch (firstErr) {
         // If server restarted or temp file expired, seamlessly fallback to uploading singleFile
         if (singleResult?.job_id && singleFile && firstErr.response?.status === 400) {
           const fallbackRes = await attemptTransform(false)
           setSmartResult(fallbackRes.data)
+          if (userEmail) fetchUserTokens(userEmail)
         } else {
           throw firstErr
         }
@@ -337,6 +350,7 @@ export default function FingerprintAnalyzer() {
           <ArrowLeft size={16} /> Back to Dashboard
         </Link>
         <div className="flex items-center gap-2">
+          <TokenBadge userEmail={user?.email} />
           <span className="px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-xs font-mono font-medium flex items-center gap-1.5">
             <Fingerprint size={13} /> Forensic Engine v3.0
           </span>

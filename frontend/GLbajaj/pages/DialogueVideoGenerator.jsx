@@ -33,6 +33,8 @@ import StarField from '../components/StarField'
 import { getApiUrl, getFullMediaUrl } from '../utils/apiUrl'
 import { useAuth } from '../context/AuthContext'
 import UserNav from '../components/auth/UserNav'
+import TokenBadge from '../components/TokenBadge'
+import { fetchUserTokens } from '../utils/tokenUsage'
 
 const DEFAULT_CHARACTERS = [
   {
@@ -359,11 +361,16 @@ export default function DialogueVideoGenerator() {
         channel_watermark: watermark.trim(),
       }
 
+      const userEmail = user?.email || localStorage.getItem('user_email') || ''
       const res = await axios.post(`${base}/api/dialogue/generate`, payload, {
+        headers: {
+          'X-User-Email': userEmail
+        },
         timeout: 20000,
       })
 
       if (res.data && res.data.job_id) {
+        if (userEmail) fetchUserTokens(userEmail)
         const jobId = res.data.job_id
         setGenerationLogs((l) => [
           ...l,
@@ -493,11 +500,9 @@ export default function DialogueVideoGenerator() {
           <ArrowLeft size={16} /> Back to Dashboard
         </Link>
         <div className="flex items-center gap-3">
+          <TokenBadge userEmail={user?.email} />
           <span className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-mono font-medium">
             <Radio size={12} className="text-cyan-400 animate-pulse" /> AI Multi-Voice Studio v4.0
-          </span>
-          <span className="px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs font-mono font-bold">
-            100% Free
           </span>
           <UserNav />
         </div>

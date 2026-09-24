@@ -165,6 +165,16 @@ class VerifyPaymentLinkRequest(BaseModel):
     payment_id: str = Field(..., max_length=100)
     email: Optional[str] = Field(default=None, max_length=255)
 
+# ── Token Quota Management Service ───────────────────────────────────────────
+from token_service import (
+    get_or_init_user_tokens,
+    consume_user_token,
+)
+
+class ConsumeTokenRequest(BaseModel):
+    email: Optional[str] = Field(default=None, max_length=255)
+    action: Optional[str] = Field(default="ai_generation", max_length=100)
+
 # ── FastAPI app — docs hidden in production (DEBUG=true to expose) ────────────
 app = FastAPI(
     title="Bittu AI — Media Generation API",
@@ -421,6 +431,12 @@ async def generate_video(payload: GenerateRequest, request: Request) -> Streamin
     # ── Security: rate limit + input sanitization ──────────────────────────
     rate_limit(request, max_requests=5, window_sec=60)
     payload.text = sanitize_text(payload.text, max_length=2000, field_name="text")
+
+    # ── Token Quota Check (3 tokens / 12 days per email) ───────────────────
+    user_email_clean = (request.headers.get("x-user-email") or "anonymous_video@bittuai.online").strip().lower()
+    token_res = consume_user_token(user_email_clean, action="text_to_video_generation")
+    if not token_res.get("success"):
+        raise HTTPException(status_code=403, detail=token_res.get("error", "Token quota reached (3 tokens / 12 days)."))
 
     job_id = uuid.uuid4().hex[:12]
     log.info("═" * 60)
@@ -748,6 +764,12 @@ async def smart_fingerprint_transform(
     3. Re-encode a transformed variant with all parameters shifted
     4. Return fingerprint data + transform params + before/after comparison
     """
+    # ── Token Quota Check (3 tokens / 12 days per email) ───────────────────
+    user_email_clean = (request.headers.get("x-user-email") or "anonymous_fingerprint@bittuai.online").strip().lower()
+    token_res = consume_user_token(user_email_clean, action="fingerprint_transform")
+    if not token_res.get("success"):
+        raise HTTPException(status_code=403, detail=token_res.get("error", "Token quota reached (3 tokens / 12 days)."))
+
     job_id = uuid.uuid4().hex[:12]
     filename = "media.mp4"
     input_path = None
@@ -1040,6 +1062,12 @@ async def generate_kids_short_endpoint(req: KidsGenerateApiRequest, request: Req
     if req.story_script:
         req.story_script = sanitize_text(req.story_script, max_length=2000, field_name="story_script")
 
+    # ── Token Quota Check (3 tokens / 12 days per email) ───────────────────
+    user_email_clean = (request.headers.get("x-user-email") or "anonymous_kids@bittuai.online").strip().lower()
+    token_res = consume_user_token(user_email_clean, action="kids_shorts_generation")
+    if not token_res.get("success"):
+        raise HTTPException(status_code=403, detail=token_res.get("error", "Token quota reached (3 tokens / 12 days)."))
+
     job_id = uuid.uuid4().hex[:8]
     log.info("👶 [Job %s] Enqueued Kids 3D Short: %s (%s)", job_id, req.word, req.variety)
     
@@ -1128,6 +1156,12 @@ async def generate_dialogue_video_endpoint(req: DialogueVideoRequest, request: R
     # Sanitize title field against injection
     if req.title:
         req.title = sanitize_text(req.title, max_length=200, field_name="title")
+
+    # ── Token Quota Check (3 tokens / 12 days per email) ───────────────────
+    user_email_clean = (request.headers.get("x-user-email") or "anonymous_dialogue@bittuai.online").strip().lower()
+    token_res = consume_user_token(user_email_clean, action="dialogue_video_generation")
+    if not token_res.get("success"):
+        raise HTTPException(status_code=403, detail=token_res.get("error", "Token quota reached (3 tokens / 12 days)."))
 
     job_id = uuid.uuid4().hex[:8]
     log.info("🎙️ [Job %s] Enqueued Dialogue Video: %s (%d lines)", job_id, req.title, len(req.dialogues))
@@ -1292,6 +1326,31 @@ async def get_payment_status_endpoint(email: Optional[str] = None):
     """
     status = get_user_pro_status(email)
     return JSONResponse(content=status)
+
+
+# ─────────────────────────────────────────────────────────────
+# 11.0  Token Quota Endpoints (3 Tokens / 12 Days Cycle)
+# ─────────────────────────────────────────────────────────────
+
+@app.get("/api/tokens/status", tags=["Tokens"])
+async def get_token_status_endpoint(email: Optional[str] = None):
+    """
+    Returns the user's available token balance (3 free tokens per 12 days).
+    """
+    return JSONResponse(content=get_or_init_user_tokens(email))
+
+
+@app.post("/api/tokens/consume", tags=["Tokens"])
+async def consume_token_endpoint(req: ConsumeTokenRequest, request: Request):
+    """
+    Consumes 1 token from the user quota. Rejects if 0 tokens left.
+    """
+    rate_limit(request, max_requests=20, window_sec=60)
+    email = req.email or request.headers.get("x-user-email") or "anonymous_coder@bittuai.online"
+    result = consume_user_token(email=email, action=req.action or "ai_generation")
+    if not result.get("success"):
+        raise HTTPException(status_code=403, detail=result.get("error", "Token quota exhausted."))
+    return JSONResponse(content=result)
 
 
 # ─────────────────────────────────────────────────────────────

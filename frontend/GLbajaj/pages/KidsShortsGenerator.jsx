@@ -26,6 +26,8 @@ import StarField from '../components/StarField'
 import { getApiUrl, getFullMediaUrl } from '../utils/apiUrl'
 import { useAuth } from '../context/AuthContext'
 import UserNav from '../components/auth/UserNav'
+import TokenBadge from '../components/TokenBadge'
+import { fetchUserTokens } from '../utils/tokenUsage'
 
 export default function KidsShortsGenerator() {
   const { user, openAuthModal } = useAuth()
@@ -142,9 +144,16 @@ export default function KidsShortsGenerator() {
         channel_watermark: watermark.trim(),
       }
 
-      const res = await axios.post(`${base}/api/kids/generate`, payload, { timeout: 20000 })
+      const userEmail = user?.email || localStorage.getItem('user_email') || ''
+      const res = await axios.post(`${base}/api/kids/generate`, payload, { 
+        headers: {
+          'X-User-Email': userEmail
+        },
+        timeout: 20000 
+      })
 
       if (res.data && res.data.job_id) {
+        if (userEmail) fetchUserTokens(userEmail)
         const jobId = res.data.job_id
         setGenerationLogs(l => [...l, `📋 Job queued (ID: ${jobId}). Synthesizing 3D animation...`])
         
@@ -294,6 +303,7 @@ export default function KidsShortsGenerator() {
         </div>
 
         <div className="flex items-center gap-3">
+          <TokenBadge userEmail={user?.email} />
           <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono">
             <ShieldCheck size={14} /> YouTube Kids Ready
           </div>
