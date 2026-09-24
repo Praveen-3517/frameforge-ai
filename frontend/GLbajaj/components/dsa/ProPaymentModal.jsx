@@ -17,8 +17,27 @@ function loadRazorpayScript() {
       resolve(true)
       return
     }
+
+    const existingScript = document.querySelector('script[src*="checkout.razorpay.com"]')
+    if (existingScript) {
+      let attempts = 0
+      const check = setInterval(() => {
+        attempts++
+        if (window.Razorpay) {
+          clearInterval(check)
+          resolve(true)
+        } else if (attempts > 20) {
+          clearInterval(check)
+          resolve(!!window.Razorpay)
+        }
+      }, 100)
+      return
+    }
+
     const script = document.createElement('script')
+    script.id = 'razorpay-sdk'
     script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+    script.async = true
     script.onload = () => resolve(true)
     script.onerror = () => resolve(false)
     document.body.appendChild(script)
@@ -37,8 +56,11 @@ export default function ProPaymentModal({ isOpen, onClose, onSuccess, isLight = 
   const [errorMsg, setErrorMsg] = useState('')
   const [successData, setSuccessData] = useState(null)
 
-  // Pre-fill user data if logged in
+  // Pre-fill user data and preload Razorpay SDK on modal open
   useEffect(() => {
+    if (isOpen) {
+      loadRazorpayScript().catch(() => {})
+    }
     if (user) {
       if (user.email && !email) setEmail(user.email)
       const userFullName = user.user_metadata?.full_name || user.fullName || ''
