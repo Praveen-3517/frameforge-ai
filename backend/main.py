@@ -1316,6 +1316,68 @@ async def run_java_code(req: JavaRunRequest):
                 "stderr": run_proc.stderr
             }
         except subprocess.TimeoutExpired:
+            return {"success": False, "stage": "runtime", "stderr": f"Execution error: {str(e)}"}
+
+
+class CRunRequest(BaseModel):
+    code: str
+
+@app.post("/api/dsa/run-c", tags=["DSA"])
+async def run_c_code(req: CRunRequest):
+    """
+    Safely compiles and runs C code using GCC with 8s compile & 5s run timeout.
+    """
+    code = req.code.strip()
+    if not code:
+        raise HTTPException(status_code=400, detail="Empty code provided")
+
+    import tempfile
+    import subprocess
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        c_file = Path(tmpdir) / "solution.c"
+        out_bin = Path(tmpdir) / "solution"
+        c_file.write_text(code, encoding="utf-8")
+
+        # Compile with GCC
+        try:
+            compile_proc = await asyncio.to_thread(
+                subprocess.run,
+                ["gcc", "-std=c11", "-O2", str(c_file), "-o", str(out_bin), "-lm"],
+                capture_output=True,
+                text=True,
+                timeout=8,
+                cwd=tmpdir
+            )
+            if compile_proc.returncode != 0:
+                return {
+                    "success": False,
+                    "stage": "compile",
+                    "stdout": "",
+                    "stderr": compile_proc.stderr or compile_proc.stdout or "Compilation error."
+                }
+        except subprocess.TimeoutExpired:
+            return {"success": False, "stage": "compile", "stderr": "Compilation timed out (8s limit)."}
+        except Exception as e:
+            return {"success": False, "stage": "compile", "stderr": f"Compiler error: {str(e)}"}
+
+        # Execute
+        try:
+            run_proc = await asyncio.to_thread(
+                subprocess.run,
+                [str(out_bin)],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                cwd=tmpdir
+            )
+            return {
+                "success": run_proc.returncode == 0,
+                "stage": "runtime",
+                "stdout": run_proc.stdout,
+                "stderr": run_proc.stderr
+            }
+        except subprocess.TimeoutExpired:
             return {"success": False, "stage": "runtime", "stderr": "Execution timed out (5s limit, possible infinite loop)."}
         except Exception as e:
             return {"success": False, "stage": "runtime", "stderr": f"Execution error: {str(e)}"}

@@ -2,11 +2,12 @@ import React, { useState } from 'react'
 import {
   Copy, Check, Play,
   Code2, Clock, Database, Sparkles, CheckCircle2,
-  ArrowRightLeft, Eye, Coffee
+  ArrowRightLeft, Eye, Coffee, Terminal
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import CodeDiffViewer from './CodeDiffViewer'
 import { getJavaSolution } from '../../data/dsaJavaSolutions'
+import { getCSolution } from '../../data/dsaCSolutions'
 
 export default function SolutionPanel({
   problem,
@@ -14,11 +15,11 @@ export default function SolutionPanel({
   isLight = false,
   onLoadCodeIntoEditor,
   userCode = '',
-  activeLang = 'java'
+  activeLang = 'c'
 }) {
   const { user, openAuthModal } = useAuth()
   const [solutionLang, setSolutionLang] = useState('en') // 'en' | 'hi'
-  const [codeLang, setCodeLang] = useState(activeLang || 'java')
+  const [codeLang, setCodeLang] = useState(activeLang || 'c')
   const [copied, setCopied] = useState(false)
   const [showDiff, setShowDiff] = useState(false)
 
@@ -31,11 +32,15 @@ export default function SolutionPanel({
   const isHindi = solutionLang === 'hi'
   const text = isHindi ? solution?.hi : solution?.en
 
-  // Guarantee clean Java code in Java mode — NEVER fallback to Python!
+  // Guarantee clean code matching selected language
+  const cCode = solution?.cCode || getCSolution(problem)?.code || ''
   const javaCode = solution?.javaCode || getJavaSolution(problem)?.code || ''
   const pythonCode = solution?.code || ''
-  const activeSolutionCode = codeLang === 'java' ? javaCode : pythonCode
-  const activeFileName = codeLang === 'java' ? 'Solution.java (Optimal Java 21 / SE)' : 'solution.py (Optimal Python 3)'
+
+  const activeSolutionCode = codeLang === 'c' ? cCode : (codeLang === 'java' ? javaCode : pythonCode)
+  const activeFileName = codeLang === 'c' 
+    ? 'solution.c (Optimal C11 / C17)' 
+    : (codeLang === 'java' ? 'Solution.java (Optimal Java 21 / SE)' : 'solution.py (Optimal Python 3)')
 
   const handleCopy = () => {
     if (!activeSolutionCode) return
@@ -51,10 +56,21 @@ export default function SolutionPanel({
       <div className="space-y-2">
         {/* Language Tabs + Action Bar */}
         <div className="flex flex-wrap items-center justify-between gap-2">
-          {/* Language Selector: Java / Python */}
+          {/* Language Selector: C / Java / Python */}
           <div className={`flex items-center p-0.5 rounded-xl border text-xs font-bold ${
             isLight ? 'bg-slate-100 border-slate-300' : 'bg-black/30 border-white/10'
           }`}>
+            <button
+              onClick={() => setCodeLang('c')}
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition-all ${
+                codeLang === 'c'
+                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md'
+                  : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-white/60 hover:text-white'
+              }`}
+            >
+              <Terminal size={13} />
+              <span>C Solution</span>
+            </button>
             <button
               onClick={() => setCodeLang('java')}
               className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition-all ${
@@ -70,7 +86,7 @@ export default function SolutionPanel({
               onClick={() => setCodeLang('python')}
               className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition-all ${
                 codeLang === 'python'
-                  ? 'bg-gradient-to-r from-blue-500 to-cyan-600 text-white shadow-md'
+                  ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md'
                   : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-white/60 hover:text-white'
               }`}
             >
