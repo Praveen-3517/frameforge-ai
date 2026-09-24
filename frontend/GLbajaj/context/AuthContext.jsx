@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { supabase } from '../utils/supabaseClient'
 import { getApiUrl } from '../utils/apiUrl'
+import { fetchRemoteProStatus } from '../utils/proSubscription'
 
 const AuthContext = createContext({})
 
@@ -82,6 +83,13 @@ export function AuthProvider({ children }) {
       setLoading(false)
     }
   }, [])
+
+  // Auto-sync Pro Lifetime Pass on login across any device
+  useEffect(() => {
+    if (user?.email) {
+      fetchRemoteProStatus(user.email).catch(() => {})
+    }
+  }, [user?.email])
 
   const openAuthModal = (mode = 'signin') => {
     setAuthMode(mode)
