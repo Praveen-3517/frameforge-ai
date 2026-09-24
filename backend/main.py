@@ -15,6 +15,7 @@
 """
 
 import asyncio
+import hashlib
 import json
 import logging
 import os
@@ -1226,6 +1227,113 @@ async def verify_otp_endpoint(req: VerifyOtpRequest, request: Request):
         raise HTTPException(status_code=400, detail=res.get("error", "Verification failed."))
 
     return JSONResponse(content=res)
+
+
+# ─────────────────────────────────────────────────────────────
+# 11.55 Centralized Cloud User Database & Authentication
+# ─────────────────────────────────────────────────────────────
+
+USERS_FILE = Path(__file__).resolve().parent / "data" / "users.json"
+
+class CloudRegisterRequest(BaseModel):
+    email: str
+    password: str
+    full_name: Optional[str] = ""
+
+class CloudLoginRequest(BaseModel):
+    email: str
+    password: str
+
+def _hash_pw(password: str) -> str:
+    salted = "bittu_ai_2026_!xZ9#kL" + password
+    return hashlib.sha256(salted.encode("utf-8")).hexdigest()
+
+def _load_cloud_users() -> list:
+    if not USERS_FILE.exists():
+        return []
+    try:
+        with open(USERS_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+def _save_cloud_users(users: list):
+    try:
+        USERS_FILE.parent.mkdir(parents=True, exist_ok=True)
+        with open(USERS_FILE, "w", encoding="utf-8") as f:
+            json.dump(users, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        logger.error(f"Error saving users: {e}")
+
+@app.post("/api/auth/register", tags=["Authentication"])
+async def register_cloud_user(req: CloudRegisterRequest, request: Request):
+    rate_limit(request, max_requests=10, window_sec=60)
+    email = req.email.strip().lower()
+    if not email or "@" not in email:
+        raise HTTPException(status_code=400, detail="Please enter a valid email address.")
+    if not req.password or len(req.password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters.")
+    
+    users = _load_cloud_users()
+    if any(u.get("email") == email for u in users):
+        raise HTTPException(status_code=400, detail="An account with this email already exists. Please Sign In.")
+    
+    pw_hash = _hash_pw(req.password)
+    user_entry = {
+        "id": f"usr_{int(time.time() * 1000)}",
+        "email": email,
+        "password_hash": pw_hash,
+        "full_name": req.full_name.strip() if req.full_name else email.split("@")[0],
+        "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "auth_provider": "cloud"
+    }
+    users.append(user_entry)
+    _save_cloud_users(users)
+    
+    safe_user = {k: v for k, v in user_entry.items() if k != "password_hash"}
+    safe_user["user_metadata"] = {"full_name": safe_user["full_name"]}
+    return JSONResponse(content={"success": True, "user": safe_user})
+
+@app.post("/api/auth/login", tags=["Authentication"])
+async def login_cloud_user(req: CloudLoginRequest, request: Request):
+    rate_limit(request, max_requests=15, window_sec=60)
+    email = req.email.strip().lower()
+    users = _load_cloud_users()
+    user_entry = next((u for u in users if u.get("email") == email), None)
+    
+    if not user_entry:
+        raise HTTPException(status_code=404, detail='Account not found. Please click "Create Account" to sign up first.')
+    
+    pw_hash = _hash_pw(req.password)
+    # Also support direct match if sent pre-hashed
+    if user_entry.get("password_hash") != pw_hash and user_entry.get("password_hash") != req.password:
+        raise HTTPException(status_code=401, detail="Incorrect password. Please try again.")
+    
+    safe_user = {k: v for k, v in user_entry.items() if k != "password_hash"}
+    safe_user["user_metadata"] = {"full_name": safe_user.get("full_name", email.split("@")[0])}
+    return JSONResponse(content={"success": True, "user": safe_user})
+
+@app.post("/api/auth/sync-user", tags=["Authentication"])
+async def sync_cloud_user(req: CloudRegisterRequest, request: Request):
+    """Seamlessly syncs an account from local storage to cloud storage without throwing if already exists"""
+    email = req.email.strip().lower()
+    if not email or "@" not in email:
+        return JSONResponse(content={"success": False, "error": "Invalid email"})
+    users = _load_cloud_users()
+    existing = next((u for u in users if u.get("email") == email), None)
+    if not existing:
+        pw_hash = req.password if len(req.password) == 64 else _hash_pw(req.password)
+        user_entry = {
+            "id": f"usr_{int(time.time() * 1000)}",
+            "email": email,
+            "password_hash": pw_hash,
+            "full_name": req.full_name.strip() if req.full_name else email.split("@")[0],
+            "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "auth_provider": "cloud"
+        }
+        users.append(user_entry)
+        _save_cloud_users(users)
+    return JSONResponse(content={"success": True})
 
 
 # ─────────────────────────────────────────────────────────────

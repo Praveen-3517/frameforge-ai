@@ -84,11 +84,32 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  // Auto-sync Pro Lifetime Pass on login across any device
+  // Auto-sync Pro Lifetime Pass on login across any device & sync local users to cloud
   useEffect(() => {
     if (user?.email) {
       fetchRemoteProStatus(user.email).catch(() => {})
     }
+
+    // Sync any pre-existing local storage users to Central Cloud Server
+    try {
+      const localUsers = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || '[]')
+      if (localUsers.length > 0) {
+        const base = getApiUrl()
+        localUsers.forEach(u => {
+          if (u.email && u.passwordHash) {
+            fetch(`${base}/api/auth/sync-user`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                email: u.email,
+                password: u.passwordHash,
+                full_name: u.user_metadata?.full_name || ''
+              })
+            }).catch(() => {})
+          }
+        })
+      }
+    } catch {}
   }, [user?.email])
 
   const openAuthModal = (mode = 'signin') => {
@@ -161,57 +182,113 @@ export function AuthProvider({ children }) {
     return { user: sessionUser, session: { user: sessionUser } }
   }
 
-  // Sign Up with Email, Password & Full Name
+  // Sign Up with Email, Password & Full Name (Central Cloud Server + Supabase + Local)
   const signUp = async (email, password, fullName = '') => {
-    // If Supabase is real, try Supabase first
-    if (!isPlaceholderSupabase()) {
-      try {
-        const { data, error } = await supabase.auth.signUp({
-          email,
+    const base = getApiUrl()
+    const normalizedEmail = email.toLowerCase().trim()
+    let cloudUser = null
+
+    // 1. Central Backend Cloud DB Registration
+    try {
+      const res = await fetch(`${base}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: normalizedEmail,
           password,
-          options: {
-            data: { full_name: fullName },
-          },
+          full_name: fullName
         })
-        if (error) throw error
-        if (data?.user) {
-          setUser(data.user)
-          setSession(data.session)
-          localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify({ user: data.user }))
-          return data
-        }
-      } catch (sbError) {
-        console.warn('Supabase signup failed, falling back to local auth:', sbError.message)
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        throw new Error(data.detail || data.error || 'Registration failed.')
       }
+      if (data?.user) {
+        cloudUser = data.user
+      }
+    } catch (apiErr) {
+      if (apiErr.message.includes('already exists')) {
+        throw apiErr
+      }
+      console.warn('Central auth register error:', apiErr.message)
     }
 
-    // Seamless Local Fallback
-    return localSignUp(email, password, fullName)
+    // 2. Supabase if configured
+    if (!isPlaceholderSupabase()) {
+      try {
+        await supabase.auth.signUp({
+          email: normalizedEmail,
+          password,
+          options: { data: { full_name: fullName } },
+        })
+      } catch (sbError) {}
+    }
+
+    // 3. Fallback / Local sync
+    const localRes = await localSignUp(email, password, fullName).catch(() => ({}))
+    const finalUser = cloudUser || localRes.user || {
+      id: 'usr_' + Date.now().toString(36),
+      email: normalizedEmail,
+      user_metadata: { full_name: fullName || normalizedEmail.split('@')[0] }
+    }
+
+    setUser(finalUser)
+    setSession({ user: finalUser, access_token: 'cloud_token' })
+    localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify({ user: finalUser }))
+    return { user: finalUser, session: { user: finalUser } }
   }
 
-  // Sign In with Email & Password
+  // Sign In with Email & Password (Central Cloud Server + Supabase + Local)
   const signIn = async (email, password) => {
-    // If Supabase is real, try Supabase first
+    const base = getApiUrl()
+    const normalizedEmail = email.toLowerCase().trim()
+    let cloudError = null
+
+    // 1. Central Backend Cloud DB Login
+    try {
+      const res = await fetch(`${base}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: normalizedEmail,
+          password
+        })
+      })
+      const data = await res.json().catch(() => ({}))
+      if (res.ok && data?.user) {
+        setUser(data.user)
+        setSession({ user: data.user, access_token: 'cloud_token' })
+        localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify({ user: data.user }))
+        return { user: data.user, session: { user: data.user } }
+      } else if (!res.ok) {
+        cloudError = data.detail || data.error
+      }
+    } catch (err) {
+      console.warn('Central auth login error:', err.message)
+    }
+
+    // 2. Try Supabase if configured
     if (!isPlaceholderSupabase()) {
       try {
         const { data, error } = await supabase.auth.signInWithPassword({
-          email,
+          email: normalizedEmail,
           password,
         })
-        if (error) throw error
-        if (data?.user) {
+        if (!error && data?.user) {
           setUser(data.user)
           setSession(data.session)
           localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify({ user: data.user }))
           return data
         }
-      } catch (sbError) {
-        console.warn('Supabase signin failed, falling back to local auth:', sbError.message)
-      }
+      } catch (sbError) {}
     }
 
-    // Seamless Local Fallback
-    return localSignIn(email, password)
+    // 3. Try Local Storage
+    try {
+      return await localSignIn(email, password)
+    } catch (localErr) {
+      throw new Error(cloudError || localErr.message)
+    }
   }
 
   // Sign Out
