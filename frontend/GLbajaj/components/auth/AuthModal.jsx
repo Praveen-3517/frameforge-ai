@@ -75,6 +75,7 @@ export default function AuthModal({ isLight = false }) {
   const [otpCooldown,  setOtpCooldown]  = useState(0)
   const [devOtpHint,   setDevOtpHint]   = useState(null)
   const [resending,    setResending]    = useState(false)
+  const otpInputRef = useRef(null)
 
   const [loadingElapsed, setLoadingElapsed] = useState(0)
 
