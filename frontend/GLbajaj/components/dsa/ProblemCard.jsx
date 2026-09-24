@@ -97,7 +97,7 @@ export default function ProblemCard({ problem, isSolved, isBookmarked, onBookmar
 
       {/* Main content */}
       <Link
-        to={`/dsa/${problem.id}?lang=${localStorage.getItem('dsa_lang') || 'java'}`}
+        to={`/dsa/${problem.id}?lang=${localStorage.getItem('dsa_lang') || 'c'}`}
         onClick={handleCardClick}
         className="flex-1 min-w-0 flex flex-col gap-1.5"
       >
@@ -165,7 +165,7 @@ export default function ProblemCard({ problem, isSolved, isBookmarked, onBookmar
       </button>
 
       {/* Arrow */}
-      <Link to={`/dsa/${problem.id}`} onClick={handleCardClick} className="shrink-0">
+      <Link to={`/dsa/${problem.id}?lang=${localStorage.getItem('dsa_lang') || 'c'}`} onClick={handleCardClick} className="shrink-0">
         <ChevronRight
           size={18}
           className={`${

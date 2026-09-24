@@ -209,13 +209,13 @@ export default function DSAHub() {
               </Link>
               <div>
                 <h1 className={`text-base sm:text-lg font-bold tracking-tight leading-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                  DSA <span className="bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">Practice</span>
+                  DSA <span className="bg-gradient-to-r from-cyan-400 via-violet-400 to-fuchsia-400 bg-clip-text text-transparent">Practice Hub</span>
                 </h1>
                 <p className={`text-[10px] leading-none font-medium flex items-center gap-1 ${
                   isLight ? 'text-slate-500' : 'text-white/50'
                 }`}>
-                  <span className={activeLang === 'java' ? 'text-amber-500 font-bold' : 'text-cyan-400 font-bold'}>
-                    {activeLang === 'java' ? '☕ Java Track' : '🐍 Python Track'}
+                  <span className={activeLang === 'c' ? 'text-cyan-400 font-bold' : (activeLang === 'java' ? 'text-amber-500 font-bold' : 'text-emerald-400 font-bold')}>
+                    {activeLang === 'c' ? '⚡ C Language Track' : (activeLang === 'java' ? '☕ Java Track' : '🐍 Python Track')}
                   </span>
                   <span>· {total} Problems · Basic to Advanced</span>
                 </p>
@@ -227,6 +227,16 @@ export default function DSAHub() {
               <div className={`flex items-center p-0.5 rounded-lg border text-xs font-bold shrink-0 ${
                 isLight ? 'bg-slate-200 border-slate-300' : 'bg-white/5 border-white/10'
               }`}>
+                <button
+                  onClick={() => handleLangToggle('c')}
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition-all ${
+                    activeLang === 'c'
+                      ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-sm'
+                      : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-white/40 hover:text-white'
+                  }`}
+                >
+                  <span>C</span>
+                </button>
                 <button
                   onClick={() => handleLangToggle('java')}
                   className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition-all ${
@@ -242,7 +252,7 @@ export default function DSAHub() {
                   onClick={() => handleLangToggle('python')}
                   className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition-all ${
                     activeLang === 'python'
-                      ? 'bg-gradient-to-r from-blue-500 to-cyan-600 text-white shadow-sm'
+                      ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-sm'
                       : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-white/40 hover:text-white'
                   }`}
                 >
