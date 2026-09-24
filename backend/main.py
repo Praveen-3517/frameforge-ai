@@ -144,21 +144,26 @@ from payment_service import (
     create_razorpay_order,
     create_razorpay_payment_link,
     verify_razorpay_signature,
+    verify_and_activate_razorpay_payment,
     activate_user_pro,
     get_user_pro_status,
 )
 
 class CreateOrderRequest(BaseModel):
-    amount: int = Field(default=99, ge=1, le=100000)
+    amount: int = Field(default=149, ge=1, le=100000)
     email: Optional[str] = Field(default=None, max_length=255)
     name: Optional[str] = Field(default=None, max_length=255)
-    plan_name: Optional[str] = Field(default="DSA Pro Pass (1 Month)", max_length=100)
+    plan_name: Optional[str] = Field(default="DSA Master Lifetime Pass (Java + C)", max_length=100)
 
 class VerifyPaymentRequest(BaseModel):
     email: Optional[str] = Field(default=None, max_length=255)
     razorpay_order_id: str = Field(..., max_length=100)
     razorpay_payment_id: str = Field(..., max_length=100)
     razorpay_signature: str = Field(..., max_length=255)
+
+class VerifyPaymentLinkRequest(BaseModel):
+    payment_id: str = Field(..., max_length=100)
+    email: Optional[str] = Field(default=None, max_length=255)
 
 # ── FastAPI app — docs hidden in production (DEBUG=true to expose) ────────────
 app = FastAPI(
@@ -1238,7 +1243,7 @@ async def create_payment_link_endpoint(req: CreateOrderRequest, request: Request
 async def verify_payment_endpoint(req: VerifyPaymentRequest, request: Request):
     """
     Verifies the cryptographic HMAC-SHA256 signature from Razorpay.
-    Upon verification, activates 30 days of Pro membership for the user.
+    Upon verification, activates Lifetime Pro membership (Java + C) for the user.
     """
     rate_limit(request, max_requests=10, window_sec=60)
     order_id = req.razorpay_order_id.strip()
@@ -1251,14 +1256,31 @@ async def verify_payment_endpoint(req: VerifyPaymentRequest, request: Request):
     if not is_valid:
         raise HTTPException(status_code=400, detail="Invalid payment signature. Verification failed.")
 
-    # Activate Pro membership
+    # Activate Lifetime Pro membership
     result = activate_user_pro(
         email=email,
         order_id=order_id,
         payment_id=payment_id,
-        amount_inr=99,
-        days=30,
+        amount_inr=149,
+        days=36500,
     )
+
+    return JSONResponse(content=result)
+
+
+@app.post("/api/payment/verify-payment-link", tags=["Payment"])
+async def verify_payment_link_endpoint(req: VerifyPaymentLinkRequest, request: Request):
+    """
+    Directly queries Razorpay to verify hosted payment link transactions,
+    ensuring tamper-proof lifetime activation without client-side spoofing.
+    """
+    rate_limit(request, max_requests=10, window_sec=60)
+    payment_id = req.payment_id.strip()
+    email = req.email.strip().lower() if req.email else ""
+
+    result = await verify_and_activate_razorpay_payment(payment_id=payment_id, email=email)
+    if not result.get("success"):
+        raise HTTPException(status_code=400, detail=result.get("error", "Payment verification failed."))
 
     return JSONResponse(content=result)
 

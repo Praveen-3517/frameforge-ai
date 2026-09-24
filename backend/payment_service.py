@@ -235,6 +235,59 @@ def verify_razorpay_signature(
     return is_valid
 
 
+async def verify_and_activate_razorpay_payment(
+    payment_id: str,
+    email: str,
+) -> Dict[str, Any]:
+    """
+    Directly queries the live Razorpay API to verify whether a payment was captured.
+    Prevents any spoofing or query param tampering.
+    """
+    if not RAZORPAY_KEY_ID or not RAZORPAY_KEY_SECRET or not payment_id:
+        return {"success": False, "error": "Invalid verification parameters."}
+
+    clean_pid = payment_id.strip()
+    clean_email = (email or "").strip().lower()
+
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            res = await client.get(
+                f"https://api.razorpay.com/v1/payments/{clean_pid}",
+                auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET),
+            )
+
+        if res.status_code == 200:
+            pdata = res.json()
+            status = pdata.get("status")
+            amount = pdata.get("amount", 0)  # in paise
+            order_id = pdata.get("order_id") or clean_pid
+
+            # Verification criteria: Payment must be captured or authorized
+            if status in ("captured", "authorized") and amount >= 10000:
+                # Use customer email from Razorpay if user email was empty
+                final_email = clean_email or (pdata.get("email") or "").strip().lower()
+                if not final_email:
+                    final_email = "verified_coder@bittuai.online"
+
+                activation = activate_user_pro(
+                    email=final_email,
+                    order_id=order_id,
+                    payment_id=clean_pid,
+                    amount_inr=int(amount / 100),
+                    days=36500,
+                )
+                return activation
+            else:
+                log.warning("[PAYMENT] Payment %s status not captured: status=%s, amount=%s", clean_pid, status, amount)
+                return {"success": False, "error": f"Payment is in '{status}' status, not captured."}
+        else:
+            log.error("[PAYMENT] Razorpay API verification failed for %s [%s]: %s", clean_pid, res.status_code, res.text)
+            return {"success": False, "error": "Payment record not found on Razorpay."}
+    except Exception as e:
+        log.exception("[PAYMENT] Exception during live payment verification: %s", e)
+        return {"success": False, "error": f"Verification error: {str(e)}"}
+
+
 # ─────────────────────────────────────────────────────────────
 # 4.  Subscription Management & Activation
 # ─────────────────────────────────────────────────────────────

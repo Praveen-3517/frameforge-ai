@@ -10,7 +10,7 @@ import ProblemCard from '../components/dsa/ProblemCard'
 import StatsPanel from '../components/dsa/StatsPanel'
 import LeaderboardModal from '../components/dsa/LeaderboardModal'
 import ProPaymentModal from '../components/dsa/ProPaymentModal'
-import { getCachedProStatus, fetchRemoteProStatus } from '../utils/proSubscription'
+import { getCachedProStatus, fetchRemoteProStatus, verifyPaymentLinkReturn } from '../utils/proSubscription'
 import { dsaProblems, filterProblems } from '../data/dsaProblems'
 import StarField from '../components/StarField'
 import { getLevel, getStreak, updateStreak, LEVELS } from '../utils/dsaStats'
@@ -112,13 +112,25 @@ export default function DSAHub() {
 
   const { solved, bookmarks, markSolved, toggleBookmark } = useDSAStorage()
 
-  // Sync remote Pro subscription status
+  // Sync remote Pro subscription status + Handle return from Razorpay
   useEffect(() => {
-    if (user?.email) {
-      fetchRemoteProStatus(user.email).then(status => {
+    const params = new URLSearchParams(window.location.search)
+    const paymentId = params.get('razorpay_payment_id')
+    const activeEmail = user?.email || localStorage.getItem('user_email') || ''
+
+    if (paymentId) {
+      verifyPaymentLinkReturn(paymentId, activeEmail).then(res => {
+        if (res?.isPro) {
+          setIsPro(true)
+        }
+        window.history.replaceState({}, document.title, window.location.pathname)
+      })
+    } else if (activeEmail) {
+      fetchRemoteProStatus(activeEmail).then(status => {
         if (status?.isPro) setIsPro(true)
       })
     }
+
     const handleProUpdate = (e) => {
       if (e.detail?.isPro) setIsPro(true)
     }

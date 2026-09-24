@@ -46,6 +46,31 @@ export function saveProStatus({ email, expiresAt, plan = 'DSA_LIFETIME_MASTER_PA
   return data
 }
 
+export async function verifyPaymentLinkReturn(paymentId, email) {
+  if (!paymentId) return { isPro: false }
+  try {
+    const base = getApiUrl()
+    const res = await fetch(`${base}/api/payment/verify-payment-link`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ payment_id: paymentId, email }),
+    })
+    if (res.ok) {
+      const data = await res.json()
+      if (data.is_pro || data.success) {
+        return saveProStatus({
+          email: data.email || email,
+          expiresAt: data.expires_at,
+          plan: data.plan,
+        })
+      }
+    }
+  } catch (err) {
+    console.error('[PaymentLink] Verification failed:', err)
+  }
+  return { isPro: false }
+}
+
 export async function fetchRemoteProStatus(email) {
   if (!email) return getCachedProStatus()
   try {
@@ -69,3 +94,4 @@ export async function fetchRemoteProStatus(email) {
   }
   return getCachedProStatus(email)
 }
+

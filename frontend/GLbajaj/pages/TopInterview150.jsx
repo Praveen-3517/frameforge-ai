@@ -7,7 +7,7 @@ import {
   Tag, Code2, ArrowRight, Zap
 } from 'lucide-react'
 import { TOP_INTERVIEW_150, TOP_INTERVIEW_CATEGORIES } from '../data/topInterview150Data'
-import { getCachedProStatus, fetchRemoteProStatus } from '../utils/proSubscription'
+import { getCachedProStatus, fetchRemoteProStatus, verifyPaymentLinkReturn } from '../utils/proSubscription'
 import { useAuth } from '../context/AuthContext'
 import ProPaymentModal from '../components/dsa/ProPaymentModal'
 
@@ -43,15 +43,16 @@ export default function TopInterview150() {
   // Sync and Listen for Pro status updates + Handle return from Razorpay
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const paymentStatus = params.get('payment') || params.get('razorpay_payment_link_status')
+    const paymentId = params.get('razorpay_payment_id')
     const activeEmail = user?.email || localStorage.getItem('user_email') || ''
 
-    if (paymentStatus === 'success' || paymentStatus === 'paid') {
-      if (activeEmail) {
-        saveProStatus({ email: activeEmail, expiresAt: new Date(Date.now() + 30 * 86400000).toISOString() })
-        setIsPro(true)
+    if (paymentId) {
+      verifyPaymentLinkReturn(paymentId, activeEmail).then(res => {
+        if (res?.isPro) {
+          setIsPro(true)
+        }
         window.history.replaceState({}, document.title, window.location.pathname)
-      }
+      })
     } else if (activeEmail) {
       fetchRemoteProStatus(activeEmail).then(status => {
         if (status?.isPro) setIsPro(true)
