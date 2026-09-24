@@ -1,16 +1,34 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { CheckCircle2, Circle, Bookmark, BookmarkCheck, ChevronRight, Tag, Zap, Lock } from 'lucide-react'
+import { CheckCircle2, Circle, Bookmark, BookmarkCheck, ChevronRight, Tag, Zap, Lock, Sparkles, Crown } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 
-export default function ProblemCard({ problem, isSolved, isBookmarked, onBookmark, isLight = false }) {
+export default function ProblemCard({
+  problem,
+  isSolved,
+  isBookmarked,
+  onBookmark,
+  isLight = false,
+  isPro = false,
+  onRequirePro
+}) {
   const { user, openAuthModal } = useAuth()
+  const isFreeTier = problem.id <= 6
+  const isLocked = !isFreeTier && !isPro
 
   const handleCardClick = (e) => {
     if (!user) {
       e.preventDefault()
       e.stopPropagation()
       openAuthModal('signup')
+      return
+    }
+    if (isLocked) {
+      e.preventDefault()
+      e.stopPropagation()
+      if (onRequirePro) {
+        onRequirePro()
+      }
     }
   }
 
@@ -80,9 +98,13 @@ export default function ProblemCard({ problem, isSolved, isBookmarked, onBookmar
         isLight
           ? isSolved
             ? 'bg-emerald-50/70 border-emerald-300 shadow-sm'
+            : isLocked
+            ? 'bg-amber-50/30 border-amber-200/60 hover:border-amber-400 hover:shadow-md shadow-sm'
             : 'bg-white border-slate-200/90 hover:border-violet-400 hover:shadow-md shadow-sm'
           : isSolved
             ? 'bg-emerald-500/5 border-emerald-500/15 hover:border-emerald-500/30'
+            : isLocked
+            ? 'bg-amber-500/[0.02] border-amber-500/15 hover:bg-amber-500/[0.05] hover:border-amber-500/30'
             : 'bg-white/2 border-white/8 hover:bg-white/4 hover:border-violet-500/30'
       }`}
     >
@@ -97,7 +119,7 @@ export default function ProblemCard({ problem, isSolved, isBookmarked, onBookmar
 
       {/* Main content */}
       <Link
-        to={`/dsa/${problem.id}?lang=${localStorage.getItem('dsa_lang') || 'c'}`}
+        to={isLocked ? '#' : `/dsa/${problem.id}?lang=${localStorage.getItem('dsa_lang') || 'c'}`}
         onClick={handleCardClick}
         className="flex-1 min-w-0 flex flex-col gap-1.5"
       >
@@ -109,11 +131,36 @@ export default function ProblemCard({ problem, isSolved, isBookmarked, onBookmar
           }`}>
             {problem.id}. {problem.title}
           </span>
-          {!user && (
-            <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[9px] font-mono font-bold ${
-              isLight ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-amber-400/15 text-amber-300 border border-amber-400/30'
+
+          {/* Access Badges */}
+          {isFreeTier ? (
+            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+              isLight ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
             }`}>
-              <Lock size={9} /> Free (Sign Up)
+              <Sparkles size={10} className="text-emerald-500" />
+              <span>Free Question</span>
+            </span>
+          ) : isLocked ? (
+            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+              isLight ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-amber-400/15 text-amber-300 border border-amber-400/40 shadow-sm'
+            }`}>
+              <Lock size={10} className="text-amber-500" />
+              <span>Pro (₹149 Lifetime)</span>
+            </span>
+          ) : (
+            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+              isLight ? 'bg-violet-100 text-violet-800 border border-violet-200' : 'bg-violet-500/20 text-violet-300 border border-violet-500/30'
+            }`}>
+              <Crown size={10} className="text-amber-400" />
+              <span>Pro Unlocked</span>
+            </span>
+          )}
+
+          {!user && isFreeTier && (
+            <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[9px] font-mono font-bold ${
+              isLight ? 'bg-slate-100 text-slate-700 border border-slate-300' : 'bg-white/10 text-white/60 border border-white/10'
+            }`}>
+              Sign In to Save
             </span>
           )}
         </div>
@@ -164,17 +211,28 @@ export default function ProblemCard({ problem, isSolved, isBookmarked, onBookmar
         )}
       </button>
 
-      {/* Arrow */}
-      <Link to={`/dsa/${problem.id}?lang=${localStorage.getItem('dsa_lang') || 'c'}`} onClick={handleCardClick} className="shrink-0">
-        <ChevronRight
-          size={18}
-          className={`${
-            isLight
-              ? 'text-slate-400 group-hover:text-violet-600 group-hover:translate-x-0.5'
-              : 'text-white/15 group-hover:text-violet-400 group-hover:translate-x-0.5'
-          } transition-all duration-200`}
-        />
+      {/* Arrow / Lock */}
+      <Link
+        to={isLocked ? '#' : `/dsa/${problem.id}?lang=${localStorage.getItem('dsa_lang') || 'c'}`}
+        onClick={handleCardClick}
+        className="shrink-0"
+      >
+        {isLocked ? (
+          <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-500 border border-amber-500/20">
+            <Lock size={14} />
+          </div>
+        ) : (
+          <ChevronRight
+            size={18}
+            className={`${
+              isLight
+                ? 'text-slate-400 group-hover:text-violet-600 group-hover:translate-x-0.5'
+                : 'text-white/15 group-hover:text-violet-400 group-hover:translate-x-0.5'
+            } transition-all duration-200`}
+          />
+        )}
       </Link>
     </div>
   )
 }
+

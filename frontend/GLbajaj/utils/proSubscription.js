@@ -26,18 +26,18 @@ export function getCachedProStatus(userEmail = null) {
       isPro: !!parsed.isPro,
       expiresAt: parsed.expiresAt || null,
       email: parsed.email || userEmail,
-      plan: parsed.plan || 'DSA_PRO_MONTHLY',
+      plan: parsed.plan || 'DSA_LIFETIME_MASTER_PASS',
     }
   } catch {
     return { isPro: false, expiresAt: null }
   }
 }
 
-export function saveProStatus({ email, expiresAt, plan = 'DSA_PRO_MONTHLY' }) {
+export function saveProStatus({ email, expiresAt, plan = 'DSA_LIFETIME_MASTER_PASS' }) {
   const data = {
     isPro: true,
     email: email || '',
-    expiresAt,
+    expiresAt: expiresAt || new Date(Date.now() + 36500 * 86400000).toISOString(),
     plan,
     updatedAt: new Date().toISOString(),
   }

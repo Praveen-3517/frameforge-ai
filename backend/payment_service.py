@@ -4,9 +4,10 @@
 ║                                                                  ║
 ║  Provides:                                                       ║
 ║   1. Direct Razorpay Order Creation via official REST API        ║
-║   2. Cryptographic HMAC-SHA256 Payment Signature Verification    ║
-║   3. Student-friendly ₹99/Month Pro Plan Subscription Store       ║
-║   4. Pro Membership Expiry Tracking & Verification               ║
+║   2. Razorpay Hosted Payment Links (AdBlock Proof Checkout)      ║
+║   3. Cryptographic HMAC-SHA256 Payment Signature Verification    ║
+║   4. ₹149 DSA Master Pass (Lifetime Access to Java + C Tracks)    ║
+║   5. Free Tier (First 6 Questions Free for Everyone)             ║
 ╚══════════════════════════════════════════════════════════════════╝
 """
 
@@ -68,16 +69,16 @@ def _save_subscribers(data: Dict[str, Any]) -> bool:
 
 
 # ─────────────────────────────────────────────────────────────
-# 2.  Razorpay Order Creation
+# 2.  Razorpay Order & Payment Link Creation
 # ─────────────────────────────────────────────────────────────
 
 async def create_razorpay_order(
-    amount_in_inr: int = 99,
+    amount_in_inr: int = 149,
     email: Optional[str] = None,
-    plan_name: str = "DSA Pro Pass (1 Month)",
+    plan_name: str = "DSA Master Lifetime Pass (Java + C)",
 ) -> Dict[str, Any]:
     """
-    Creates an official Razorpay order for ₹99 (9900 paise).
+    Creates an official Razorpay order for ₹149 (14900 paise).
     Uses standard HTTP Basic Auth with user's live credentials.
     """
     if not RAZORPAY_KEY_ID or not RAZORPAY_KEY_SECRET:
@@ -116,7 +117,7 @@ async def create_razorpay_order(
             return {
                 "success": True,
                 "order_id": data.get("id"),
-                "amount": data.get("amount"),       # in paise (e.g. 9900)
+                "amount": data.get("amount"),       # in paise (e.g. 14900)
                 "amount_inr": amount_in_inr,
                 "currency": data.get("currency", "INR"),
                 "key_id": RAZORPAY_KEY_ID,
@@ -139,10 +140,10 @@ async def create_razorpay_order(
 
 
 async def create_razorpay_payment_link(
-    amount_in_inr: int = 99,
+    amount_in_inr: int = 149,
     email: Optional[str] = None,
     name: Optional[str] = None,
-    plan_name: str = "DSA Pro Pass (1 Month)",
+    plan_name: str = "DSA Master Lifetime Pass (Java + C)",
 ) -> Dict[str, Any]:
     """
     Creates a Razorpay Hosted Payment Link (e.g. https://rzp.io/l/xxxxx)
@@ -175,7 +176,7 @@ async def create_razorpay_payment_link(
             "plan": plan_name,
             "user_email": user_email,
         },
-        "callback_url": "https://www.bittuai.online/dsa/top-interview-150?payment=success",
+        "callback_url": "https://www.bittuai.online/dsa?payment=success",
         "callback_method": "get"
     }
 
@@ -242,11 +243,11 @@ def activate_user_pro(
     email: str,
     order_id: str,
     payment_id: str,
-    amount_inr: int = 99,
-    days: int = 30,
+    amount_inr: int = 149,
+    days: int = 36500, # 100 Years / Lifetime Access
 ) -> Dict[str, Any]:
     """
-    Activates Pro membership for 30 days and persists it to disk.
+    Activates Lifetime Pro membership (100 years) and persists it to disk.
     """
     normalized_email = (email or "anonymous_pro@bittuai.online").strip().lower()
     now = datetime.utcnow()
@@ -256,7 +257,7 @@ def activate_user_pro(
     sub_data = {
         "email": normalized_email,
         "is_pro": True,
-        "plan": "DSA_PRO_MONTHLY",
+        "plan": "DSA_LIFETIME_MASTER_PASS",
         "amount_inr": amount_inr,
         "order_id": order_id,
         "payment_id": payment_id,
@@ -268,14 +269,14 @@ def activate_user_pro(
     subscribers[normalized_email] = sub_data
     _save_subscribers(subscribers)
 
-    log.info("[PAYMENT] Pro Membership activated for %s until %s", normalized_email, expires_at.strftime("%Y-%m-%d %H:%M UTC"))
+    log.info("[PAYMENT] Lifetime Pro Membership activated for %s", normalized_email)
     return {
         "success": True,
         "is_pro": True,
         "email": normalized_email,
-        "plan": "DSA_PRO_MONTHLY",
+        "plan": "DSA_LIFETIME_MASTER_PASS",
         "expires_at": sub_data["expires_at"],
-        "message": "Welcome to Bittu AI DSA Pro! Top Interview Questions & Pro Perks Unlocked!",
+        "message": "Welcome to Bittu AI DSA Master Pass! Full Lifetime Access to DSA with Java and DSA with C Unlocked!",
     }
 
 
@@ -293,18 +294,18 @@ def get_user_pro_status(email: Optional[str]) -> Dict[str, Any]:
     if not record or not record.get("is_pro"):
         return {"is_pro": False, "plan": None, "expires_at": None}
 
-    # Check expiry
-    try:
-        expires_ts = record.get("expires_timestamp")
-        if expires_ts and time.time() > expires_ts:
-            log.info("Pro membership for %s has expired.", normalized_email)
-            return {"is_pro": False, "plan": None, "expires_at": record.get("expires_at"), "expired": True}
-    except Exception:
-        pass
+    # Verify expiration (36500 days for lifetime)
+    expires_ts = record.get("expires_timestamp")
+    if expires_ts and time.time() > expires_ts:
+        log.info("[PAYMENT] Pro subscription for %s expired at %s", normalized_email, record.get("expires_at"))
+        record["is_pro"] = False
+        subscribers[normalized_email] = record
+        _save_subscribers(subscribers)
+        return {"is_pro": False, "plan": None, "expires_at": None, "expired": True}
 
     return {
         "is_pro": True,
-        "plan": record.get("plan", "DSA_PRO_MONTHLY"),
+        "plan": record.get("plan", "DSA_LIFETIME_MASTER_PASS"),
         "expires_at": record.get("expires_at"),
         "activated_at": record.get("activated_at"),
     }

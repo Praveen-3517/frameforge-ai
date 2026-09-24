@@ -5,7 +5,7 @@ import {
   Lightbulb, CheckCircle2, Circle, Bookmark, BookmarkCheck,
   RotateCcw, Tag, Clock, Play, Trophy, Zap, Share2, Check,
   Sun, Moon, Unlock, Building2, Sparkles, HelpCircle, Languages,
-  ArrowRightLeft, Coffee, Terminal
+  ArrowRightLeft, Coffee, Terminal, Lock, Crown
 } from 'lucide-react'
 import CodeEditor from '../components/dsa/CodeEditor'
 import TestRunner from '../components/dsa/TestRunner'
@@ -13,6 +13,8 @@ import HintPanel from '../components/dsa/HintPanel'
 import SolutionPanel from '../components/dsa/SolutionPanel'
 import CodeDiffViewer from '../components/dsa/CodeDiffViewer'
 import InterviewTimer from '../components/dsa/InterviewTimer'
+import ProPaymentModal from '../components/dsa/ProPaymentModal'
+import { getCachedProStatus, fetchRemoteProStatus } from '../utils/proSubscription'
 import { dsaProblems } from '../data/dsaProblems'
 import { onProblemSolved, XP_MAP } from '../utils/dsaStats'
 import { getProblemInterviewData } from '../data/dsaInterviewSolutions'
@@ -152,6 +154,25 @@ export default function DSASolver() {
   const [solutionToast, setSolutionToast] = useState(false)
   const [theme, setTheme]               = useState(() => localStorage.getItem('dsa_theme') || 'dark')
   const [interviewMode, setInterviewMode] = useState(false)
+  const [isPro, setIsPro]               = useState(() => getCachedProStatus(user?.email).isPro)
+  const [showProModal, setShowProModal] = useState(false)
+
+  const isFreeTier = problemId <= 6
+  const isLocked = !isFreeTier && !isPro
+
+  // Sync remote Pro subscription status
+  useEffect(() => {
+    if (user?.email) {
+      fetchRemoteProStatus(user.email).then(status => {
+        if (status?.isPro) setIsPro(true)
+      })
+    }
+    const handleProUpdate = (e) => {
+      if (e.detail?.isPro) setIsPro(true)
+    }
+    window.addEventListener('bittu_pro_updated', handleProUpdate)
+    return () => window.removeEventListener('bittu_pro_updated', handleProUpdate)
+  }, [user])
 
   const handleLanguageChange = (newLang) => {
     setSelectedLang(newLang)
@@ -239,13 +260,30 @@ export default function DSASolver() {
         <div className="bg-gradient-to-r from-violet-600 via-fuchsia-600 to-cyan-600 text-white px-4 py-2 flex items-center justify-between text-xs font-semibold shrink-0 shadow-md">
           <div className="flex items-center gap-2">
             <span className="bg-white/20 px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider">🔒 Preview Mode</span>
-            <span>Sign up free to execute Python code, unlock interview hints, and save progress!</span>
+            <span>Sign up free to execute code, unlock interview hints, and save progress!</span>
           </div>
           <button
             onClick={() => openAuthModal('signup')}
             className="bg-white text-slate-950 hover:bg-white/90 px-3 py-1 rounded-lg text-xs font-bold shadow-sm transition-transform active:scale-95 cursor-pointer whitespace-nowrap"
           >
             Sign Up Free
+          </button>
+        </div>
+      )}
+
+      {/* ── Lifetime Pass Required Banner for Question #7+ ── */}
+      {user && isLocked && (
+        <div className="bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 text-white px-4 py-2 flex items-center justify-between text-xs font-semibold shrink-0 shadow-md">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="bg-white/20 px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider">🔒 Q#{problem.id} Pro Tier</span>
+            <span>Questions #1–6 are 100% Free! Unlock full Java & C tracks (554+ problems) with the ₹149 Lifetime Pass.</span>
+          </div>
+          <button
+            onClick={() => setShowProModal(true)}
+            className="bg-white text-slate-950 hover:bg-white/90 px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider shadow-sm transition-transform active:scale-95 cursor-pointer whitespace-nowrap flex items-center gap-1.5"
+          >
+            <Crown size={12} className="text-amber-600 fill-amber-600/20" />
+            <span>Unlock (₹149)</span>
           </button>
         </div>
       )}
@@ -442,6 +480,23 @@ export default function DSASolver() {
               <ChevronRight size={15} />
             </button>
           </div>
+
+          {/* Lifetime Pass Button */}
+          {!isPro ? (
+            <button
+              onClick={() => setShowProModal(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white shadow-sm hover:opacity-95 active:scale-95 transition-all shrink-0 cursor-pointer"
+              title="Unlock All 554+ Java & C DSA Problems for ₹149 Lifetime"
+            >
+              <Crown size={12} className="fill-white/20" />
+              <span className="hidden sm:inline">Pass (₹149)</span>
+            </button>
+          ) : (
+            <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500/15 border border-amber-400/30 text-amber-500 shrink-0">
+              <Crown size={12} className="text-amber-500 fill-amber-500/20" />
+              <span className="hidden sm:inline text-[11px]">PRO</span>
+            </div>
+          )}
 
           {/* User Nav */}
           <UserNav isLight={isLight} />
@@ -790,6 +845,35 @@ export default function DSASolver() {
                   Exit Interview Simulation Mode
                 </button>
               </div>
+            ) : isLocked && activeTab !== 'description' ? (
+              <div className={`p-6 sm:p-8 rounded-2xl border text-center transition-all ${
+                isLight ? 'bg-amber-50/70 border-amber-200 text-slate-800' : 'bg-amber-500/5 border-amber-500/20 text-white'
+              }`}>
+                <div className={`w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center border shadow-lg ${
+                  isLight ? 'bg-amber-100 border-amber-300 text-amber-600' : 'bg-amber-500/20 border-amber-500/30 text-amber-400'
+                }`}>
+                  <Lock size={26} />
+                </div>
+                <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 mb-2">
+                  Questions #1 to #6 are Free · Q#{problem.id} is Locked
+                </div>
+                <h3 className="text-base font-extrabold mb-2 text-slate-900 dark:text-white">
+                  Unlock Official Editorial & Optimal Solutions
+                </h3>
+                <p className={`text-xs leading-relaxed max-w-md mx-auto mb-6 ${
+                  isLight ? 'text-slate-600' : 'text-white/60'
+                }`}>
+                  Get lifetime access to complete Java & C optimal solutions, Hindi explanations, visual code diffs, and interview walkthroughs for all 554+ problems.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setShowProModal(true)}
+                  className="px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white shadow-lg shadow-amber-500/30 hover:opacity-95 active:scale-95 transition-all inline-flex items-center gap-2 cursor-pointer"
+                >
+                  <Crown size={15} className="fill-white/20" />
+                  <span>Unlock Both Tracks for ₹149 (Lifetime)</span>
+                </button>
+              </div>
             ) : (
               <>
                 {activeTab === 'hints' && (
@@ -907,6 +991,14 @@ export default function DSASolver() {
           </div>
         </div>
       </div>
+
+      {/* ── ₹149 DSA Master Lifetime Pass Modal ── */}
+      <ProPaymentModal
+        isOpen={showProModal}
+        onClose={() => setShowProModal(false)}
+        onSuccess={() => setIsPro(true)}
+        isLight={isLight}
+      />
     </div>
   )
 }

@@ -175,7 +175,7 @@ export default function TopInterview150() {
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-white shadow-md shadow-amber-500/25 hover:opacity-95 active:scale-95 transition-all cursor-pointer"
               >
                 <Crown size={13} className="text-white fill-white/30" />
-                <span>Get Pro Pass (₹99)</span>
+                <span>Get Lifetime Pass (₹149)</span>
               </button>
             ) : (
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-500/15 to-yellow-500/15 border border-amber-400/40 text-amber-500">
@@ -231,7 +231,7 @@ export default function TopInterview150() {
                 <p className={`text-xs sm:text-sm max-w-xl leading-relaxed ${
                   isLight ? 'text-slate-600' : 'text-slate-400'
                 }`}>
-                  Curated essential interview questions covering 23 core topics. Practice real questions asked at <strong>Google, Amazon, Meta, Microsoft, and TCS</strong> with complete Python 3 editorial solutions.
+                  Curated essential interview questions covering 23 core topics. Practice real questions asked at <strong>Google, Amazon, Meta, Microsoft, and TCS</strong> with complete Python 3, Java & C editorial solutions.
                 </p>
               </div>
             </div>
@@ -289,13 +289,13 @@ export default function TopInterview150() {
                       Top Interview 150 Questions & Solutions are Locked 🔒
                     </h2>
                     <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-500 text-slate-950 shadow-sm">
-                      Pro Pass Required
+                      Lifetime Pass
                     </span>
                   </div>
                   <p className={`text-xs sm:text-sm leading-relaxed max-w-2xl ${
                     isLight ? 'text-slate-600' : 'text-slate-300'
                   }`}>
-                    All 150 company-tagged questions, optimal Python 3 solutions, step-by-step intuition, and time/space complexity breakdowns require a Bittu AI Pro Pass. Get unlimited instant access for just <strong>₹99/month</strong>.
+                    All 150 company-tagged questions, optimal solutions in Java, C & Python, step-by-step intuition, and time/space complexity breakdowns require a Lifetime Pass. Get unlimited instant access for just <strong>₹149 one-time</strong>.
                   </p>
                 </div>
               </div>
@@ -311,7 +311,7 @@ export default function TopInterview150() {
                 className="shrink-0 w-full sm:w-auto px-6 py-3 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-wider bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-slate-950 shadow-xl shadow-amber-500/30 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Crown size={16} className="fill-slate-950" />
-                <span>Unlock All 150 (₹99)</span>
+                <span>Unlock All 150 (₹149)</span>
               </button>
             </div>
           </div>
@@ -479,7 +479,7 @@ export default function TopInterview150() {
                                   ? 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-violet-50 hover:border-violet-300 hover:text-violet-700 shadow-sm'
                                   : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white'
                               }`}
-                              title={!isPro ? 'Pro Subscription Required (₹99/mo)' : 'View Editorial Solution'}
+                              title={!isPro ? 'Lifetime Pass Required (₹149)' : 'View Editorial Solution'}
                             >
                               {!isPro ? (
                                 <>

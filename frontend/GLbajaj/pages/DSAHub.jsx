@@ -305,15 +305,15 @@ export default function DSAHub() {
                   setShowProModal(true)
                 }}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white shadow-sm shadow-amber-500/25 hover:opacity-95 active:scale-95 transition-all shrink-0 cursor-pointer"
-                title="Unlock Top Interview Questions & Pro Perks for ₹99/mo"
+                title="Unlock Java + C Full DSA Tracks & Optimal Solutions for ₹149 Lifetime"
               >
                 <Crown size={13} className="text-white fill-white/20" />
-                <span>DSA Pro (₹99)</span>
+                <span>Lifetime Pass (₹149)</span>
               </button>
             ) : (
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-amber-500/15 to-yellow-500/15 border border-amber-400/40 text-amber-500 shrink-0">
                 <Crown size={13} className="text-amber-500 fill-amber-500/20" />
-                <span>PRO ACTIVE</span>
+                <span>LIFETIME PASS ACTIVE</span>
               </div>
             )}
 
@@ -495,6 +495,53 @@ export default function DSAHub() {
           {/* ── Main Content ── */}
           <div className="flex-1 min-w-0">
 
+            {/* ── Launch Offer Banner: First 6 Free + ₹149 Lifetime Access ── */}
+            <div className={`mb-4 p-4 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 transition-all ${
+              isLight
+                ? 'bg-gradient-to-r from-violet-50 via-amber-50 to-cyan-50 border-amber-200/90 shadow-sm'
+                : 'bg-gradient-to-r from-violet-950/40 via-amber-950/20 to-cyan-950/30 border-amber-500/30 shadow-lg shadow-amber-950/20'
+            }`}>
+              <div className="flex items-start sm:items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-500/25">
+                  <Sparkles size={20} className="text-white" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                    <span className="text-xs font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                      Special Launch Offer
+                    </span>
+                    <span className="text-[10px] font-bold px-2 py-0.2 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                      Questions #1 to #6 are 100% Free
+                    </span>
+                  </div>
+                  <p className={`text-xs font-medium leading-relaxed ${isLight ? 'text-slate-700' : 'text-white/80'}`}>
+                    Access both <strong>DSA with Java</strong> & <strong>DSA with C</strong>. Get Lifetime Access to all 554+ problems, optimal editorial solutions, and line-by-line diffs for just <strong>₹149</strong> one-time!
+                  </p>
+                </div>
+              </div>
+              {!isPro ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!user) {
+                      openAuthModal('signup')
+                      return
+                    }
+                    setShowProModal(true)
+                  }}
+                  className="w-full sm:w-auto px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white shadow-md shadow-amber-500/30 hover:opacity-95 active:scale-95 transition-all shrink-0 cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <Crown size={14} className="fill-white/20" />
+                  <span>Get Lifetime Pass (₹149)</span>
+                </button>
+              ) : (
+                <div className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-500 shrink-0">
+                  <CheckCircle2 size={13} />
+                  <span>Lifetime Pass Active</span>
+                </div>
+              )}
+            </div>
+
             {/* ── LeetCode-Style Featured Study Banners ── */}
             <div className="mb-4">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -517,7 +564,7 @@ export default function DSAHub() {
                     Interview Crash Course
                   </h3>
                   <p className="text-[11px] text-purple-200/80 leading-relaxed line-clamp-2">
-                    Data Structures and Algorithms masterclass with real Python 3.11 WASM.
+                    Data Structures and Algorithms masterclass with Java 21, C17 & Python 3.11 WASM.
                   </p>
                 </div>
 
@@ -541,7 +588,7 @@ export default function DSAHub() {
                     ) : (
                       <>
                         <Lock size={11} className="text-amber-300" />
-                        <span>Locked · ₹99/mo</span>
+                        <span>Locked · ₹149</span>
                       </>
                     )}
                   </div>
@@ -573,7 +620,7 @@ export default function DSAHub() {
                     ) : (
                       <>
                         <Lock size={11} className="text-amber-300" />
-                        <span className="text-amber-300 font-bold">Pro Pass Required (₹99/mo) — View Questions & Unlock →</span>
+                        <span className="text-amber-300 font-bold">Lifetime Pass (₹149) — View Questions & Unlock →</span>
                       </>
                     )}
                   </div>
@@ -780,6 +827,8 @@ export default function DSAHub() {
                     isBookmarked={bookmarks.includes(problem.id)}
                     onBookmark={toggleBookmark}
                     isLight={isLight}
+                    isPro={isPro}
+                    onRequirePro={() => setShowProModal(true)}
                   />
                 ))
               )}
