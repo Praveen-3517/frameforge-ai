@@ -10,6 +10,7 @@ import {
 import StarField from '../components/StarField'
 import { getApiUrl } from '../utils/apiUrl'
 import UserNav from '../components/auth/UserNav'
+import TrustFooter from '../components/TrustFooter'
 
 const STANDARD_TOOLS = [
   {
@@ -599,6 +600,9 @@ export default function Dashboard() {
         </div>
 
       </main>
+
+      {/* Trust, Legal Disclaimer & Developer Attribution Footer */}
+      <TrustFooter isLight={isLight} />
     </div>
   )
 }
