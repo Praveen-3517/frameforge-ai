@@ -916,8 +916,9 @@ pause
         </div>
 
         {/* ═══════════════════════════════════════════════════════════ */}
-        {/* 4,000 HOURS MONETIZATION TARGET DASHBOARD                   */}
+        {/* 4,000 HOURS MONETIZATION TARGET DASHBOARD (HIDDEN)          */}
         {/* ═══════════════════════════════════════════════════════════ */}
+        <div style={{ display: 'none' }}>
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
           
           {/* Card 1: Channel Existing Hours (Editable) */}
@@ -1008,10 +1009,12 @@ pause
           </div>
 
         </div>
+        </div>{/* END HIDDEN WATCH TIME DASHBOARD */}
 
         {/* ═══════════════════════════════════════════════════════════ */}
-        {/* 📱 PHONE COMPANION MODE (ALAG IP = 2X WATCH TIME)            */}
+        {/* 📱 PHONE COMPANION MODE (ALAG IP = 2X WATCH TIME) (HIDDEN)  */}
         {/* ═══════════════════════════════════════════════════════════ */}
+        <div style={{ display: 'none' }}>
         {phoneUrl && (
           <div className="p-5 rounded-2xl bg-gradient-to-r from-violet-500/10 via-[#131628] to-cyan-500/10 border border-violet-500/30 backdrop-blur-xl">
             <div className="flex flex-col md:flex-row items-start gap-5">
@@ -1058,6 +1061,7 @@ pause
             </div>
           </div>
         )}
+        </div>{/* END HIDDEN PHONE COMPANION */}
 
         {/* ═══════════════════════════════════════════════════════════ */}
         {/* INTERACTIVE 24/7 MULTI-SCREEN GRID                         */}
