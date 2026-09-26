@@ -5,11 +5,28 @@
 
 ## 🚀 RECENTLY COMPLETED UPDATES (Updated: 2026-09-26)
 
-> **📌 Feature: Multi-Way C Solutions in DSA Platform & Single-Line Formatting Fix**
+> **📌 Feature 1: Developer Attribution, Schema.org Person Metadata & Brand Disambiguation**
+- **Schema.org Structured Data:** Updated `index.html` with explicit `@type: Person` (`Praveen Kushwaha`, MCA Student & AI Developer, `sameAs: github.com/Praveen-3517`) and `disambiguatingDescription` establishing `bittuai.online` as an independent educational portfolio platform.
+- **Brand & Legal Disambiguation:** Added clear legal disclaimers separating Bittu AI (educational project) from commercial entities (Sahinov Pvt Ltd / bittuai.com) to resolve false automated search engine confusion.
+- **Trust & Safety Footer:** Built `frontend/GLbajaj/components/TrustFooter.jsx` and integrated it across `Dashboard.jsx` with modals for About Developer, Brand Disclaimer, Privacy Policy, and Terms of Service.
+- **Google AI Overview Feedback:** Submitted official correction report on Google Search AI Overview to remove erroneous ScamAdviser warning on new domain registration.
+- **Status:** ✅ COMPLETED & DEPLOYED (2026-09-26)
+
+---
+
+> **📌 Feature 2: Watch-Time Engine UI Hidden & Google Favicon Standardization**
+- **Dashboard Cleanup:** Commented out the "Watch-Time Booster" card tile on `Dashboard.jsx` while preserving route `/multiview`.
+- **Player Page Cleanup:** Temporarily hidden the 4,000 Hours Target Dashboard and Phone Companion Mode sections in `MultiViewPlayer.jsx`.
+- **Favicon Crawler Optimization:** Standardized `<link rel="icon">` tags in `index.html` removing version query strings (`?v=2026`) for seamless crawling by Google Favicon Bot.
+- **Status:** ✅ COMPLETED & DEPLOYED (2026-09-26)
+
+---
+
+> **📌 Feature 3: Multi-Way C Solutions in DSA Platform & Single-Line Formatting Fix**
 - **Multi-Way Solution Approaches:** Added interactive approach tabs in the empty editor header bar (`Way 1: For Loop`, `Way 2: While + If`, `Way 3: Optimal`) in `DSASolver.jsx` and `SolutionPanel.jsx` allowing users to explore different solution techniques with 1-click loading into the Monaco Editor.
 - **Simplified Beginner-Friendly C Logic:** Canonical and dynamic C solutions rewritten with intuitive logic, clean standard headers, step-by-step comments, and zero cryptic pointers.
 - **Fixed Single-Line Code Bug:** Resolved double-escaped `\\n` newline issue in `dsaCSolutions.js` so all C solutions render properly across multiple lines with clean indentation.
-- **Status:** ✅ COMPLETED (2026-09-26)
+- **Status:** ✅ COMPLETED & DEPLOYED (2026-09-26)
 
 ---
 
