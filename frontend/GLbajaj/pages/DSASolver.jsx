@@ -18,7 +18,7 @@ import { getCachedProStatus, fetchRemoteProStatus } from '../utils/proSubscripti
 import { dsaProblems } from '../data/dsaProblems'
 import { onProblemSolved, XP_MAP } from '../utils/dsaStats'
 import { getProblemInterviewData } from '../data/dsaInterviewSolutions'
-import { getCSolution } from '../data/dsaCSolutions'
+import { getCSolution, getCSolutionApproaches } from '../data/dsaCSolutions'
 import { useAuth } from '../context/AuthContext'
 import UserNav from '../components/auth/UserNav'
 
@@ -156,6 +156,19 @@ export default function DSASolver() {
   const [interviewMode, setInterviewMode] = useState(false)
   const [isPro, setIsPro]               = useState(() => getCachedProStatus(user?.email).isPro)
   const [showProModal, setShowProModal] = useState(false)
+  const [activeApproachId, setActiveApproachId] = useState(null)
+  const [approachToast, setApproachToast] = useState(null)
+
+  const cApproaches = useMemo(() => {
+    return getCSolutionApproaches(problem)
+  }, [problem])
+
+  const handleSelectApproach = (appr) => {
+    setActiveApproachId(appr.id)
+    updateCode(appr.code)
+    setApproachToast(`Loaded ${appr.name} into Editor!`)
+    setTimeout(() => setApproachToast(null), 2500)
+  }
 
   const isFreeTier = problemId <= 6
   const isLocked = !isFreeTier && !isPro
@@ -938,8 +951,8 @@ export default function DSASolver() {
           mobileTab === 'editor' ? 'flex' : 'hidden'
         } lg:flex flex-1 flex-col min-h-0 overflow-hidden`}>
           {/* Editor header */}
-          <div className="flex items-center justify-between px-4 py-2 border-b border-white/8 bg-white/[0.015] shrink-0">
-            <div className="flex items-center gap-2">
+          <div className="relative flex items-center justify-between px-3 md:px-4 py-2 border-b border-white/8 bg-white/[0.015] shrink-0 gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               <div className="flex gap-1.5">
                 <span className="w-3 h-3 rounded-full bg-red-500/60" />
                 <span className="w-3 h-3 rounded-full bg-yellow-500/60" />
@@ -952,9 +965,54 @@ export default function DSASolver() {
                 {selectedLang === 'c' ? 'solution.c' : (selectedLang === 'java' ? 'Solution.java' : 'solution.py')}
               </span>
             </div>
-            <span className="text-white/40 text-xs font-mono font-medium">
-              {selectedLang === 'c' ? '⚡ C11 / C17 · GCC Ready' : (selectedLang === 'java' ? '☕ Java 21 · SE' : '🐍 Python 3.11 · Pyodide')}
-            </span>
+
+            {/* Middle: Multiple Solution Ways Buttons */}
+            {selectedLang === 'c' && cApproaches.length > 0 && (
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 max-w-full">
+                <span className="text-[11px] font-semibold text-white/40 hidden xl:inline-flex items-center gap-1 mr-0.5 shrink-0">
+                  <Sparkles size={11} className="text-cyan-400" />
+                  Ways:
+                </span>
+                {cApproaches.map((appr, idx) => {
+                  const isActive = activeApproachId === appr.id
+                  return (
+                    <button
+                      key={appr.id || idx}
+                      onClick={() => handleSelectApproach(appr)}
+                      title={`Click to load ${appr.name}: ${appr.description} (${appr.timeComplexity})`}
+                      className={`group flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all shrink-0 border ${
+                        isActive
+                          ? 'bg-gradient-to-r from-cyan-500/30 to-blue-600/30 text-cyan-300 border-cyan-400/60 shadow-sm shadow-cyan-500/25 ring-1 ring-cyan-400/30'
+                          : isLight
+                          ? 'bg-white hover:bg-slate-100 text-slate-700 border-slate-300 hover:border-slate-400'
+                          : 'bg-white/[0.04] hover:bg-white/[0.09] text-white/75 hover:text-white border-white/10 hover:border-white/20'
+                      }`}
+                    >
+                      <span className="font-mono text-[11px]">{appr.name}</span>
+                      <span className={`text-[9px] px-1.5 py-0.2 rounded font-sans uppercase tracking-wider font-bold ${
+                        isActive ? 'bg-cyan-400/25 text-cyan-200' : 'bg-white/10 text-white/50'
+                      }`}>
+                        {appr.badge || appr.timeComplexity}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-white/40 text-xs font-mono font-medium hidden sm:inline">
+                {selectedLang === 'c' ? '⚡ C11 / C17 · GCC Ready' : (selectedLang === 'java' ? '☕ Java 21 · SE' : '🐍 Python 3.11 · Pyodide')}
+              </span>
+            </div>
+
+            {/* Quick Toast when Approach is loaded */}
+            {approachToast && (
+              <div className="absolute top-11 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-3 py-1.5 bg-cyan-950/95 text-cyan-200 border border-cyan-400/50 rounded-lg text-xs shadow-xl backdrop-blur-md animate-fadeIn">
+                <Check size={13} className="text-cyan-400" />
+                <span className="font-semibold">{approachToast}</span>
+              </div>
+            )}
           </div>
 
           {/* Editor */}

@@ -7,7 +7,7 @@ import {
 import { useAuth } from '../../context/AuthContext'
 import CodeDiffViewer from './CodeDiffViewer'
 import { getJavaSolution } from '../../data/dsaJavaSolutions'
-import { getCSolution } from '../../data/dsaCSolutions'
+import { getCSolution, getCSolutionApproaches } from '../../data/dsaCSolutions'
 
 export default function SolutionPanel({
   problem,
@@ -22,6 +22,7 @@ export default function SolutionPanel({
   const [codeLang, setCodeLang] = useState(activeLang || 'c')
   const [copied, setCopied] = useState(false)
   const [showDiff, setShowDiff] = useState(false)
+  const [cApproachIndex, setCApproachIndex] = useState(0)
 
   // Keep in sync if parent activeLang changes
   React.useEffect(() => {
@@ -32,14 +33,17 @@ export default function SolutionPanel({
   const isHindi = solutionLang === 'hi'
   const text = isHindi ? solution?.hi : solution?.en
 
+  const cApproaches = React.useMemo(() => getCSolutionApproaches(problem), [problem])
+  const selectedCApproach = cApproaches[cApproachIndex] || cApproaches[0]
+
   // Guarantee clean code matching selected language
-  const cCode = solution?.cCode || getCSolution(problem)?.code || ''
+  const cCode = solution?.cCode || selectedCApproach?.code || ''
   const javaCode = solution?.javaCode || getJavaSolution(problem)?.code || ''
   const pythonCode = solution?.code || ''
 
   const activeSolutionCode = codeLang === 'c' ? cCode : (codeLang === 'java' ? javaCode : pythonCode)
   const activeFileName = codeLang === 'c' 
-    ? 'solution.c (Optimal C11 / C17)' 
+    ? `${selectedCApproach?.name || 'solution.c'} (${selectedCApproach?.timeComplexity || 'C11'})` 
     : (codeLang === 'java' ? 'Solution.java (Optimal Java 21 / SE)' : 'solution.py (Optimal Python 3)')
 
   const handleCopy = () => {
@@ -110,6 +114,43 @@ export default function SolutionPanel({
             </button>
           </div>
         </div>
+
+        {/* Multi-Way Approaches for C */}
+        {codeLang === 'c' && cApproaches.length > 0 && (
+          <div className={`flex flex-wrap items-center gap-1.5 p-2 rounded-xl border ${
+            isLight ? 'bg-slate-50 border-slate-200' : 'bg-black/20 border-white/5'
+          }`}>
+            <span className={`text-[11px] font-semibold flex items-center gap-1 mr-1 ${
+              isLight ? 'text-slate-500' : 'text-white/50'
+            }`}>
+              <Sparkles size={12} className="text-cyan-400" />
+              Different Ways to Solve:
+            </span>
+            {cApproaches.map((appr, idx) => {
+              const isSelected = cApproachIndex === idx
+              return (
+                <button
+                  key={appr.id || idx}
+                  onClick={() => setCApproachIndex(idx)}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all border ${
+                    isSelected
+                      ? 'bg-gradient-to-r from-cyan-500/25 to-blue-500/25 text-cyan-300 border-cyan-400/50 shadow-sm'
+                      : isLight
+                      ? 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                      : 'bg-white/[0.03] text-white/70 border-white/10 hover:bg-white/[0.08] hover:text-white'
+                  }`}
+                >
+                  <span>{appr.name}</span>
+                  <span className={`text-[9px] px-1 py-0.2 rounded font-mono ${
+                    isSelected ? 'bg-cyan-400/20 text-cyan-200' : 'bg-white/10 text-white/40'
+                  }`}>
+                    {appr.timeComplexity}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        )}
 
         {/* Code Box */}
         {showDiff ? (
