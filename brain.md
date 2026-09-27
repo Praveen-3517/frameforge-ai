@@ -3,9 +3,33 @@
 
 ---
 
-## 🚀 RECENTLY COMPLETED UPDATES (Updated: 2026-09-26)
+## 🚀 RECENTLY COMPLETED UPDATES (Updated: 2026-09-27)
 
-> **📌 Feature 1: Developer Attribution, Schema.org Person Metadata & Brand Disambiguation**
+> **📌 Feature 1: Render Cloud Backend Migration & Zero-Downtime Resilience**
+- **Migration to Fresh Account:** Successfully migrated FastAPI cloud backend from suspended Render instance to fresh deployment at `https://frameforge-ai-9myp.onrender.com`.
+- **Environment & Routing:** Configured `backend/requirements.txt` with Root Directory `backend` and verified `uvicorn main:app` runtime execution.
+- **Frontend Synchronizations:** Updated `frontend/.env`, `frontend/GLbajaj/utils/apiUrl.js`, and `frontend/vercel.json` to proxy API requests to the new backend.
+- **Uptime Monitoring:** Configured UptimeRobot monitor checking `/health` every 5 minutes to prevent cold starts and keep the service 24/7 active.
+- **Status:** ✅ COMPLETED & VERIFIED (2026-09-27)
+
+---
+
+> **📌 Feature 2: Vercel JSON Header Fix & Production Security Hardening**
+- **Vercel Regex Fix:** Resolved `Invalid vercel.json file provided` build error caused by unescaped backslashes in header regexes by switching to standard Vercel glob patterns (`:path*`, `/((?!api/|health...).*)`).
+- **Security Hardening:** Removed hardcoded fallback Razorpay Key Secret from `backend/payment_service.py` to ensure credentials only load strictly from environment variables.
+- **Live Verification:** Verified 200 OK responses on `https://www.bittuai.online/health` and live Razorpay payment checkout link creation (`/api/payment/create-payment-link`).
+- **Status:** ✅ COMPLETED & DEPLOYED (2026-09-27)
+
+---
+
+> **📌 Feature 3: "Recommended for Beginners" Badges for Java & C DSA Tracks**
+- **DSA Practice Hub:** Added vibrant `★ Recommended for Beginners` badge next to both **DSA with Java** (Amber Gold) and **DSA with C** (Cyan Blue) in the Launch Offer banner in `DSAHub.jsx`.
+- **Pro Payment Modal:** Updated `ProPaymentModal.jsx` to display `★ Recommended for Beginners` badge in both modal description and value checklist for Java & C tracks.
+- **Status:** ✅ COMPLETED & DEPLOYED (2026-09-27)
+
+---
+
+> **📌 Feature 4: Developer Attribution, Schema.org Person Metadata & Brand Disambiguation**
 - **Schema.org Structured Data:** Updated `index.html` with explicit `@type: Person` (`Praveen Kushwaha`, MCA Student & AI Developer, `sameAs: github.com/Praveen-3517`) and `disambiguatingDescription` establishing `bittuai.online` as an independent educational portfolio platform.
 - **Brand & Legal Disambiguation:** Added clear legal disclaimers separating Bittu AI (educational project) from commercial entities (Sahinov Pvt Ltd / bittuai.com) to resolve false automated search engine confusion.
 - **Trust & Safety Footer:** Built `frontend/GLbajaj/components/TrustFooter.jsx` and integrated it across `Dashboard.jsx` with modals for About Developer, Brand Disclaimer, Privacy Policy, and Terms of Service.
