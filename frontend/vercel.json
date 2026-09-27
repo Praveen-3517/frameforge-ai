@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://frameforge-ai-fa8z.onrender.com/api/$1"
+      "destination": "https://frameforge-ai-9myp.onrender.com/api/$1"
     },
     {
       "source": "/health",
-      "destination": "https://frameforge-ai-fa8z.onrender.com/health"
+      "destination": "https://frameforge-ai-9myp.onrender.com/health"
     },
     {
       "source": "/generate-video",
-      "destination": "https://frameforge-ai-fa8z.onrender.com/generate-video"
+      "destination": "https://frameforge-ai-9myp.onrender.com/generate-video"
     },
     {
       "source": "/change-clothes",
-      "destination": "https://frameforge-ai-fa8z.onrender.com/change-clothes"
+      "destination": "https://frameforge-ai-9myp.onrender.com/change-clothes"
     },
     {
       "source": "/(.*)",
@@ -105,7 +105,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://image.pollinations.ai https://*.supabase.co; connect-src 'self' https://frameforge-ai-fa8z.onrender.com https://*.supabase.co wss://*.supabase.co; media-src 'self' blob:; frame-ancestors 'none';"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://image.pollinations.ai https://*.supabase.co; connect-src 'self' https://frameforge-ai-9myp.onrender.com https://*.supabase.co wss://*.supabase.co; media-src 'self' blob:; frame-ancestors 'none';"
         }
       ]
     }

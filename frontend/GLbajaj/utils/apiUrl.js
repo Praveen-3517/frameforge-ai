@@ -11,7 +11,7 @@ export function getApiUrl() {
       return ''
     }
   }
-  return import.meta.env.VITE_API_URL || 'https://frameforge-ai-fa8z.onrender.com'
+  return import.meta.env.VITE_API_URL || 'https://frameforge-ai-9myp.onrender.com'
 }
 
 export function getFullMediaUrl(pathOrFilename) {
