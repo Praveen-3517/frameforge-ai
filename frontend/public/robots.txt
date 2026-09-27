@@ -1,9 +1,35 @@
+# Bittu AI — robots.txt
+# https://bittuai.online
+
+# Allow all search engine bots
 User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /.env
+
+# Explicit Google bot rules (faster crawl)
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+# Google image bot
+User-agent: Googlebot-Image
+Allow: /
+
+# Bing
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 2
+
+# AI crawlers (allowed for brand discovery)
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: PerplexityBot
 Allow: /
 
 # Sitemap location
 Sitemap: https://bittuai.online/sitemap.xml
-
-# Block unnecessary paths
-Disallow: /api/
-Disallow: *.env

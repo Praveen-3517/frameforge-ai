@@ -88,6 +88,19 @@ export default function Dashboard() {
     return sessionStorage.getItem('dashboard_theme') || 'light'
   })
 
+  // ✅ SEO: Set page title & meta description dynamically for this route
+  useEffect(() => {
+    document.title = 'Bittu AI — Free AI Tools & DSA Coding Platform | 1,800+ Problems'
+    const metaDesc = document.querySelector('meta[name="description"]')
+    if (metaDesc) {
+      metaDesc.setAttribute('content',
+        'Bittu AI: 100% free educational AI platform. Practice 1,800+ DSA problems with in-browser coding, generate AI videos, try AI Clothes Changer, create Kids 3D Shorts & analyze audio/video forensics. No signup needed.'
+      )
+    }
+    const canonical = document.querySelector('link[rel="canonical"]')
+    if (canonical) canonical.setAttribute('href', 'https://bittuai.online/')
+  }, [])
+
   useEffect(() => {
     sessionStorage.setItem('dashboard_theme', theme)
     localStorage.setItem('dsa_theme', theme)
@@ -101,6 +114,7 @@ export default function Dashboard() {
   }, [theme])
 
   const isLight = theme === 'light'
+
 
   return (
     <div className={`relative min-h-screen flex flex-col transition-colors duration-300 w-full max-w-[100vw] overflow-x-hidden ${

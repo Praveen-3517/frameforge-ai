@@ -40,6 +40,20 @@ export default function TopInterview150() {
   const [theme] = useState(() => sessionStorage.getItem('dsa_theme') || 'light')
   const isLight = theme === 'light'
 
+
+  // ✅ SEO: Dynamic title & description for /dsa/top-interview-150 route
+  useEffect(() => {
+    document.title = 'Top Interview 150 Problems — FAANG Coding Questions | Bittu AI'
+    const metaDesc = document.querySelector('meta[name="description"]')
+    if (metaDesc) {
+      metaDesc.setAttribute('content',
+        'Prepare for FAANG, Google, Amazon & Microsoft interviews with Bittu AI\'s Top Interview 150 — the most frequently asked coding problems. Covers Arrays, Two Pointers, Sliding Window, Trees, DP & Graphs. Free & Pro plans available.'
+      )
+    }
+    const canonical = document.querySelector('link[rel="canonical"]')
+    if (canonical) canonical.setAttribute('href', 'https://bittuai.online/dsa/top-interview-150')
+  }, [])
+
   // Sync and Listen for Pro status updates + Handle return from Razorpay
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)

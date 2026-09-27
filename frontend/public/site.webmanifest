@@ -1,19 +1,58 @@
 {
-  "name": "Bittu AI — One-Click AI Tools Suite",
+  "name": "Bittu AI — Free AI Tools & DSA Platform",
   "short_name": "Bittu AI",
+  "description": "1,800+ DSA problems, AI Video Generator, AI Dialogue Studio, AI Clothes Changer & Kids 3D Shorts — all free by Praveen Kushwaha.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#7c3aed",
+  "background_color": "#0b0d17",
+  "lang": "en-IN",
+  "dir": "ltr",
+  "categories": ["education", "productivity", "entertainment"],
   "icons": [
     {
       "src": "/android-chrome-192x192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "maskable any"
     },
     {
       "src": "/android-chrome-512x512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "maskable any"
     }
   ],
-  "theme_color": "#7c3aed",
-  "background_color": "#0b0d17",
-  "display": "standalone"
+  "shortcuts": [
+    {
+      "name": "DSA Practice",
+      "short_name": "DSA",
+      "description": "Practice 1,800+ DSA problems with in-browser coding",
+      "url": "/dsa",
+      "icons": [{ "src": "/favicon-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Top Interview 150",
+      "short_name": "Interview 150",
+      "description": "FAANG-style top 150 interview coding questions",
+      "url": "/dsa/top-interview-150",
+      "icons": [{ "src": "/favicon-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "AI Video Generator",
+      "short_name": "Text to Video",
+      "description": "Convert any story into a cinematic AI video",
+      "url": "/video",
+      "icons": [{ "src": "/favicon-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "AI Dialogue Studio",
+      "short_name": "Dialogue AI",
+      "description": "Multi-character AI podcasts and debates",
+      "url": "/dialogue",
+      "icons": [{ "src": "/favicon-96x96.png", "sizes": "96x96" }]
+    }
+  ]
 }

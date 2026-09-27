@@ -146,6 +146,19 @@ export default function DSAHub() {
   // Update streak on mount
   useEffect(() => { updateStreak() }, [])
 
+  // ✅ SEO: Dynamic title & description for /dsa route
+  useEffect(() => {
+    document.title = 'DSA Practice Platform — 1,800+ Problems | Arrays, Trees, DP | Bittu AI'
+    const metaDesc = document.querySelector('meta[name="description"]')
+    if (metaDesc) {
+      metaDesc.setAttribute('content',
+        'Practice 1,800+ Data Structures & Algorithms problems on Bittu AI — Arrays, Linked Lists, Trees, Graphs, Dynamic Programming, Sorting & more. Run Python/Java code live in-browser for FREE. LeetCode alternative for Indian developers.'
+      )
+    }
+    const canonical = document.querySelector('link[rel="canonical"]')
+    if (canonical) canonical.setAttribute('href', 'https://bittuai.online/dsa')
+  }, [])
+
   useEffect(() => {
     sessionStorage.setItem('dsa_theme', theme)
     localStorage.setItem('dsa_theme', theme)

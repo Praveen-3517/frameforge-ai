@@ -53,6 +53,16 @@ export default function App() {
   useEffect(() => {
     document.documentElement.classList.add('dark')
     document.documentElement.classList.remove('light')
+    // ✅ SEO: Per-route title & description
+    document.title = 'AI Text to Video Generator — Free Online | Bittu AI'
+    const metaDesc = document.querySelector('meta[name="description"]')
+    if (metaDesc) {
+      metaDesc.setAttribute('content',
+        'Convert any text story into a fully narrated cinematic MP4 video using Gemini AI, FLUX images & Edge-TTS voiceover. 100% free, no API key needed. India\'s best free AI video generator.'
+      )
+    }
+    const canonical = document.querySelector('link[rel="canonical"]')
+    if (canonical) canonical.setAttribute('href', 'https://bittuai.online/video')
     return () => stepTimers.current.forEach(clearTimeout)
   }, [])
 
