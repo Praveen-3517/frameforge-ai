@@ -224,7 +224,7 @@ export default function ProPaymentModal({ isOpen, onClose, onSuccess, isLight = 
               Unlock DSA with Java & DSA with C
             </h3>
             <p className={`text-xs sm:text-sm mb-4 leading-relaxed ${isLight ? 'text-slate-600' : 'text-white/70'}`}>
-              Get full lifetime access to both <strong>DSA with Java (554+ Problems)</strong> and <strong>DSA with C (554+ Problems)</strong> with optimal code, Hindi/English explanations, and live compilers.
+              Get full lifetime access to both <strong>DSA with Java (554+ Problems)</strong> <span className="inline-flex items-center px-1.5 py-0.2 mx-1 rounded-md text-[10px] font-bold bg-amber-500/20 text-amber-500 dark:text-amber-300 border border-amber-500/30">★ Recommended for Beginners</span> and <strong>DSA with C (554+ Problems)</strong> with optimal code, Hindi/English explanations, and live compilers.
             </p>
 
             {/* Price Box */}
@@ -256,7 +256,7 @@ export default function ProPaymentModal({ isOpen, onClose, onSuccess, isLight = 
             {/* Value checklist */}
             <div className="space-y-2 mb-5">
               {[
-                { title: '☕ Complete DSA with Java', desc: '554+ Problems, Collections, OOPs & Optimal Algorithms.' },
+                { title: '☕ Complete DSA with Java (Recommended for Beginners)', desc: '554+ Problems, Collections, OOPs & Optimal Algorithms.' },
                 { title: '⚡ Complete DSA with C Language', desc: '554+ Problems, Pointers, Memory Allocation & Structs.' },
                 { title: '🎯 Optimal Code & Hindi/English Logic', desc: 'Instant solution viewer, diff comparer & interview hints.' },
                 { title: '♾️ Lifetime Access on All Devices', desc: 'One-time ₹149 payment. Use anytime across mobile & laptop.' },

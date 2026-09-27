@@ -540,7 +540,7 @@ export default function DSAHub() {
                     </span>
                   </div>
                   <p className={`text-xs font-medium leading-relaxed ${isLight ? 'text-slate-700' : 'text-white/80'}`}>
-                    Access both <strong>DSA with Java</strong> & <strong>DSA with C</strong>. Get Lifetime Access to all 554+ problems, optimal editorial solutions, and line-by-line diffs for just <strong>₹149</strong> one-time!
+                    Access both <strong>DSA with Java</strong> <span className="inline-flex items-center px-1.5 py-0.2 mx-1 rounded-md text-[10px] font-bold bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/30">★ Recommended for Beginners</span> & <strong>DSA with C</strong>. Get Lifetime Access to all 554+ problems, optimal editorial solutions, and line-by-line diffs for just <strong>₹149</strong> one-time!
                   </p>
                 </div>
               </div>
