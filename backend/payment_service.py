@@ -33,8 +33,8 @@ log = logging.getLogger("payment_service")
 # 1.  Configuration & Keys
 # ─────────────────────────────────────────────────────────────
 
-RAZORPAY_KEY_ID: str = os.getenv("RAZORPAY_KEY_ID", "rzp_live_TdAIqK8iA6DzsG").strip()
-RAZORPAY_KEY_SECRET: str = os.getenv("RAZORPAY_KEY_SECRET", "4InJkA8NPiy9uDiBKFcnFnuc").strip()
+RAZORPAY_KEY_ID: str = os.getenv("RAZORPAY_KEY_ID", "").strip()
+RAZORPAY_KEY_SECRET: str = os.getenv("RAZORPAY_KEY_SECRET", "").strip()
 
 RAZORPAY_ORDERS_URL = "https://api.razorpay.com/v1/orders"
 
