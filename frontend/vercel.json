@@ -17,7 +17,7 @@
       "destination": "https://frameforge-ai-9myp.onrender.com/change-clothes"
     },
     {
-      "source": "/((?!api/|health|generate-video|change-clothes).*)",
+      "source": "/((?!api/|health|generate-video|change-clothes|favicon|apple-touch-icon|android-chrome|og-image|bittu-logo|logo|robots\\.txt|sitemap\\.xml|site\\.webmanifest|.*\\.ico|.*\\.png|.*\\.svg|.*\\.jpg|.*\\.jpeg|.*\\.webp|.*\\.json|.*\\.txt|.*\\.xml).*)",
       "destination": "/index.html"
     }
   ],
