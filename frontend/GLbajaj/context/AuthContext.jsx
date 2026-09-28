@@ -124,14 +124,19 @@ export function AuthProvider({ children }) {
         if (res.ok) {
           const data = await res.json()
           if (data.valid === false && data.reason === 'logged_in_on_another_device') {
-            console.warn('[DeviceGuard] Conflict detected! Active login on another device. Auto-logging out.')
             try {
               if (!isPlaceholderSupabase()) {
                 await supabase.auth.signOut()
               }
             } catch {}
-            localStorage.removeItem(LOCAL_SESSION_KEY)
-            localStorage.removeItem('bittu_dsa_pro')
+            // Thoroughly purge all auth tokens from localStorage
+            try {
+              Object.keys(localStorage).forEach(k => {
+                if (k.startsWith('sb-') || k.startsWith('bittu_ai_local') || k === 'bittu_dsa_pro' || k === 'user_email') {
+                  localStorage.removeItem(k)
+                }
+              })
+            } catch {}
             setUser(null)
             setSession(null)
             setDeviceConflictMsg(data.message || 'You have been logged out because your account was logged in on another device.')
