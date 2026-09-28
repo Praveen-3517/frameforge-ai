@@ -5,16 +5,26 @@
 
 ## 🚀 RECENTLY COMPLETED UPDATES (Updated: 2026-09-28)
 
-> **🔒 Feature 0: Single Active Device Login & Anti-Piracy Session Protection**
-- **Purpose & Business Value:** Prevents revenue loss caused by students sharing their email/password with multiple friends or logging in simultaneously across 3–4 phones/laptops.
-- **Backend Architecture:**
-  - `create_user_session(email)`: Automatically generates a cryptographic `session_token` upon every registration / login and sets it as the user's sole active device session in `backend/data/sessions.json`.
-  - `validate_user_session(email, token)`: Lightweight validation endpoint (`POST /api/auth/validate-session` & `GET /api/auth/validate-session`). If an older device presents a superseded token, the backend returns `{ valid: false, reason: "logged_in_on_another_device" }`.
-- **Frontend Enforcement:**
-  - `AuthContext.jsx`: Persistent physical browser `deviceId` generated and registered on every login (`POST /api/auth/bind-device`).
-  - Active device heartbeat runs every 2.5 seconds (`GET /api/auth/check-device`) and on window focus/tab change.
-  - If a concurrent login on another device is detected: automatically logs out the superseded device, performs a deep purge of all auth tokens/keys (`sb-*`, `bittu_ai_local*`, `bittu_dsa_pro`), and displays a polite alert modal: *"You have been logged out because your account was logged in on another device. Only 1 active device is permitted."*
-- **Status:** ✅ COMPLETED, TESTED & VERIFIED BY USER (2026-09-28)
+> **🔒 Feature 0: Single Active Device Login & Anti-Piracy Session Protection (Production Verified)**
+- **Purpose & Business Value:** Eliminates revenue loss from credential sharing (one student sharing email/password with multiple peers) by enforcing a strict **1 Active Device per Account** policy across Phone, Laptop, and Tablet.
+- **Device Identification:**
+  - Client-side browser generates a persistent unique physical identifier `bittu_ai_device_id` (e.g. `dev_xxx...`) in `localStorage`.
+  - **Multi-Tab Support on Same Machine:** Because tabs in the same browser share `localStorage`, opening multiple tabs on the same laptop will NEVER kick each other out.
+- **Backend Architecture & Endpoints:**
+  - `POST /api/auth/bind-device`: Accepts `{ email, device_id }`. Binds the new device as the sole active device in memory (`ACTIVE_DEVICE_CACHE`) and disk (`backend/data/sessions.json`).
+  - `GET /api/auth/check-device?email=...&device_id=...`: Verifies if the calling device is currently the authorized active device. Returns `{ valid: true }` if matched, or `{ valid: false, reason: "logged_in_on_another_device" }` if superseded by a newer login.
+  - **Bug Fix Applied:** Resolved a critical production `NameError: name 'logger' is not defined` by adding `logger = log` alias in `backend/main.py`.
+- **Frontend Enforcement & Auto-Logout:**
+  - `AuthContext.jsx`: Runs an active heartbeat every **2.5 seconds** and immediately triggers on tab switch / window focus.
+  - Upon device conflict detection:
+    1. Calls `supabase.auth.signOut()`.
+    2. Deep purges all authentication tokens and credentials from `localStorage` (`sb-*`, `bittu_ai_local*`, `bittu_dsa_pro`, `user_email`).
+    3. Resets `user` and `session` state to `null`.
+    4. Displays an immediate blocking modal dialog: *"Single Device Active Session — You have been logged out because your account was logged in on another device. Only 1 active device is permitted."*
+- **Live Verification:** 
+  - Verified live on production backend `https://frameforge-ai-9myp.onrender.com`.
+  - Confirmed working end-to-end by user across physical Laptop and Mobile Phone (logging into Phone instantly kicks out Laptop within 2.5 seconds).
+- **Status:** ✅ COMPLETED, TESTED & PRODUCTION VERIFIED (2026-09-28)
 
 ---
 
