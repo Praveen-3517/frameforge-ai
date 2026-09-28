@@ -7,7 +7,31 @@ const AuthContext = createContext({})
 
 const LOCAL_USERS_KEY   = 'bittu_ai_local_users'
 const LOCAL_SESSION_KEY = 'bittu_ai_local_session'
-const SESSION_TOKEN_KEY = 'bittu_ai_session_token'
+const DEVICE_ID_KEY     = 'bittu_ai_device_id'
+
+export function getOrCreateDeviceId() {
+  let id = localStorage.getItem(DEVICE_ID_KEY)
+  if (!id) {
+    id = 'dev_' + Math.random().toString(36).slice(2, 9) + '_' + Date.now().toString(36)
+    localStorage.setItem(DEVICE_ID_KEY, id)
+  }
+  return id
+}
+
+export async function bindDeviceSession(email) {
+  if (!email) return
+  try {
+    const deviceId = getOrCreateDeviceId()
+    const base = getApiUrl()
+    await fetch(`${base}/api/auth/bind-device`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email.toLowerCase().trim(), device_id: deviceId }),
+    })
+  } catch (err) {
+    console.warn('[DeviceGuard] Failed to bind device:', err)
+  }
+}
 
 // ─── Password hashing (SHA-256 + deterministic salt, Web Crypto API) ──────────
 // Passwords are NEVER stored in plain text — only the hex digest is saved.
@@ -86,23 +110,27 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  // Single active device session heartbeat check (runs every 15 seconds & on tab focus)
+  // Single active device session heartbeat check (runs every 3.5 seconds & on tab focus)
   useEffect(() => {
     if (!user?.email) return
 
-    const checkSession = async () => {
-      const token = localStorage.getItem(SESSION_TOKEN_KEY) || user.session_token
-      if (!token) return
+    const deviceId = getOrCreateDeviceId()
 
+    const checkDeviceSession = async () => {
+      if (!user?.email) return
       try {
         const base = getApiUrl()
-        const res = await fetch(`${base}/api/auth/validate-session?email=${encodeURIComponent(user.email)}&session_token=${encodeURIComponent(token)}`)
+        const res = await fetch(`${base}/api/auth/check-device?email=${encodeURIComponent(user.email)}&device_id=${encodeURIComponent(deviceId)}`)
         if (res.ok) {
           const data = await res.json()
           if (data.valid === false && data.reason === 'logged_in_on_another_device') {
-            console.warn('[Session] Active login on another device detected. Auto-logging out.')
+            console.warn('[DeviceGuard] Conflict detected! Active login on another device. Auto-logging out.')
+            try {
+              if (!isPlaceholderSupabase()) {
+                await supabase.auth.signOut()
+              }
+            } catch {}
             localStorage.removeItem(LOCAL_SESSION_KEY)
-            localStorage.removeItem(SESSION_TOKEN_KEY)
             localStorage.removeItem('bittu_dsa_pro')
             setUser(null)
             setSession(null)
@@ -115,8 +143,8 @@ export function AuthProvider({ children }) {
       }
     }
 
-    const interval = setInterval(checkSession, 15000)
-    const onFocus = () => { checkSession() }
+    const interval = setInterval(checkDeviceSession, 3500)
+    const onFocus = () => { checkDeviceSession() }
     window.addEventListener('focus', onFocus)
     document.addEventListener('visibilitychange', onFocus)
 
@@ -275,9 +303,7 @@ export function AuthProvider({ children }) {
       user_metadata: { full_name: fullName || normalizedEmail.split('@')[0] }
     }
 
-    if (cloudUser?.session_token) {
-      localStorage.setItem(SESSION_TOKEN_KEY, cloudUser.session_token)
-    }
+    await bindDeviceSession(normalizedEmail)
 
     setUser(finalUser)
     setSession({ user: finalUser, access_token: 'cloud_token' })
@@ -303,9 +329,7 @@ export function AuthProvider({ children }) {
       })
       const data = await res.json().catch(() => ({}))
       if (res.ok && data?.user) {
-        if (data.session_token) {
-          localStorage.setItem(SESSION_TOKEN_KEY, data.session_token)
-        }
+        await bindDeviceSession(normalizedEmail)
         setUser(data.user)
         setSession({ user: data.user, access_token: 'cloud_token' })
         localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify({ user: data.user }))
@@ -325,6 +349,7 @@ export function AuthProvider({ children }) {
           password,
         })
         if (!error && data?.user) {
+          await bindDeviceSession(normalizedEmail)
           setUser(data.user)
           setSession(data.session)
           localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify({ user: data.user }))
@@ -335,7 +360,9 @@ export function AuthProvider({ children }) {
 
     // 3. Try Local Storage
     try {
-      return await localSignIn(email, password)
+      const localResult = await localSignIn(email, password)
+      await bindDeviceSession(normalizedEmail)
+      return localResult
     } catch (localErr) {
       throw new Error(cloudError || localErr.message)
     }
@@ -350,7 +377,6 @@ export function AuthProvider({ children }) {
     } catch {}
 
     localStorage.removeItem(LOCAL_SESSION_KEY)
-    localStorage.removeItem(SESSION_TOKEN_KEY)
     setUser(null)
     setSession(null)
   }

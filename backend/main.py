@@ -1416,6 +1416,60 @@ async def sync_cloud_user(req: CloudRegisterRequest, request: Request):
         _save_cloud_users(users)
     return JSONResponse(content={"success": True})
 
+class BindDeviceRequest(BaseModel):
+    email: str
+    device_id: str
+
+def bind_user_device(email: str, device_id: str) -> dict:
+    if not email or not device_id:
+        return {"success": False, "error": "Missing parameters"}
+    norm_email = email.strip().lower()
+    clean_dev = device_id.strip()
+
+    sessions = _load_active_sessions()
+    sessions[norm_email] = {
+        "device_id": clean_dev,
+        "updated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "last_seen": int(time.time()),
+    }
+    _save_active_sessions(sessions)
+    logger.info(f"[DEVICE-BIND] Active device for {norm_email} bound to {clean_dev[:12]}...")
+    return {"success": True, "active_device_id": clean_dev}
+
+def check_user_device(email: str, device_id: str) -> dict:
+    if not email or not device_id:
+        return {"valid": True, "active": True}
+    norm_email = email.strip().lower()
+    clean_dev = device_id.strip()
+
+    sessions = _load_active_sessions()
+    sess = sessions.get(norm_email)
+    if not sess or not sess.get("device_id"):
+        # Auto-bind this device if none bound yet
+        sessions[norm_email] = {
+            "device_id": clean_dev,
+            "updated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "last_seen": int(time.time()),
+        }
+        _save_active_sessions(sessions)
+        return {"valid": True, "active": True}
+
+    active_dev = sess.get("device_id")
+    if active_dev and active_dev != clean_dev:
+        logger.warning(f"[DEVICE-CHECK] Device conflict for {norm_email}! Current: {clean_dev[:10]}, Active: {active_dev[:10]}")
+        return {
+            "valid": False,
+            "active": False,
+            "reason": "logged_in_on_another_device",
+            "message": "You have been logged out because your account was logged in on another device. Only 1 active device is permitted."
+        }
+
+    # Update last seen
+    sess["last_seen"] = int(time.time())
+    sessions[norm_email] = sess
+    _save_active_sessions(sessions)
+    return {"valid": True, "active": True}
+
 @app.post("/api/auth/validate-session", tags=["Authentication"])
 async def validate_session_post_endpoint(req: ValidateSessionRequest):
     """Validates if the user's current session token is the sole active session."""
@@ -1426,6 +1480,18 @@ async def validate_session_post_endpoint(req: ValidateSessionRequest):
 async def validate_session_get_endpoint(email: str = "", session_token: str = ""):
     """Lightweight GET endpoint for background single-device heartbeat validation."""
     res = validate_user_session(email, session_token)
+    return JSONResponse(content=res)
+
+@app.post("/api/auth/bind-device", tags=["Authentication"])
+async def bind_device_endpoint(req: BindDeviceRequest):
+    """Binds the current device ID as the sole active device for this user account."""
+    res = bind_user_device(req.email, req.device_id)
+    return JSONResponse(content=res)
+
+@app.get("/api/auth/check-device", tags=["Authentication"])
+async def check_device_endpoint(email: str = "", device_id: str = ""):
+    """Checks whether this device is currently the authorized active device for this user."""
+    res = check_user_device(email, device_id)
     return JSONResponse(content=res)
 
 
