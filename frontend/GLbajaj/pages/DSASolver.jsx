@@ -14,7 +14,7 @@ import SolutionPanel from '../components/dsa/SolutionPanel'
 import CodeDiffViewer from '../components/dsa/CodeDiffViewer'
 import InterviewTimer from '../components/dsa/InterviewTimer'
 import ProPaymentModal from '../components/dsa/ProPaymentModal'
-import { getCachedProStatus, fetchRemoteProStatus } from '../utils/proSubscription'
+import { isDsaPro, fetchRemoteProStatus } from '../utils/proSubscription'
 import { dsaProblems } from '../data/dsaProblems'
 import { onProblemSolved, XP_MAP } from '../utils/dsaStats'
 import { getProblemInterviewData } from '../data/dsaInterviewSolutions'
@@ -154,7 +154,7 @@ export default function DSASolver() {
   const [solutionToast, setSolutionToast] = useState(false)
   const [theme, setTheme]               = useState(() => localStorage.getItem('dsa_theme') || 'dark')
   const [interviewMode, setInterviewMode] = useState(false)
-  const [isPro, setIsPro]               = useState(() => getCachedProStatus(user?.email).isPro)
+  const [isPro, setIsPro]               = useState(() => isDsaPro(user?.email))
   const [showProModal, setShowProModal] = useState(false)
   const [activeApproachId, setActiveApproachId] = useState(null)
   const [approachToast, setApproachToast] = useState(null)
@@ -176,12 +176,12 @@ export default function DSASolver() {
   // Sync remote Pro subscription status
   useEffect(() => {
     if (user?.email) {
-      fetchRemoteProStatus(user.email).then(status => {
-        if (status?.isPro) setIsPro(true)
+      fetchRemoteProStatus(user.email).then(() => {
+        if (isDsaPro(user.email)) setIsPro(true)
       })
     }
     const handleProUpdate = (e) => {
-      if (e.detail?.isPro) setIsPro(true)
+      if (e.detail?.isPro && isDsaPro(user?.email)) setIsPro(true)
     }
     window.addEventListener('bittu_pro_updated', handleProUpdate)
     return () => window.removeEventListener('bittu_pro_updated', handleProUpdate)

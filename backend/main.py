@@ -154,7 +154,9 @@ class CreateOrderRequest(BaseModel):
     amount: int = Field(default=149, ge=1, le=100000)
     email: Optional[str] = Field(default=None, max_length=255)
     name: Optional[str] = Field(default=None, max_length=255)
-    plan_name: Optional[str] = Field(default="DSA Master Lifetime Pass (Java + C)", max_length=100)
+    college: Optional[str] = Field(default=None, max_length=255)
+    plan_name: Optional[str] = Field(default="DSA Master Lifetime Pass (Java + C)", max_length=150)
+    plan_id: Optional[str] = Field(default="DSA_JAVA_C_PASS", max_length=50)
 
 class VerifyPaymentRequest(BaseModel):
     email: Optional[str] = Field(default=None, max_length=255)
@@ -165,6 +167,7 @@ class VerifyPaymentRequest(BaseModel):
 class VerifyPaymentLinkRequest(BaseModel):
     payment_id: str = Field(..., max_length=100)
     email: Optional[str] = Field(default=None, max_length=255)
+    plan_id: Optional[str] = Field(default=None, max_length=50)  # DSA_JAVA_C_PASS | TOP_INTERVIEW_PASS
 
 # ── Token Quota Management Service ───────────────────────────────────────────
 from token_service import (
@@ -1352,7 +1355,8 @@ async def create_payment_order_endpoint(req: CreateOrderRequest, request: Reques
     res = await create_razorpay_order(
         amount_in_inr=req.amount,
         email=email,
-        plan_name=req.plan_name or "DSA Pro Pass (1 Month)",
+        college=req.college,
+        plan_name=req.plan_name or "DSA Master Lifetime Pass (Java + C)",
     )
     if not res.get("success"):
         raise HTTPException(status_code=500, detail=res.get("error", "Failed to initialize payment order."))
@@ -1373,7 +1377,9 @@ async def create_payment_link_endpoint(req: CreateOrderRequest, request: Request
         amount_in_inr=req.amount,
         email=email,
         name=req.name,
-        plan_name=req.plan_name or "DSA Pro Pass (1 Month)",
+        college=req.college,
+        plan_name=req.plan_name or "DSA Master Lifetime Pass (Java + C)",
+        plan_id=req.plan_id or "DSA_JAVA_C_PASS",
     )
     if not res.get("success"):
         raise HTTPException(status_code=500, detail=res.get("error", "Failed to create payment link."))
@@ -1419,8 +1425,9 @@ async def verify_payment_link_endpoint(req: VerifyPaymentLinkRequest, request: R
     rate_limit(request, max_requests=10, window_sec=60)
     payment_id = req.payment_id.strip()
     email = req.email.strip().lower() if req.email else ""
+    plan_id = req.plan_id.strip() if req.plan_id else None
 
-    result = await verify_and_activate_razorpay_payment(payment_id=payment_id, email=email)
+    result = await verify_and_activate_razorpay_payment(payment_id=payment_id, email=email, plan_id=plan_id)
     if not result.get("success"):
         raise HTTPException(status_code=400, detail=result.get("error", "Payment verification failed."))
 

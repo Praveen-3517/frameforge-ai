@@ -75,6 +75,7 @@ def _save_subscribers(data: Dict[str, Any]) -> bool:
 async def create_razorpay_order(
     amount_in_inr: int = 149,
     email: Optional[str] = None,
+    college: Optional[str] = None,
     plan_name: str = "DSA Master Lifetime Pass (Java + C)",
 ) -> Dict[str, Any]:
     """
@@ -97,6 +98,7 @@ async def create_razorpay_order(
             "platform": "Bittu AI",
             "plan": plan_name,
             "user_email": (email or "").strip().lower(),
+            "college": (college or "").strip(),
             "created_at": datetime.utcnow().isoformat(),
         },
     }
@@ -143,7 +145,9 @@ async def create_razorpay_payment_link(
     amount_in_inr: int = 149,
     email: Optional[str] = None,
     name: Optional[str] = None,
+    college: Optional[str] = None,
     plan_name: str = "DSA Master Lifetime Pass (Java + C)",
+    plan_id: str = "DSA_JAVA_C_PASS",
 ) -> Dict[str, Any]:
     """
     Creates a Razorpay Hosted Payment Link (e.g. https://rzp.io/l/xxxxx)
@@ -174,7 +178,9 @@ async def create_razorpay_payment_link(
         "notes": {
             "platform": "Bittu AI",
             "plan": plan_name,
+            "plan_id": plan_id,
             "user_email": user_email,
+            "college": (college or "").strip(),
         },
         "callback_url": "https://www.bittuai.online/dsa?payment=success",
         "callback_method": "get"
@@ -238,6 +244,7 @@ def verify_razorpay_signature(
 async def verify_and_activate_razorpay_payment(
     payment_id: str,
     email: str,
+    plan_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Directly queries the live Razorpay API to verify whether a payment was captured.
@@ -269,12 +276,17 @@ async def verify_and_activate_razorpay_payment(
                 if not final_email:
                     final_email = "verified_coder@bittuai.online"
 
+                # Determine plan: prefer explicit plan_id, else read from Razorpay notes
+                notes = pdata.get("notes") or {}
+                resolved_plan = plan_id or notes.get("plan_id") or "DSA_JAVA_C_PASS"
+
                 activation = activate_user_pro(
                     email=final_email,
                     order_id=order_id,
                     payment_id=clean_pid,
                     amount_inr=int(amount / 100),
                     days=36500,
+                    plan=resolved_plan,
                 )
                 return activation
             else:
@@ -297,10 +309,12 @@ def activate_user_pro(
     order_id: str,
     payment_id: str,
     amount_inr: int = 149,
-    days: int = 36500, # 100 Years / Lifetime Access
+    days: int = 36500,  # 100 Years / Lifetime Access
+    plan: str = "DSA_JAVA_C_PASS",
 ) -> Dict[str, Any]:
     """
     Activates Lifetime Pro membership (100 years) and persists it to disk.
+    Plan can be DSA_JAVA_C_PASS or TOP_INTERVIEW_PASS.
     """
     normalized_email = (email or "anonymous_pro@bittuai.online").strip().lower()
     now = datetime.utcnow()
@@ -310,7 +324,7 @@ def activate_user_pro(
     sub_data = {
         "email": normalized_email,
         "is_pro": True,
-        "plan": "DSA_LIFETIME_MASTER_PASS",
+        "plan": plan,
         "amount_inr": amount_inr,
         "order_id": order_id,
         "payment_id": payment_id,
@@ -327,9 +341,9 @@ def activate_user_pro(
         "success": True,
         "is_pro": True,
         "email": normalized_email,
-        "plan": "DSA_LIFETIME_MASTER_PASS",
+        "plan": plan,
         "expires_at": sub_data["expires_at"],
-        "message": "Welcome to Bittu AI DSA Master Pass! Full Lifetime Access to DSA with Java and DSA with C Unlocked!",
+        "message": f"Welcome to Bittu AI! Your {plan} is now active with Lifetime Access.",
     }
 
 

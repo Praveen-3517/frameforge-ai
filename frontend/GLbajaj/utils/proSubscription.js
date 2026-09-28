@@ -1,11 +1,22 @@
 /**
  * Bittu AI — DSA Pro Subscription State Manager
  * Handles local caching, backend status checks, and reactive state updates.
+ *
+ * PLAN SEPARATION (2026-09-28):
+ *  - DSA_JAVA_C_PASS        → Unlocks DSAHub + DSASolver (Java / C / Python problems)
+ *  - TOP_INTERVIEW_PASS     → Unlocks Top Interview 150 questions only
+ *  - DSA_LIFETIME_MASTER_PASS → Legacy plan (existing buyers): unlocks BOTH (backward compat)
  */
 
 import { getApiUrl } from './apiUrl'
 
 const PRO_STORAGE_KEY = 'bittu_dsa_pro'
+
+/** Plans that grant DSA Java/C/Python problem access */
+const DSA_PLANS = ['DSA_JAVA_C_PASS', 'DSA_LIFETIME_MASTER_PASS']
+
+/** Plans that grant Top Interview 150 access */
+const INTERVIEW_PLANS = ['TOP_INTERVIEW_PASS', 'DSA_LIFETIME_MASTER_PASS']
 
 export function getCachedProStatus(userEmail = null) {
   try {
@@ -33,6 +44,26 @@ export function getCachedProStatus(userEmail = null) {
   }
 }
 
+/**
+ * Returns true if user has access to DSA Java/C/Python problems.
+ * (DSA_JAVA_C_PASS or legacy DSA_LIFETIME_MASTER_PASS)
+ */
+export function isDsaPro(userEmail = null) {
+  const status = getCachedProStatus(userEmail)
+  if (!status.isPro) return false
+  return DSA_PLANS.includes(status.plan)
+}
+
+/**
+ * Returns true if user has access to Top Interview 150.
+ * (TOP_INTERVIEW_PASS only — DSA pass does NOT grant this)
+ */
+export function isInterviewPro(userEmail = null) {
+  const status = getCachedProStatus(userEmail)
+  if (!status.isPro) return false
+  return INTERVIEW_PLANS.includes(status.plan)
+}
+
 export function saveProStatus({ email, expiresAt, plan = 'DSA_LIFETIME_MASTER_PASS' }) {
   const data = {
     isPro: true,
@@ -46,14 +77,14 @@ export function saveProStatus({ email, expiresAt, plan = 'DSA_LIFETIME_MASTER_PA
   return data
 }
 
-export async function verifyPaymentLinkReturn(paymentId, email) {
+export async function verifyPaymentLinkReturn(paymentId, email, planId = null) {
   if (!paymentId) return { isPro: false }
   try {
     const base = getApiUrl()
     const res = await fetch(`${base}/api/payment/verify-payment-link`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ payment_id: paymentId, email }),
+      body: JSON.stringify({ payment_id: paymentId, email, plan_id: planId }),
     })
     if (res.ok) {
       const data = await res.json()
@@ -61,7 +92,7 @@ export async function verifyPaymentLinkReturn(paymentId, email) {
         return saveProStatus({
           email: data.email || email,
           expiresAt: data.expires_at,
-          plan: data.plan,
+          plan: data.plan, // Backend returns the correct plan (DSA_JAVA_C_PASS or TOP_INTERVIEW_PASS)
         })
       }
     }

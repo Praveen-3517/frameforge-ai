@@ -44,11 +44,52 @@ function loadRazorpayScript() {
   })
 }
 
-export default function ProPaymentModal({ isOpen, onClose, onSuccess, isLight = false }) {
+export default function ProPaymentModal({ isOpen, onClose, onSuccess, isLight = false, plan = 'DSA_JAVA_C_PASS' }) {
   const { user } = useAuth()
+
+  // ── Plan Configuration ───────────────────────────────────────────────────
+  const PLAN_CONFIG = {
+    DSA_JAVA_C_PASS: {
+      planId: 'DSA_JAVA_C_PASS',
+      planName: 'DSA Master Lifetime Pass (Java + C)',
+      title: 'Unlock DSA with Java & DSA with C',
+      subtitle: 'Java + C Complete Track',
+      badgeLabel: 'DSA Master Pass',
+      amount: 149,
+      strikethrough: '₹4,999 (Coding Institutes)',
+      successTitle: 'DSA Master Lifetime Pass (Java + C)',
+      successDesc: 'All 554+ problems, solutions, and premium features are unlocked permanently!',
+      checklist: [
+        { title: '☕ Complete DSA with Java (Recommended for Beginners)', desc: '554+ Problems, Collections, OOPs & Optimal Algorithms.' },
+        { title: '⚡ Complete DSA with C Language (Recommended for Beginners)', desc: '554+ Problems, Pointers, Memory Allocation & Structs.' },
+        { title: '🎯 Optimal Code & Hindi/English Logic', desc: 'Instant solution viewer, diff comparer & interview hints.' },
+        { title: '♾️ Lifetime Access on All Devices', desc: 'One-time ₹149 payment. Use anytime across mobile & laptop.' },
+      ],
+    },
+    TOP_INTERVIEW_PASS: {
+      planId: 'TOP_INTERVIEW_PASS',
+      planName: 'Top Interview 150 Lifetime Pass',
+      title: 'Unlock Top Interview 150 Questions',
+      subtitle: 'FAANG Interview Prep Pass',
+      badgeLabel: 'Interview Pass',
+      amount: 199,
+      strikethrough: '₹2,999 (Coaching Centers)',
+      successTitle: 'Top Interview 150 Lifetime Pass',
+      successDesc: 'All 150 company-tagged questions, solutions & complexity breakdowns are unlocked permanently!',
+      checklist: [
+        { title: '🎯 150 FAANG-Asked Questions', desc: 'Curated from Google, Amazon, Meta, Microsoft & TCS interviews.' },
+        { title: '🐍 Python 3 Optimal Solutions', desc: 'Step-by-step approach, algorithm intuition & editorial.' },
+        { title: '📊 Time & Space Complexity', desc: 'Full O-notation analysis for every problem.' },
+        { title: '♾️ Lifetime Access on All Devices', desc: 'One-time ₹199 payment. Use anytime across mobile & laptop.' },
+      ],
+    },
+  }
+
+  const cfg = PLAN_CONFIG[plan] || PLAN_CONFIG['DSA_JAVA_C_PASS']
   
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [college, setCollege] = useState('')
   const [phone, setPhone] = useState('')
   
   const [loading, setLoading] = useState(false)
@@ -60,11 +101,15 @@ export default function ProPaymentModal({ isOpen, onClose, onSuccess, isLight = 
   useEffect(() => {
     if (isOpen) {
       loadRazorpayScript().catch(() => {})
+      const savedCollege = localStorage.getItem('user_college') || ''
+      if (savedCollege && !college) setCollege(savedCollege)
     }
     if (user) {
       if (user.email && !email) setEmail(user.email)
       const userFullName = user.user_metadata?.full_name || user.fullName || ''
       if (userFullName && !name) setName(userFullName)
+      const userCollege = user.user_metadata?.college || user.college || ''
+      if (userCollege && !college) setCollege(userCollege)
     }
   }, [user, isOpen])
 
@@ -80,6 +125,11 @@ export default function ProPaymentModal({ isOpen, onClose, onSuccess, isLight = 
       return
     }
 
+    const trimmedCollege = college.trim()
+    if (trimmedCollege) {
+      localStorage.setItem('user_college', trimmedCollege)
+    }
+
     setLoading(true)
     setStatusMsg('Opening secure Razorpay UPI & Card checkout...')
 
@@ -91,10 +141,12 @@ export default function ProPaymentModal({ isOpen, onClose, onSuccess, isLight = 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          amount: 149,
+          amount: cfg.amount,
           email: trimmedEmail,
           name: name.trim() || 'Student Coder',
-          plan_name: 'DSA Master Lifetime Pass (Java + C)'
+          college: trimmedCollege,
+          plan_name: cfg.planName,
+          plan_id: cfg.planId,
         })
       })
 
@@ -162,7 +214,7 @@ export default function ProPaymentModal({ isOpen, onClose, onSuccess, isLight = 
               Payment Successful! 🎉
             </h3>
             <p className={`text-sm mb-6 max-w-sm mx-auto leading-relaxed ${isLight ? 'text-slate-600' : 'text-white/70'}`}>
-              Congratulations! Your <strong>DSA Master Lifetime Pass (Java + C)</strong> is now active. All 554+ problems, solutions, and premium features are unlocked permanently!
+              Congratulations! Your <strong>{cfg.successTitle}</strong> is now active. {cfg.successDesc}
             </p>
 
             <div className={`p-3.5 rounded-2xl border text-xs font-mono mb-6 text-left ${
@@ -172,9 +224,15 @@ export default function ProPaymentModal({ isOpen, onClose, onSuccess, isLight = 
                 <span>Account:</span>
                 <span className="font-bold">{successData.email}</span>
               </div>
+              {college && (
+                <div className="flex justify-between py-1 border-b border-white/5">
+                  <span>College:</span>
+                  <span className="font-bold">{college}</span>
+                </div>
+              )}
               <div className="flex justify-between py-1 border-b border-white/5">
                 <span>Plan:</span>
-                <span className="font-bold text-amber-500">₹149 Master Lifetime Pass (Java + C)</span>
+                <span className="font-bold text-amber-500">₹{cfg.amount} {cfg.badgeLabel} Lifetime</span>
               </div>
               <div className="flex justify-between py-1">
                 <span>Status:</span>
@@ -208,23 +266,26 @@ export default function ProPaymentModal({ isOpen, onClose, onSuccess, isLight = 
                 <div className="flex items-center gap-2 mb-0.5">
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-cyan-500/20 border border-amber-500/40 text-amber-400 text-[10px] font-mono font-bold tracking-wider uppercase">
                     <Crown size={11} className="text-amber-400" />
-                    DSA Master Pass
+                    {cfg.badgeLabel}
                   </span>
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold">
                     <Sparkles size={10} /> Lifetime Access
                   </span>
                 </div>
                 <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                  Java + C Complete Track
-                </span>
+                    {cfg.subtitle}
+                  </span>
               </div>
             </div>
 
             <h3 className="text-xl sm:text-2xl font-black tracking-tight mb-1.5">
-              Unlock DSA with Java & DSA with C
+              {cfg.title}
             </h3>
             <p className={`text-xs sm:text-sm mb-4 leading-relaxed ${isLight ? 'text-slate-600' : 'text-white/70'}`}>
-              Get full lifetime access to both <strong>DSA with Java (554+ Problems)</strong> <span className="inline-flex items-center px-1.5 py-0.2 mx-1 rounded-md text-[10px] font-bold bg-amber-500/20 text-amber-500 dark:text-amber-300 border border-amber-500/30">★ Recommended for Beginners</span> and <strong>DSA with C (554+ Problems)</strong> <span className="inline-flex items-center px-1.5 py-0.2 mx-1 rounded-md text-[10px] font-bold bg-cyan-500/20 text-cyan-500 dark:text-cyan-300 border border-cyan-500/30">★ Recommended for Beginners</span> with optimal code, Hindi/English explanations, and live compilers.
+              {plan === 'TOP_INTERVIEW_PASS'
+                ? 'Get lifetime access to all 150 company-tagged FAANG questions with Python 3 solutions, step-by-step approach, and complexity analysis.'
+                : <>Get full lifetime access to both <strong>DSA with Java (554+ Problems)</strong> <span className="inline-flex items-center px-1.5 py-0.2 mx-1 rounded-md text-[10px] font-bold bg-amber-500/20 text-amber-500 dark:text-amber-300 border border-amber-500/30">★ Recommended for Beginners</span> and <strong>DSA with C (554+ Problems)</strong> <span className="inline-flex items-center px-1.5 py-0.2 mx-1 rounded-md text-[10px] font-bold bg-cyan-500/20 text-cyan-500 dark:text-cyan-300 border border-cyan-500/30">★ Recommended for Beginners</span> with optimal code, Hindi/English explanations, and live compilers.</>
+              }
             </p>
 
             {/* Price Box */}
@@ -236,10 +297,10 @@ export default function ProPaymentModal({ isOpen, onClose, onSuccess, isLight = 
               <div>
                 <div className="flex items-baseline gap-2">
                   <span className={`text-3xl sm:text-4xl font-black ${isLight ? 'text-violet-900' : 'text-white'}`}>
-                    ₹149
+                    ₹{cfg.amount}
                   </span>
                   <span className={`text-xs line-through ${isLight ? 'text-slate-400' : 'text-white/40'}`}>
-                    ₹4,999 (Coding Institutes)
+                    {cfg.strikethrough}
                   </span>
                 </div>
                 <p className={`text-[11px] font-medium mt-0.5 ${isLight ? 'text-violet-700' : 'text-amber-300/90'}`}>
@@ -255,12 +316,7 @@ export default function ProPaymentModal({ isOpen, onClose, onSuccess, isLight = 
 
             {/* Value checklist */}
             <div className="space-y-2 mb-5">
-              {[
-                { title: '☕ Complete DSA with Java (Recommended for Beginners)', desc: '554+ Problems, Collections, OOPs & Optimal Algorithms.' },
-                { title: '⚡ Complete DSA with C Language (Recommended for Beginners)', desc: '554+ Problems, Pointers, Memory Allocation & Structs.' },
-                { title: '🎯 Optimal Code & Hindi/English Logic', desc: 'Instant solution viewer, diff comparer & interview hints.' },
-                { title: '♾️ Lifetime Access on All Devices', desc: 'One-time ₹149 payment. Use anytime across mobile & laptop.' },
-              ].map((item, idx) => (
+              {cfg.checklist.map((item, idx) => (
                 <div key={idx} className="flex items-start gap-2.5 text-xs">
                   <div className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
                     <Check size={10} strokeWidth={3} />
@@ -285,7 +341,7 @@ export default function ProPaymentModal({ isOpen, onClose, onSuccess, isLight = 
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="student@gmail.com"
+                    placeholder="Enter your email"
                     disabled={loading}
                     className={`w-full px-3 py-2 rounded-xl text-xs border outline-none transition-all ${
                       isLight
@@ -311,6 +367,25 @@ export default function ProPaymentModal({ isOpen, onClose, onSuccess, isLight = 
                     }`}
                   />
                 </div>
+              </div>
+
+              {/* College / Institution Name Field */}
+              <div>
+                <label className={`block text-[11px] font-semibold mb-1 ${isLight ? 'text-slate-700' : 'text-white/80'}`}>
+                  College / Institution Name <span className="text-slate-400 font-normal">(for certificate & receipt)</span>
+                </label>
+                <input
+                  type="text"
+                  value={college}
+                  onChange={(e) => setCollege(e.target.value)}
+                  placeholder="Enter your college / institution name"
+                  disabled={loading}
+                  className={`w-full px-3 py-2 rounded-xl text-xs border outline-none transition-all ${
+                    isLight
+                      ? 'bg-slate-50 border-slate-300 text-slate-900 focus:border-violet-500 focus:bg-white'
+                      : 'bg-white/5 border-white/10 text-white focus:border-violet-400 focus:bg-white/10'
+                  }`}
+                />
               </div>
 
               {/* Error Banner */}
@@ -343,7 +418,7 @@ export default function ProPaymentModal({ isOpen, onClose, onSuccess, isLight = 
                 ) : (
                   <>
                     <Zap size={16} className="text-amber-300 fill-amber-300" />
-                    <span>Pay ₹149 & Unlock Lifetime Pass</span>
+                    <span>Pay ₹{cfg.amount} & Unlock Lifetime Pass</span>
                     <ArrowRight size={15} />
                   </>
                 )}

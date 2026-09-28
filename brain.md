@@ -3,9 +3,44 @@
 
 ---
 
-## 🚀 RECENTLY COMPLETED UPDATES (Updated: 2026-09-27)
+## 🚀 RECENTLY COMPLETED UPDATES (Updated: 2026-09-28)
 
-> **📌 Feature 1: Render Cloud Backend Migration & Zero-Downtime Resilience**
+> **📌 Feature 1: DSA Course & Top Interview 150 Plan Separation**
+- **Problem Fixed:** Buying DSA Java/C course (₹149) was also unlocking Top Interview 150 — both shared a single `isPro` flag.
+- **Plan Split:** Introduced 3 distinct plans: `DSA_JAVA_C_PASS` (DSA Hub/Solver), `TOP_INTERVIEW_PASS` (Top Interview 150 only), `DSA_LIFETIME_MASTER_PASS` (legacy buyers — backward compat, both access).
+- **`proSubscription.js`:** Added `isDsaPro()` and `isInterviewPro()` plan-aware helper functions.
+- **`ProPaymentModal.jsx`:** Added `plan` prop — renders different UI, price (₹149 vs ₹199), checklist, and plan_name per plan.
+- **`TopInterview150.jsx`:** Uses `isInterviewPro()` and passes `plan="TOP_INTERVIEW_PASS"` to ProPaymentModal.
+- **`DSAHub.jsx` + `DSASolver.jsx`:** Use `isDsaPro()` for access check.
+- **`payment_service.py`:** `plan_id` stored in Razorpay notes; `activate_user_pro()` saves correct plan to `subscribers.json`.
+- **`main.py`:** `plan_id` field added to `CreateOrderRequest` + `VerifyPaymentLinkRequest`.
+- **Status:** ✅ COMPLETED (2026-09-28)
+
+---
+
+> **📌 Feature 1: College / Institution Name Added to Payment Receipt & Checkout Form**
+- **Checkout Modal:** Added a dedicated input field for `College / Institution Name (for certificate & receipt)` in `ProPaymentModal.jsx`.
+- **Receipt Details:** Displayed student's college name dynamically in the payment success receipt card summary upon completion.
+- **Backend & Razorpay Notes:** Updated `backend/main.py` (`CreateOrderRequest`) and `backend/payment_service.py` (`create_razorpay_order`, `create_razorpay_payment_link`) to attach student's college details directly into Razorpay order notes and payment link records.
+- **Local Persistence:** Cached entered college name in browser `localStorage` (`user_college`) with auto-prefill from auth context for zero repetitive typing.
+- **Placeholder Cleanup:** Removed example-based placeholder text (`e.g. ...`) from all form fields — replaced with clean direct prompts (`Enter your email`, `Enter your full name`, `Enter your college / institution name`).
+- **Status:** ✅ COMPLETED & VERIFIED (2026-09-27)
+
+---
+
+> **📌 Feature 2: Google Favicon Globe Icon Fix — www vs non-www Cache & SPA Rewrite Bug**
+- **Root Cause 1 (SPA Rewrite):** `vercel.json` catch-all SPA rewrite `/((?!api/|...).*)` was intercepting ALL static file requests including `favicon.ico`, `favicon-48x48.png`, `favicon.svg` etc. and serving `index.html` HTML instead of the actual icon files. Google Favicon Bot received HTML and fell back to globe icon.
+- **Fix Applied:** Updated `vercel.json` SPA rewrite regex to explicitly exclude all static file extensions (`.ico`, `.png`, `.svg`, `.jpg`, `.jpeg`, `.webp`, `.json`, `.txt`, `.xml`) and named favicon/manifest files from the catch-all redirect.
+- **Root Cause 2 (www vs non-www Mismatch):** All canonical, OG, Twitter, and Schema.org URLs in `frontend/index.html` pointed to `https://bittuai.online` (non-www), but the live domain resolves as `https://www.bittuai.online`. Google's favicon service had cached the non-www version's globe but not the www version.
+- **Fix Applied:** Standardized ALL URLs in `frontend/index.html` to `https://www.bittuai.online` — canonical tag, favicon `href` attributes (absolute URLs), `og:url`, `og:image`, `twitter:image`, and Schema.org `url` field.
+- **Verification:** Confirmed `https://www.bittuai.online/favicon.ico` returns Bittu AI 3D logo with `200 OK` and correct `image/x-icon` Content-Type.
+- **Final Step:** Google Search Console Request Indexing submitted for `https://www.bittuai.online/` to trigger Google Favicon Bot re-fetch.
+- **Expected Resolution:** Google Search favicon icon update within 1–2 days.
+- **Status:** ✅ FIXED & DEPLOYED (2026-09-27)
+
+---
+
+> **📌 Feature 2: Render Cloud Backend Migration & Zero-Downtime Resilience**
 - **Migration to Fresh Account:** Successfully migrated FastAPI cloud backend from suspended Render instance to fresh deployment at `https://frameforge-ai-9myp.onrender.com`.
 - **Environment & Routing:** Configured `backend/requirements.txt` with Root Directory `backend` and verified `uvicorn main:app` runtime execution.
 - **Frontend Synchronizations:** Updated `frontend/.env`, `frontend/GLbajaj/utils/apiUrl.js`, and `frontend/vercel.json` to proxy API requests to the new backend.

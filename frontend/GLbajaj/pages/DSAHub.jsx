@@ -10,7 +10,7 @@ import ProblemCard from '../components/dsa/ProblemCard'
 import StatsPanel from '../components/dsa/StatsPanel'
 import LeaderboardModal from '../components/dsa/LeaderboardModal'
 import ProPaymentModal from '../components/dsa/ProPaymentModal'
-import { getCachedProStatus, fetchRemoteProStatus, verifyPaymentLinkReturn } from '../utils/proSubscription'
+import { isDsaPro, fetchRemoteProStatus, verifyPaymentLinkReturn } from '../utils/proSubscription'
 import { dsaProblems, filterProblems } from '../data/dsaProblems'
 import StarField from '../components/StarField'
 import { getLevel, getStreak, updateStreak, LEVELS } from '../utils/dsaStats'
@@ -104,7 +104,7 @@ export default function DSAHub() {
   const [showStats, setShowStats] = useState(false)
   const [showLeaderboard, setShowLeaderboard] = useState(false)
   const [showProModal, setShowProModal] = useState(false)
-  const [isPro, setIsPro] = useState(() => getCachedProStatus(user?.email).isPro)
+  const [isPro, setIsPro] = useState(() => isDsaPro(user?.email))
   const [topInterviewOnly, setTopInterviewOnly] = useState(false)
   const [theme, setTheme] = useState(() => sessionStorage.getItem('dsa_theme') || 'light')
   const [currentPage, setCurrentPage] = useState(1)
@@ -119,20 +119,20 @@ export default function DSAHub() {
     const activeEmail = user?.email || localStorage.getItem('user_email') || ''
 
     if (paymentId) {
-      verifyPaymentLinkReturn(paymentId, activeEmail).then(res => {
-        if (res?.isPro) {
+      verifyPaymentLinkReturn(paymentId, activeEmail, 'DSA_JAVA_C_PASS').then(res => {
+        if (res?.isPro && isDsaPro(activeEmail)) {
           setIsPro(true)
         }
         window.history.replaceState({}, document.title, window.location.pathname)
       })
     } else if (activeEmail) {
-      fetchRemoteProStatus(activeEmail).then(status => {
-        if (status?.isPro) setIsPro(true)
+      fetchRemoteProStatus(activeEmail).then(() => {
+        if (isDsaPro(activeEmail)) setIsPro(true)
       })
     }
 
     const handleProUpdate = (e) => {
-      if (e.detail?.isPro) setIsPro(true)
+      if (e.detail?.isPro && isDsaPro(activeEmail)) setIsPro(true)
     }
     window.addEventListener('bittu_pro_updated', handleProUpdate)
     return () => window.removeEventListener('bittu_pro_updated', handleProUpdate)

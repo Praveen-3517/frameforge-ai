@@ -7,7 +7,7 @@ import {
   Tag, Code2, ArrowRight, Zap
 } from 'lucide-react'
 import { TOP_INTERVIEW_150, TOP_INTERVIEW_CATEGORIES } from '../data/topInterview150Data'
-import { getCachedProStatus, fetchRemoteProStatus, verifyPaymentLinkReturn } from '../utils/proSubscription'
+import { isInterviewPro, fetchRemoteProStatus, verifyPaymentLinkReturn } from '../utils/proSubscription'
 import { useAuth } from '../context/AuthContext'
 import ProPaymentModal from '../components/dsa/ProPaymentModal'
 
@@ -16,7 +16,8 @@ export default function TopInterview150() {
   const { user, openAuthModal } = useAuth()
 
   // Pro Subscription State
-  const [isPro, setIsPro] = useState(() => getCachedProStatus(user?.email).isPro)
+  // isInterviewPro: true only for TOP_INTERVIEW_PASS holders (or legacy DSA_LIFETIME_MASTER_PASS)
+  const [isPro, setIsPro] = useState(() => isInterviewPro(user?.email))
   const [showProModal, setShowProModal] = useState(false)
 
   // Local storage for solved interview questions
@@ -61,20 +62,23 @@ export default function TopInterview150() {
     const activeEmail = user?.email || localStorage.getItem('user_email') || ''
 
     if (paymentId) {
-      verifyPaymentLinkReturn(paymentId, activeEmail).then(res => {
-        if (res?.isPro) {
+      verifyPaymentLinkReturn(paymentId, activeEmail, 'TOP_INTERVIEW_PASS').then(res => {
+        // Only unlock if the returned plan is TOP_INTERVIEW_PASS (or legacy)
+        if (res?.isPro && isInterviewPro(activeEmail)) {
           setIsPro(true)
         }
         window.history.replaceState({}, document.title, window.location.pathname)
       })
     } else if (activeEmail) {
-      fetchRemoteProStatus(activeEmail).then(status => {
-        if (status?.isPro) setIsPro(true)
+      fetchRemoteProStatus(activeEmail).then(() => {
+        // Re-check using plan-specific helper after remote sync
+        if (isInterviewPro(activeEmail)) setIsPro(true)
       })
     }
 
     const handleProUpdate = (e) => {
-      if (e.detail?.isPro) setIsPro(true)
+      // Only grant access if the purchased plan includes Top Interview 150
+      if (e.detail?.isPro && isInterviewPro(activeEmail)) setIsPro(true)
     }
     window.addEventListener('bittu_pro_updated', handleProUpdate)
     return () => window.removeEventListener('bittu_pro_updated', handleProUpdate)
@@ -722,12 +726,13 @@ export default function TopInterview150() {
         </div>
       )}
 
-      {/* ── ₹99 DSA Pro Pass Payment Modal ── */}
+      {/* ── Top Interview 150 Pass Payment Modal (SEPARATE from DSA Java/C pass) ── */}
       <ProPaymentModal
         isOpen={showProModal}
         onClose={() => setShowProModal(false)}
         onSuccess={() => setIsPro(true)}
         isLight={isLight}
+        plan="TOP_INTERVIEW_PASS"
       />
     </div>
   )
