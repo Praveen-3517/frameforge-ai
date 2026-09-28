@@ -175,13 +175,16 @@ export default function DSASolver() {
 
   // Sync remote Pro subscription status
   useEffect(() => {
-    if (user?.email) {
-      fetchRemoteProStatus(user.email).then(() => {
-        if (isDsaPro(user.email)) setIsPro(true)
+    const activeEmail = user?.email || localStorage.getItem('user_email') || ''
+    if (activeEmail) {
+      fetchRemoteProStatus(activeEmail).then(() => {
+        setIsPro(isDsaPro(activeEmail))
       })
+    } else {
+      setIsPro(isDsaPro())
     }
-    const handleProUpdate = (e) => {
-      if (e.detail?.isPro && isDsaPro(user?.email)) setIsPro(true)
+    const handleProUpdate = () => {
+      setIsPro(isDsaPro(activeEmail))
     }
     window.addEventListener('bittu_pro_updated', handleProUpdate)
     return () => window.removeEventListener('bittu_pro_updated', handleProUpdate)

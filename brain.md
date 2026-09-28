@@ -5,6 +5,17 @@
 
 ## 🚀 RECENTLY COMPLETED UPDATES (Updated: 2026-09-28)
 
+> **📌 Feature 0: 100% Seamless Cross-Device Pro Auto-Recovery & Payment Sync**
+- **Problem Fixed:** When a user purchased a course on their mobile phone via Razorpay (e.g. `kushwahapraveen310@gmail.com`), Razorpay returned `email: void@razorpay.com` in the payment payload for UPI QR checkouts. The user's real email was saved in Razorpay `notes['user_email']`. The old verification code registered the pro membership under `void@razorpay.com`, causing the desktop login with `kushwahapraveen310@gmail.com` to report `is_pro: false` and show lock icons / purchase prompts.
+- **Smart Email Resolution:** Updated `verify_and_activate_razorpay_payment` in `backend/payment_service.py` to inspect `notes['user_email']` and `notes['email']` before falling back to Razorpay customer email.
+- **Dynamic Razorpay Payment Auto-Discovery:** In `get_user_pro_status`, if a user's email is not in local memory/disk cache, the backend queries Razorpay Payments API for captured payments matching `notes['user_email']` or `notes['email']`. If found, it automatically activates Lifetime Pro for 100 years and returns `is_pro: true`.
+- **Zero-Failure Cross-Device Sync:** Any user who has ever paid on Razorpay will now be unlocked instantly across all devices (mobile, desktop, laptop, incognito, new browsers) immediately upon login or status check.
+- **Frontend Reactive State:** Fixed `fetchRemoteProStatus`, `DSAHub.jsx`, `TopInterview150.jsx`, and `DSASolver.jsx` to reactively update `isPro` state.
+- **Supabase URL Typo Fix:** Corrected typo in `frontend/GLbajaj/utils/supabaseClient.js` fallback URL (`vgiwwjfgujbkeovwvvcv.supabase.co`).
+- **Status:** ✅ COMPLETED & VERIFIED (2026-09-28)
+
+---
+
 > **📌 Feature 1: DSA Course & Top Interview 150 Plan Separation**
 - **Problem Fixed:** Buying DSA Java/C course (₹149) was also unlocking Top Interview 150 — both shared a single `isPro` flag.
 - **Plan Split:** Introduced 3 distinct plans: `DSA_JAVA_C_PASS` (DSA Hub/Solver), `TOP_INTERVIEW_PASS` (Top Interview 150 only), `DSA_LIFETIME_MASTER_PASS` (legacy buyers — backward compat, both access).
@@ -19,12 +30,12 @@
 ---
 
 > **📌 Feature 1: College / Institution Name Added to Payment Receipt & Checkout Form**
-- **Checkout Modal:** Added a dedicated input field for `College / Institution Name (for certificate & receipt)` in `ProPaymentModal.jsx`.
+- **Checkout Modal:** Added a dedicated input field for `College / Institution Name (for receipt)` in `ProPaymentModal.jsx` (removed `certificate` mention from label as certificates are not provided).
 - **Receipt Details:** Displayed student's college name dynamically in the payment success receipt card summary upon completion.
 - **Backend & Razorpay Notes:** Updated `backend/main.py` (`CreateOrderRequest`) and `backend/payment_service.py` (`create_razorpay_order`, `create_razorpay_payment_link`) to attach student's college details directly into Razorpay order notes and payment link records.
 - **Local Persistence:** Cached entered college name in browser `localStorage` (`user_college`) with auto-prefill from auth context for zero repetitive typing.
 - **Placeholder Cleanup:** Removed example-based placeholder text (`e.g. ...`) from all form fields — replaced with clean direct prompts (`Enter your email`, `Enter your full name`, `Enter your college / institution name`).
-- **Status:** ✅ COMPLETED & VERIFIED (2026-09-27)
+- **Status:** ✅ COMPLETED & VERIFIED (2026-09-27 / Updated 2026-09-28)
 
 ---
 

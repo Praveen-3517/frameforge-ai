@@ -120,19 +120,19 @@ export default function DSAHub() {
 
     if (paymentId) {
       verifyPaymentLinkReturn(paymentId, activeEmail, 'DSA_JAVA_C_PASS').then(res => {
-        if (res?.isPro && isDsaPro(activeEmail)) {
-          setIsPro(true)
-        }
+        setIsPro(isDsaPro(activeEmail))
         window.history.replaceState({}, document.title, window.location.pathname)
       })
     } else if (activeEmail) {
       fetchRemoteProStatus(activeEmail).then(() => {
-        if (isDsaPro(activeEmail)) setIsPro(true)
+        setIsPro(isDsaPro(activeEmail))
       })
+    } else {
+      setIsPro(isDsaPro())
     }
 
-    const handleProUpdate = (e) => {
-      if (e.detail?.isPro && isDsaPro(activeEmail)) setIsPro(true)
+    const handleProUpdate = () => {
+      setIsPro(isDsaPro(activeEmail))
     }
     window.addEventListener('bittu_pro_updated', handleProUpdate)
     return () => window.removeEventListener('bittu_pro_updated', handleProUpdate)

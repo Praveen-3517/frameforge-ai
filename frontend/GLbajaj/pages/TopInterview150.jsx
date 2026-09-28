@@ -63,22 +63,19 @@ export default function TopInterview150() {
 
     if (paymentId) {
       verifyPaymentLinkReturn(paymentId, activeEmail, 'TOP_INTERVIEW_PASS').then(res => {
-        // Only unlock if the returned plan is TOP_INTERVIEW_PASS (or legacy)
-        if (res?.isPro && isInterviewPro(activeEmail)) {
-          setIsPro(true)
-        }
+        setIsPro(isInterviewPro(activeEmail))
         window.history.replaceState({}, document.title, window.location.pathname)
       })
     } else if (activeEmail) {
       fetchRemoteProStatus(activeEmail).then(() => {
-        // Re-check using plan-specific helper after remote sync
-        if (isInterviewPro(activeEmail)) setIsPro(true)
+        setIsPro(isInterviewPro(activeEmail))
       })
+    } else {
+      setIsPro(isInterviewPro())
     }
 
-    const handleProUpdate = (e) => {
-      // Only grant access if the purchased plan includes Top Interview 150
-      if (e.detail?.isPro && isInterviewPro(activeEmail)) setIsPro(true)
+    const handleProUpdate = () => {
+      setIsPro(isInterviewPro(activeEmail))
     }
     window.addEventListener('bittu_pro_updated', handleProUpdate)
     return () => window.removeEventListener('bittu_pro_updated', handleProUpdate)

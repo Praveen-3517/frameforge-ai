@@ -1,1 +1,13 @@
-{}
+{
+  "kushwahapraveen310@gmail.com": {
+    "email": "kushwahapraveen310@gmail.com",
+    "is_pro": true,
+    "plan": "DSA_JAVA_C_PASS",
+    "amount_inr": 149,
+    "order_id": "order_ThGwEI8YQaWgYz",
+    "payment_id": "pay_ThGwXlXmLs2NAU",
+    "activated_at": "2026-09-28T02:58:03.283824Z",
+    "expires_at": "2126-09-04T02:58:03.283824Z",
+    "expires_timestamp": 4944144483
+  }
+}

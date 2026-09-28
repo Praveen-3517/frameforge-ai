@@ -116,7 +116,11 @@ export async function fetchRemoteProStatus(email) {
           plan: data.plan,
         })
       } else {
-        localStorage.removeItem(PRO_STORAGE_KEY)
+        const cached = getCachedProStatus(email)
+        if (cached?.email && cached.email.toLowerCase() === email.toLowerCase()) {
+          localStorage.removeItem(PRO_STORAGE_KEY)
+          window.dispatchEvent(new CustomEvent('bittu_pro_updated', { detail: { isPro: false, plan: null } }))
+        }
         return { isPro: false, expiresAt: null }
       }
     }

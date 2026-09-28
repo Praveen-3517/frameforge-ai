@@ -372,7 +372,7 @@ export default function ProPaymentModal({ isOpen, onClose, onSuccess, isLight = 
               {/* College / Institution Name Field */}
               <div>
                 <label className={`block text-[11px] font-semibold mb-1 ${isLight ? 'text-slate-700' : 'text-white/80'}`}>
-                  College / Institution Name <span className="text-slate-400 font-normal">(for certificate & receipt)</span>
+                  College / Institution Name <span className="text-slate-400 font-normal">(for receipt)</span>
                 </label>
                 <input
                   type="text"
