@@ -11,9 +11,10 @@
   - `create_user_session(email)`: Automatically generates a cryptographic `session_token` upon every registration / login and sets it as the user's sole active device session in `backend/data/sessions.json`.
   - `validate_user_session(email, token)`: Lightweight validation endpoint (`POST /api/auth/validate-session` & `GET /api/auth/validate-session`). If an older device presents a superseded token, the backend returns `{ valid: false, reason: "logged_in_on_another_device" }`.
 - **Frontend Enforcement:**
-  - `AuthContext.jsx`: Runs background session validation every 15 seconds and immediately on tab focus / visibility change.
-  - If a concurrent login on another device is detected: automatically logs out the superseded device, clears local pro subscription and session tokens, and presents a polite alert modal: *"You have been logged out because your account was logged in on another device. Only 1 active device is permitted."*
-- **Status:** ✅ COMPLETED & VERIFIED (2026-09-28)
+  - `AuthContext.jsx`: Persistent physical browser `deviceId` generated and registered on every login (`POST /api/auth/bind-device`).
+  - Active device heartbeat runs every 2.5 seconds (`GET /api/auth/check-device`) and on window focus/tab change.
+  - If a concurrent login on another device is detected: automatically logs out the superseded device, performs a deep purge of all auth tokens/keys (`sb-*`, `bittu_ai_local*`, `bittu_dsa_pro`), and displays a polite alert modal: *"You have been logged out because your account was logged in on another device. Only 1 active device is permitted."*
+- **Status:** ✅ COMPLETED, TESTED & VERIFIED BY USER (2026-09-28)
 
 ---
 
