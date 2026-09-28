@@ -143,7 +143,10 @@ export function AuthProvider({ children }) {
       }
     }
 
-    const interval = setInterval(checkDeviceSession, 3500)
+    // Run check immediately on mount/focus
+    checkDeviceSession()
+
+    const interval = setInterval(checkDeviceSession, 2500)
     const onFocus = () => { checkDeviceSession() }
     window.addEventListener('focus', onFocus)
     document.addEventListener('visibilitychange', onFocus)

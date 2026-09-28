@@ -55,6 +55,7 @@ logging.basicConfig(
     datefmt="%H:%M:%S",
 )
 log = logging.getLogger("text2video")
+logger = log
 
 # ─────────────────────────────────────────────────────────────
 # 1.  Configuration
@@ -1420,20 +1421,29 @@ class BindDeviceRequest(BaseModel):
     email: str
     device_id: str
 
+ACTIVE_DEVICE_CACHE: Dict[str, dict] = {}
+
 def bind_user_device(email: str, device_id: str) -> dict:
     if not email or not device_id:
         return {"success": False, "error": "Missing parameters"}
     norm_email = email.strip().lower()
     clean_dev = device_id.strip()
 
-    sessions = _load_active_sessions()
-    sessions[norm_email] = {
+    data = {
         "device_id": clean_dev,
         "updated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "last_seen": int(time.time()),
     }
-    _save_active_sessions(sessions)
-    logger.info(f"[DEVICE-BIND] Active device for {norm_email} bound to {clean_dev[:12]}...")
+    ACTIVE_DEVICE_CACHE[norm_email] = data
+
+    try:
+        sessions = _load_active_sessions()
+        sessions[norm_email] = data
+        _save_active_sessions(sessions)
+    except Exception as e:
+        log.warning(f"Error persisting session: {e}")
+
+    log.info(f"[DEVICE-BIND] Active device for {norm_email} bound to {clean_dev[:12]}...")
     return {"success": True, "active_device_id": clean_dev}
 
 def check_user_device(email: str, device_id: str) -> dict:
@@ -1442,21 +1452,25 @@ def check_user_device(email: str, device_id: str) -> dict:
     norm_email = email.strip().lower()
     clean_dev = device_id.strip()
 
-    sessions = _load_active_sessions()
-    sess = sessions.get(norm_email)
+    # 1. Check in-memory cache first
+    sess = ACTIVE_DEVICE_CACHE.get(norm_email)
+    if not sess:
+        try:
+            sessions = _load_active_sessions()
+            sess = sessions.get(norm_email)
+            if sess:
+                ACTIVE_DEVICE_CACHE[norm_email] = sess
+        except Exception:
+            sess = None
+
     if not sess or not sess.get("device_id"):
         # Auto-bind this device if none bound yet
-        sessions[norm_email] = {
-            "device_id": clean_dev,
-            "updated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-            "last_seen": int(time.time()),
-        }
-        _save_active_sessions(sessions)
+        bind_user_device(norm_email, clean_dev)
         return {"valid": True, "active": True}
 
     active_dev = sess.get("device_id")
     if active_dev and active_dev != clean_dev:
-        logger.warning(f"[DEVICE-CHECK] Device conflict for {norm_email}! Current: {clean_dev[:10]}, Active: {active_dev[:10]}")
+        log.warning(f"[DEVICE-CHECK] Device conflict for {norm_email}! Current: {clean_dev[:10]}, Active: {active_dev[:10]}")
         return {
             "valid": False,
             "active": False,
@@ -1466,8 +1480,7 @@ def check_user_device(email: str, device_id: str) -> dict:
 
     # Update last seen
     sess["last_seen"] = int(time.time())
-    sessions[norm_email] = sess
-    _save_active_sessions(sessions)
+    ACTIVE_DEVICE_CACHE[norm_email] = sess
     return {"valid": True, "active": True}
 
 @app.post("/api/auth/validate-session", tags=["Authentication"])
