@@ -1247,6 +1247,75 @@ class CloudLoginRequest(BaseModel):
     email: str
     password: str
 
+class ValidateSessionRequest(BaseModel):
+    email: str
+    session_token: str
+
+ACTIVE_SESSIONS_FILE = Path(__file__).resolve().parent / "data" / "sessions.json"
+
+def _load_active_sessions() -> dict:
+    if not ACTIVE_SESSIONS_FILE.exists():
+        return {}
+    try:
+        with open(ACTIVE_SESSIONS_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def _save_active_sessions(sessions: dict):
+    try:
+        ACTIVE_SESSIONS_FILE.parent.mkdir(parents=True, exist_ok=True)
+        with open(ACTIVE_SESSIONS_FILE, "w", encoding="utf-8") as f:
+            json.dump(sessions, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        logger.error(f"Error saving sessions: {e}")
+
+def create_user_session(email: str) -> str:
+    """Generates a unique session token for the user and invalidates any previous device session."""
+    token = f"sess_{secrets.token_hex(16)}_{int(time.time())}"
+    sessions = _load_active_sessions()
+    sessions[email.strip().lower()] = {
+        "session_token": token,
+        "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "last_seen": int(time.time()),
+    }
+    _save_active_sessions(sessions)
+    logger.info(f"[SESSION] Issued new active device session for {email.strip().lower()}: {token[:12]}...")
+    return token
+
+def validate_user_session(email: str, token: str) -> dict:
+    """Checks if the provided session token is the sole active session for this user."""
+    if not email or not token:
+        return {"valid": True}  # Do not block unauthenticated or local guests
+    norm_email = email.strip().lower()
+    sessions = _load_active_sessions()
+    sess = sessions.get(norm_email)
+    
+    if not sess:
+        # Auto-bind first active session
+        sessions[norm_email] = {
+            "session_token": token,
+            "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "last_seen": int(time.time()),
+        }
+        _save_active_sessions(sessions)
+        return {"valid": True}
+    
+    current_token = sess.get("session_token")
+    if current_token and current_token != token:
+        logger.warning(f"[SESSION] Concurrent login detected for {norm_email}. Expiring old session.")
+        return {
+            "valid": False,
+            "reason": "logged_in_on_another_device",
+            "message": "You have been logged out because your account was logged in on another device. Only 1 active device is permitted."
+        }
+    
+    # Update last seen timestamp
+    sess["last_seen"] = int(time.time())
+    sessions[norm_email] = sess
+    _save_active_sessions(sessions)
+    return {"valid": True}
+
 def _hash_pw(password: str) -> str:
     salted = "bittu_ai_2026_!xZ9#kL" + password
     return hashlib.sha256(salted.encode("utf-8")).hexdigest()
@@ -1281,6 +1350,7 @@ async def register_cloud_user(req: CloudRegisterRequest, request: Request):
     if any(u.get("email") == email for u in users):
         raise HTTPException(status_code=400, detail="An account with this email already exists. Please Sign In.")
     
+    session_token = create_user_session(email)
     pw_hash = _hash_pw(req.password)
     user_entry = {
         "id": f"usr_{int(time.time() * 1000)}",
@@ -1288,14 +1358,15 @@ async def register_cloud_user(req: CloudRegisterRequest, request: Request):
         "password_hash": pw_hash,
         "full_name": req.full_name.strip() if req.full_name else email.split("@")[0],
         "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "auth_provider": "cloud"
+        "auth_provider": "cloud",
+        "session_token": session_token
     }
     users.append(user_entry)
     _save_cloud_users(users)
     
     safe_user = {k: v for k, v in user_entry.items() if k != "password_hash"}
     safe_user["user_metadata"] = {"full_name": safe_user["full_name"]}
-    return JSONResponse(content={"success": True, "user": safe_user})
+    return JSONResponse(content={"success": True, "user": safe_user, "session_token": session_token})
 
 @app.post("/api/auth/login", tags=["Authentication"])
 async def login_cloud_user(req: CloudLoginRequest, request: Request):
@@ -1312,9 +1383,14 @@ async def login_cloud_user(req: CloudLoginRequest, request: Request):
     if user_entry.get("password_hash") != pw_hash and user_entry.get("password_hash") != req.password:
         raise HTTPException(status_code=401, detail="Incorrect password. Please try again.")
     
+    session_token = create_user_session(email)
+    user_entry["session_token"] = session_token
+    _save_cloud_users(users)
+    
     safe_user = {k: v for k, v in user_entry.items() if k != "password_hash"}
     safe_user["user_metadata"] = {"full_name": safe_user.get("full_name", email.split("@")[0])}
-    return JSONResponse(content={"success": True, "user": safe_user})
+    safe_user["session_token"] = session_token
+    return JSONResponse(content={"success": True, "user": safe_user, "session_token": session_token})
 
 @app.post("/api/auth/sync-user", tags=["Authentication"])
 async def sync_cloud_user(req: CloudRegisterRequest, request: Request):
@@ -1326,17 +1402,31 @@ async def sync_cloud_user(req: CloudRegisterRequest, request: Request):
     existing = next((u for u in users if u.get("email") == email), None)
     if not existing:
         pw_hash = req.password if len(req.password) == 64 else _hash_pw(req.password)
+        session_token = create_user_session(email)
         user_entry = {
             "id": f"usr_{int(time.time() * 1000)}",
             "email": email,
             "password_hash": pw_hash,
             "full_name": req.full_name.strip() if req.full_name else email.split("@")[0],
             "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-            "auth_provider": "cloud"
+            "auth_provider": "cloud",
+            "session_token": session_token
         }
         users.append(user_entry)
         _save_cloud_users(users)
     return JSONResponse(content={"success": True})
+
+@app.post("/api/auth/validate-session", tags=["Authentication"])
+async def validate_session_post_endpoint(req: ValidateSessionRequest):
+    """Validates if the user's current session token is the sole active session."""
+    res = validate_user_session(req.email, req.session_token)
+    return JSONResponse(content=res)
+
+@app.get("/api/auth/validate-session", tags=["Authentication"])
+async def validate_session_get_endpoint(email: str = "", session_token: str = ""):
+    """Lightweight GET endpoint for background single-device heartbeat validation."""
+    res = validate_user_session(email, session_token)
+    return JSONResponse(content=res)
 
 
 # ─────────────────────────────────────────────────────────────

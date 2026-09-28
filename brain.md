@@ -5,6 +5,18 @@
 
 ## 🚀 RECENTLY COMPLETED UPDATES (Updated: 2026-09-28)
 
+> **🔒 Feature 0: Single Active Device Login & Anti-Piracy Session Protection**
+- **Purpose & Business Value:** Prevents revenue loss caused by students sharing their email/password with multiple friends or logging in simultaneously across 3–4 phones/laptops.
+- **Backend Architecture:**
+  - `create_user_session(email)`: Automatically generates a cryptographic `session_token` upon every registration / login and sets it as the user's sole active device session in `backend/data/sessions.json`.
+  - `validate_user_session(email, token)`: Lightweight validation endpoint (`POST /api/auth/validate-session` & `GET /api/auth/validate-session`). If an older device presents a superseded token, the backend returns `{ valid: false, reason: "logged_in_on_another_device" }`.
+- **Frontend Enforcement:**
+  - `AuthContext.jsx`: Runs background session validation every 15 seconds and immediately on tab focus / visibility change.
+  - If a concurrent login on another device is detected: automatically logs out the superseded device, clears local pro subscription and session tokens, and presents a polite alert modal: *"You have been logged out because your account was logged in on another device. Only 1 active device is permitted."*
+- **Status:** ✅ COMPLETED & VERIFIED (2026-09-28)
+
+---
+
 > **📌 Feature 0: 100% Seamless Cross-Device Pro Auto-Recovery & Payment Sync**
 - **Problem Fixed:** When a user purchased a course on their mobile phone via Razorpay (e.g. `kushwahapraveen310@gmail.com`), Razorpay returned `email: void@razorpay.com` in the payment payload for UPI QR checkouts. The user's real email was saved in Razorpay `notes['user_email']`. The old verification code registered the pro membership under `void@razorpay.com`, causing the desktop login with `kushwahapraveen310@gmail.com` to report `is_pro: false` and show lock icons / purchase prompts.
 - **Smart Email Resolution:** Updated `verify_and_activate_razorpay_payment` in `backend/payment_service.py` to inspect `notes['user_email']` and `notes['email']` before falling back to Razorpay customer email.

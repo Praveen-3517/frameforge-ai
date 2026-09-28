@@ -7,6 +7,7 @@ const AuthContext = createContext({})
 
 const LOCAL_USERS_KEY   = 'bittu_ai_local_users'
 const LOCAL_SESSION_KEY = 'bittu_ai_local_session'
+const SESSION_TOKEN_KEY = 'bittu_ai_session_token'
 
 // ─── Password hashing (SHA-256 + deterministic salt, Web Crypto API) ──────────
 // Passwords are NEVER stored in plain text — only the hex digest is saved.
@@ -35,6 +36,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
   const [authMode, setAuthMode] = useState('signin') // 'signin' | 'signup'
+  const [deviceConflictMsg, setDeviceConflictMsg] = useState('')
 
   useEffect(() => {
     // 1. Check local session first (instant load)
@@ -83,6 +85,47 @@ export function AuthProvider({ children }) {
       setLoading(false)
     }
   }, [])
+
+  // Single active device session heartbeat check (runs every 15 seconds & on tab focus)
+  useEffect(() => {
+    if (!user?.email) return
+
+    const checkSession = async () => {
+      const token = localStorage.getItem(SESSION_TOKEN_KEY) || user.session_token
+      if (!token) return
+
+      try {
+        const base = getApiUrl()
+        const res = await fetch(`${base}/api/auth/validate-session?email=${encodeURIComponent(user.email)}&session_token=${encodeURIComponent(token)}`)
+        if (res.ok) {
+          const data = await res.json()
+          if (data.valid === false && data.reason === 'logged_in_on_another_device') {
+            console.warn('[Session] Active login on another device detected. Auto-logging out.')
+            localStorage.removeItem(LOCAL_SESSION_KEY)
+            localStorage.removeItem(SESSION_TOKEN_KEY)
+            localStorage.removeItem('bittu_dsa_pro')
+            setUser(null)
+            setSession(null)
+            setDeviceConflictMsg(data.message || 'You have been logged out because your account was logged in on another device.')
+            window.dispatchEvent(new CustomEvent('bittu_pro_updated', { detail: { isPro: false, plan: null } }))
+          }
+        }
+      } catch (err) {
+        // Suppress network errors
+      }
+    }
+
+    const interval = setInterval(checkSession, 15000)
+    const onFocus = () => { checkSession() }
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onFocus)
+
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onFocus)
+    }
+  }, [user?.email])
 
   // Auto-sync Pro Lifetime Pass on login across any device & sync local users to cloud
   useEffect(() => {
@@ -232,6 +275,10 @@ export function AuthProvider({ children }) {
       user_metadata: { full_name: fullName || normalizedEmail.split('@')[0] }
     }
 
+    if (cloudUser?.session_token) {
+      localStorage.setItem(SESSION_TOKEN_KEY, cloudUser.session_token)
+    }
+
     setUser(finalUser)
     setSession({ user: finalUser, access_token: 'cloud_token' })
     localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify({ user: finalUser }))
@@ -256,6 +303,9 @@ export function AuthProvider({ children }) {
       })
       const data = await res.json().catch(() => ({}))
       if (res.ok && data?.user) {
+        if (data.session_token) {
+          localStorage.setItem(SESSION_TOKEN_KEY, data.session_token)
+        }
         setUser(data.user)
         setSession({ user: data.user, access_token: 'cloud_token' })
         localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify({ user: data.user }))
@@ -300,6 +350,7 @@ export function AuthProvider({ children }) {
     } catch {}
 
     localStorage.removeItem(LOCAL_SESSION_KEY)
+    localStorage.removeItem(SESSION_TOKEN_KEY)
     setUser(null)
     setSession(null)
   }
@@ -378,6 +429,28 @@ export function AuthProvider({ children }) {
   return (
     <AuthContext.Provider value={value}>
       {children}
+      {deviceConflictMsg && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+          <div className="relative w-full max-w-md p-6 rounded-3xl bg-[#0f0a1c] border border-amber-500/40 text-white shadow-2xl text-center">
+            <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-2xl">
+              📱
+            </div>
+            <h3 className="text-lg font-bold mb-2 text-white">Single Device Active Session</h3>
+            <p className="text-xs text-slate-300 mb-6 leading-relaxed">
+              {deviceConflictMsg}
+            </p>
+            <button
+              onClick={() => {
+                setDeviceConflictMsg('')
+                openAuthModal('signin')
+              }}
+              className="w-full py-2.5 px-4 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg hover:opacity-95 transition-all cursor-pointer"
+            >
+              Sign In Here Again
+            </button>
+          </div>
+        </div>
+      )}
     </AuthContext.Provider>
   )
 }
